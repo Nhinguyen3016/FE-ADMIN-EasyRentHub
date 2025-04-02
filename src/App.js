@@ -1,17 +1,21 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import MainLayout from '../src/mainLayout/MainLayout';
+import UserManagement from './page/Account/AccountManagementPage';
+import Dashboard from './page/dashboard/DashboardPage';
+import PostManagementPage from './page/post/PostManagementPage';
+import LoginPage from './page/login/LoginPage';
 
-import UserManagement from '../src/page/Account/AccountManagementPage';
-import './styles/Account/UserManagement.css';
-import Login from '../src/page/login/LoginPage';
 function App() {
   return (
     <Router>
       <Routes>
-       
-        <Route path="/" element={<UserManagement />} />
-        <Route path="/login" element={<Login />} />
+        <Route element={<MainLayout />}>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/account" element={<UserManagement />} />
+          <Route path="/post" element={<PostManagementPage />} />
+        </Route>
+        <Route path="/login" element={<LoginPage />} />
       </Routes>
     </Router>
   );

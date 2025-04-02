@@ -1,227 +1,104 @@
-/* UserManagement.css */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: Arial, sans-serif;
-  }
-  
-  .user-management-container {
-    display: flex;
-    min-height: 100vh;
-  }
-  
-  /* Sidebar styles */
-  .sidebar {
-    width: 290px;
-    background-color: white;
-    border-right: 1px solid #e0e0e0;
-    padding: 20px 0;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .logo-container {
-    padding: 0 20px 20px;
-    border-bottom: 1px solid #e0e0e0;
-  }
-  
-  .logo {
-    width: 250px;
-    height: auto;
-  }
-  
-  .logo-text {
-    font-size: 12px;
-    color: #333;
-    margin-top: 5px;
-    text-align: center;
-  }
-  
-  .menu {
-    margin-top: 20px;
-  }
-  
-  .menu-item {
-    display: flex;
-    align-items: center;
-    padding: 15px 20px;
-    cursor: pointer;
-  }
-  
-  .menu-item.active {
-    background-color: rgba(255, 152, 68, 0.1);
-    border-left: 3px solid #ff9844;
-    color: #ff9844;
-  }
-  
-  .menu-icon {
-    margin-right: 10px;
-    width: 20px;
-    height: 20px;
-  }
-  
-  .menu-text {
-    font-size: 14px;
-  }
-  
-  /* Main content styles */
-  .main-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-  }
-  
-  /* Top Navigation Bar */
-  .top-nav-bar {
-    height: 50px;
-    background-color: white;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    padding: 0 30px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-  
-  .logout-container {
-    display: flex;
-    align-items: center;
-  }
-  
-  /* Header styles */
-  .header {
-    background-size: cover;
-    background-position: center;
-    height: 150px;
-    position: relative;
-  }
-  
-  .header-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    padding: 0 30px;
-    color: white;
-  }
-  
-  .header-title {
-    font-size: 36px;
-    font-weight: bold;
-  }
-  
-  .logout-button {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    color: #ff9844;
-  }
-  
-  .logout-icon {
-    margin-right: 5px;
-    width: 20px;
-    height: 20px;
-  }
-  
-  /* Table container styles */
-  .user-table-container {
-    padding: 20px;
-    flex: 1;
-    background-color: #f5f5f5;
-  }
-  
-  .table-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-  
-  .role-dropdown {
-    position: relative;
-  }
-  
-  .role-dropdown select {
-    padding: 10px 15px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 14px;
-    width: 200px;
-    background-color: white;
-    appearance: none;
-  }
-  
-  .dropdown-arrow {
-    position: absolute;
-    right: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 20px;
-    height: 20px;
-    pointer-events: none;
-  }
-  
-  .add-button {
-    background-color: #ff9844;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 10px 20px;
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-  }
-  
-  .add-icon {
-    margin-right: 8px;
-    width: 16px;
-    height: 16px;
-  }
-  
-  /* Table styles */
-  .user-table {
-    width: 100%;
-    border-collapse: collapse;
-    background-color: white;
-    border-radius: 5px;
-    overflow: hidden;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  }
-  
-  .user-table th,
-  .user-table td {
-    padding: 15px;
-    text-align: left;
-    border-bottom: 1px solid #e0e0e0;
-  }
-  
-  .user-table th {
-    background-color: white;
-    font-weight: normal;
-    color: #333;
-  }
-  
-  .action-buttons {
-    display: flex;
-    gap: 10px;
-  }
-  
-  .edit-button,
-  .delete-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .edit-icon,
-  .delete-icon {
-    width: 18px;
-    height: 18px;
-  }
+/* Table container styles - keep only the specific styles for UserManagement */
+.user-table-container {
+  width: 100%;
+}
+
+.table-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.role-dropdown {
+  position: relative;
+}
+
+.role-dropdown select {
+  padding: 10px 15px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 14px;
+  width: 200px;
+  background-color: white;
+  appearance: none;
+}
+
+.dropdown-arrow {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+}
+
+.add-button {
+  background-color: #ff9844;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.add-icon {
+  margin-right: 8px;
+  width: 16px;
+  height: 16px;
+}
+
+/* Table styles */
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  border-radius: 5px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.user-table th,
+.user-table td {
+  padding: 15px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.user-table th {
+  background-color: white;
+  font-weight: normal;
+  color: #333;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.edit-button,
+.delete-button,
+.see-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-icon,
+.delete-icon,
+.see-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.no-users-message {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
