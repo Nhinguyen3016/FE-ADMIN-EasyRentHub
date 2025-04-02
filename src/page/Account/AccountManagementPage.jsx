@@ -10,6 +10,8 @@ import writeImg from '../../images/write.png';
 import deleteImg from '../../images/delete.png';
 import backgroundImg from '../../images/Home_background.jpg';
 
+// Không cần import LoginPage nữa
+
 const UserManagement = () => {
   const [users, setUsers] = useState([
     {
@@ -49,15 +51,15 @@ const UserManagement = () => {
     }
   ]);
   
-  // Default is empty string to show all roles
+  // Mặc định là chuỗi rỗng để hiển thị tất cả vai trò
   const [selectedRole, setSelectedRole] = useState('');
 
-  // Function to handle role selection
+  // Hàm xử lý khi chọn vai trò
   const handleRoleChange = (e) => {
     setSelectedRole(e.target.value);
   };
 
-  // Filter users based on selected role
+  // Lọc người dùng theo vai trò đã chọn
   const filteredUsers = selectedRole 
     ? users.filter(user => {
         if (selectedRole === 'admin') return user.role === 'Quản trị viên';
@@ -72,13 +74,22 @@ const UserManagement = () => {
   };
 
   const handleEdit = (id) => {
-    // Implement edit functionality
+    // Thực hiện chức năng chỉnh sửa
     console.log('Edit user with id:', id);
   };
 
   const handleAddUser = () => {
-    // Implement add user functionality
+    // Thực hiện chức năng thêm người dùng
     console.log('Add new user');
+  };
+
+  // Hàm xử lý đăng xuất
+  const handleLogout = () => {
+    // Chuyển đến trang đăng nhập bằng window.location
+    window.location.href = '/login';
+    
+    // Hoặc nếu bạn biết đường dẫn chính xác:
+    // window.location.href = '/đường-dẫn-đến/login';
   };
 
   return (
@@ -106,7 +117,7 @@ const UserManagement = () => {
         {/* Top Navigation Bar */}
         <div className="top-nav-bar">
           <div className="logout-container">
-            <div className="logout-button">
+            <div className="logout-button" onClick={handleLogout}>
               <img src={logoutImg} alt="Logout" className="logout-icon" />
               <span>Đăng xuất</span>
             </div>
