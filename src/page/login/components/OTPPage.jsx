@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { FaArrowLeft } from 'react-icons/fa';
 import '../../../styles/login/component/OTPPage.css';
-import NewPasswordPage from './NewPasswordPage'; // Import the NewPasswordPage
+import NewPasswordPage from './NewPasswordPage'; 
 
 const OTPPage = ({ onBack }) => {
     const [otp, setOtp] = useState(['', '', '', '']);
-    const [otpVerified, setOtpVerified] = useState(false); // State to track OTP verification
+    const [otpVerified, setOtpVerified] = useState(false);
 
     const handleChange = (index, value) => {
         if (value.length > 1) return;
@@ -15,14 +15,13 @@ const OTPPage = ({ onBack }) => {
     };
 
     const handleSubmit = () => {
-        // Assuming OTP verification logic is done here
-        setOtpVerified(true); // After successful verification, navigate to NewPasswordPage
+        setOtpVerified(true); 
     };
 
     return (
         <div className="otp-container">
             {otpVerified ? (
-                <NewPasswordPage /> // Render NewPasswordPage if OTP is verified
+                <NewPasswordPage onBack={() => setOtpVerified(false)} />
             ) : (
                 <>
                     <h1 className="otp-title">Nhập OTP</h1>

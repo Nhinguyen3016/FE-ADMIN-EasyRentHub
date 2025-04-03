@@ -42,3 +42,6 @@
     margin-left: auto;
     margin-right: auto;
 }
+.otp-submit:hover {
+    background-color: #7fa523;
+}
