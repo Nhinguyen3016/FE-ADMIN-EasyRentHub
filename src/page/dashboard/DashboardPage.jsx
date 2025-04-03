@@ -17,7 +17,7 @@ const DashboardPage = () => {
       </div>
       
       <div className="chart-container" style={{ height: '50%' }}>
-        <h2>Tổng số lượng giao dịch với người thực hiện giao dịch theo tháng</h2>
+        <h2>Doanh thu</h2>
         <MonthlyTransactionChart />
       </div>
     </div>

@@ -13,13 +13,12 @@ const MonthlyTransactionChart = () => {
 
     const ctx = chartRef.current.getContext('2d');
 
-    // Dữ liệu của trục Y
+ 
     const dataValues = [50, 65, 62, 80, 200, 85, 95, 100, 90, 155, 110, 25];
 
-    // Tìm giá trị lớn nhất trong dataset
+
     const maxValue = Math.max(...dataValues);
 
-    // Xác định max Y bằng cách cộng thêm 20 vào giá trị lớn nhất
     const yMax = maxValue + 20;
 
     chartInstance.current = new Chart(ctx, {
@@ -48,9 +47,9 @@ const MonthlyTransactionChart = () => {
         scales: {
           y: {
             min: 0,
-            max: yMax, // Áp dụng max Y động hơn max số lượng 20 đơn vị
+            max: yMax, 
             ticks: {
-              stepSize: yMax / 5 // Chia trục Y thành 5 khoảng bằng nhau
+              stepSize: yMax / 5 
             },
             grid: {
               color: '#E0E0E0',
