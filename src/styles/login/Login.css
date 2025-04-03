@@ -188,4 +188,25 @@
     color: rgba(177, 173, 173, 0.5); 
     font-style: italic; 
   }
-  
+  .login-box {
+    padding: 2rem;
+    border-radius: 8px;
+    text-align: center;
+    width: 100%; 
+    max-width: 800px; 
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+
+.back-to-login {
+    background: none;
+    border: none;
+    color: #007bff;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 10px;
+}
