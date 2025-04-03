@@ -1,0 +1,44 @@
+.otp-container {
+    text-align: center;
+}
+
+.otp-title {
+    font-size: 28px;
+    font-weight: 600;
+    color: #305D72;
+    margin-bottom: 50px;
+    text-align: center;
+}
+
+.otp-inputs {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin: 20px 0;
+}
+
+.otp-box {
+    width: 60px;
+    text-align: center;
+    font-size: 20px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+}
+
+.otp-submit {
+    margin-top: 30px;
+    width: 60%;
+    padding: 15px;
+    background-color: #8ac640;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-bottom: 100px;
+    font-weight: bold;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
