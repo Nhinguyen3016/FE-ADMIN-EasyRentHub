@@ -13,7 +13,6 @@ const Login = () => {
         console.log('Login attempt with:', { username, password });
         // Add actual login logic here
     };
-
     return (
         <div className="login-container">
             <div className="login-illustration">
