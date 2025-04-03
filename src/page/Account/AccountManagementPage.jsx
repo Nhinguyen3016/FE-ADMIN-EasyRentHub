@@ -68,12 +68,10 @@ const AccountManagementPage = () => {
   };
 
   const handleEdit = (id) => {
-    // Thực hiện chức năng chỉnh sửa
     console.log('Edit user with id:', id);
   };
 
   const handleAddUser = () => {
-    // Thực hiện chức năng thêm người dùng
     console.log('Add new user');
   };
 

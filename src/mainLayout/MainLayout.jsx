@@ -11,8 +11,7 @@ import backgroundImg from '../images/Home_background.jpg';
 const MainLayout = () => {
   const location = useLocation();
   const pathname = location.pathname;
-  
-  // Determine active page based on pathname
+ 
   const getActivePage = () => {
     if (pathname === '/') return 'dashboard';
     if (pathname === '/account') return 'account';
@@ -21,8 +20,7 @@ const MainLayout = () => {
   };
   
   const activePage = getActivePage();
-
-  // Hàm xử lý đăng xuất
+ 
   const handleLogout = () => {
     window.location.href = '/login';
   };
