@@ -5,7 +5,7 @@ import UserManagement from './page/Account/AccountManagementPage';
 import Dashboard from './page/dashboard/DashboardPage';
 import PostManagementPage from './page/post/PostManagementPage';
 import LoginPage from './page/login/LoginPage';
-// import RegisterPage from './page/register/RegisterPage';
+ import RegisterPage from './page/register/RegisterPage';
 function App() {
   return (
     <Router>
@@ -16,7 +16,7 @@ function App() {
           <Route path="/post" element={<PostManagementPage />} />
         </Route>
         <Route path="/login" element={<LoginPage />} />
-       {/* <Route path="/register" element={<RegisterPage />} /> */}
+       <Route path="/register" element={<RegisterPage />} />
       </Routes>
     </Router>
   );

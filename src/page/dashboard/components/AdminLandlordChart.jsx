@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import Chart from 'chart.js/auto';
-import './UserRoleChart.css';
+import '../../../styles/dashboard/components/AdminLandlordChart.css';
 
-const UserRoleChart = () => {
+const AdminLandlordChart = () => {
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
 
@@ -16,11 +16,11 @@ const UserRoleChart = () => {
     chartInstance.current = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: ['Tenant', 'Landlord', 'Admin'],
+        labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
         datasets: [
           {
-            data: [220, 65, 10],
-            backgroundColor: '#53ab08',
+            data: [22, 28, 25, 32, 30, 35, 33, 38, 35, 42, 40, 45],
+            backgroundColor: '#E67E22',
             barPercentage: 0.6,
           }
         ]
@@ -36,9 +36,9 @@ const UserRoleChart = () => {
         scales: {
           y: {
             beginAtZero: true,
-            max: 220,
+            max: 60,
             ticks: {
-              stepSize: 55
+              stepSize: 15
             },
             grid: {
               color: '#E0E0E0',
@@ -63,10 +63,10 @@ const UserRoleChart = () => {
 
   return (
     <div className="chart-container">
-      <h2>Thống kê số lượng người dùng (theo role)</h2>
+      <h2>Tổng số lượng giao dịch giữa admin và chủ trọ</h2>
       <canvas ref={chartRef} className="chart-canvas"></canvas>
     </div>
   );
 };
 
-export default UserRoleChart;
+export default AdminLandlordChart;

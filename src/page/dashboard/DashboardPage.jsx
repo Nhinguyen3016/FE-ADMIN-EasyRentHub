@@ -2,7 +2,7 @@ import React from 'react';
 import UserRoleChart from './components/UserRoleChart';
 import AdminLandlordChart from './components/AdminLandlordChart';
 import MonthlyTransactionChart from './components/MonthlyTransactionChart';
-import './DashboardPage.css';
+import '../../styles/dashboard/DashboardPage.css';
 
 const DashboardPage = () => {
   return (

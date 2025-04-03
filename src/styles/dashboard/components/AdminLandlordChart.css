@@ -1,4 +1,5 @@
 .chart-canvas {
   width: 100% !important;
-  height: 120px !important;
+  height: 100% !important;
+  flex: 1;
 }

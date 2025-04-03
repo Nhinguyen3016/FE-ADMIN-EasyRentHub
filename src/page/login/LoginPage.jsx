@@ -65,15 +65,16 @@ const Login = () => {
                 <button type="submit" className="login-button">
                     Đăng nhập
                 </button>
-            </form>
-
-
-
-            <div className="divider">
+                <div className="divider">
                 <span className="divider-line"></span>
                 <span className="divider-text">OR</span>
                 <span className="divider-line"></span>
             </div>
+
+            </form>
+
+
+
 
             <div className="social-login">
                 <button className="social-button google">
@@ -86,7 +87,7 @@ const Login = () => {
 
             <div className="signup-prompt">
                 <span>Chưa có tài khoản? </span>
-                <a href="#register" className="signup-link">Đăng ký</a>
+                <a href="/register" className="signup-link">Đăng ký</a>
             </div>
         </div>
     );
