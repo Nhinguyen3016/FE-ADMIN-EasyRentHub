@@ -1,0 +1,43 @@
+
+.password-update-message-ssl {
+    margin-top: 20px;
+    color: #4caf50;
+    font-size: 18px;
+    font-weight: bold;
+    align-items: center;
+}
+
+.password-update-icon-ssl {
+    font-size: 100px;
+    animation: rotatePasswordUpdate-ssl 1s ease-out;
+    margin-bottom: 30px;
+}
+
+
+@keyframes rotatePasswordUpdate-ssl {
+    0% {
+        transform: rotate(0deg);
+    }
+    50% {
+        transform: rotate(180deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.login-redirect-button {
+    margin-top: 70px;
+    padding: 10px 20px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.login-redirect-button:hover {
+    background-color: #45a049;
+}

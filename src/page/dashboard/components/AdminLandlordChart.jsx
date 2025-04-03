@@ -63,7 +63,7 @@ const AdminLandlordChart = () => {
 
   return (
     <div className="chart-container">
-      <h2>Tổng số lượng giao dịch giữa admin và chủ trọ</h2>
+      <h2>Tổng số lượng giao dịch </h2>
       <canvas ref={chartRef} className="chart-canvas"></canvas>
     </div>
   );

@@ -63,7 +63,7 @@ const UserRoleChart = () => {
 
   return (
     <div className="chart-container">
-      <h2>Thống kê số lượng người dùng (theo role)</h2>
+      <h2>Số lượng người dùng </h2>
       <canvas ref={chartRef} className="chart-canvas"></canvas>
     </div>
   );
