@@ -1,6 +1,5 @@
-import '../../styles/messageDialog/MessageDialog.css';
+import '../../../styles/notification/messageDialog/MessageDialog.css';
 import React, { useState, useRef } from 'react';
-
 
 const MessageDialog = ({ onClose, contact }) => {
   const [message, setMessage] = useState('');
@@ -27,9 +26,10 @@ const MessageDialog = ({ onClose, contact }) => {
       read: true
     }
   ]);
-  const [isTyping, setIsTyping] = useState(true);
+  const [isTyping] = useState(true);
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const fileInputRef = useRef(null);
+  const imageInputRef = useRef(null);
 
   const handleSendMessage = () => {
     if (message.trim() === '') return;
@@ -59,15 +59,25 @@ const MessageDialog = ({ onClose, contact }) => {
   const handleFileSelect = (e) => {
     const files = e.target.files;
     if (files && files.length > 0) {
-      // Xử lý file được chọn
       const file = files[0];
       sendFileMessage(file);
       setShowAttachmentMenu(false);
     }
   };
 
+  const handleImageSelect = (e) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      sendImageMessage(file);
+      setShowAttachmentMenu(false);
+    }
+  };
+
   const sendFileMessage = (file) => {
-    // Tạo message mới với thông tin file
+    // Create a file URL to reference the file
+    const fileUrl = URL.createObjectURL(file);
+    
     const newMessage = {
       id: messages.length + 1,
       sender: 'user',
@@ -77,49 +87,84 @@ const MessageDialog = ({ onClose, contact }) => {
       attachment: {
         name: file.name,
         type: file.type,
-        size: file.size
+        size: file.size,
+        url: fileUrl
       }
     };
     
     setMessages([...messages, newMessage]);
   };
 
-  const openFileExplorer = () => {
-    if (fileInputRef.current) {
+  const sendImageMessage = (file) => {
+    // Create a URL for the image preview
+    const imageUrl = URL.createObjectURL(file);
+    
+    const newMessage = {
+      id: messages.length + 1,
+      sender: 'user',
+      text: `Đã gửi hình ảnh: ${file.name}`,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      read: false,
+      attachment: {
+        name: file.name,
+        type: 'image',
+        size: file.size,
+        url: imageUrl
+      }
+    };
+    
+    setMessages([...messages, newMessage]);
+  };
+
+  const openFileExplorer = (type) => {
+    if (type === 'image' && imageInputRef.current) {
+      imageInputRef.current.click();
+    } else if (type === 'document' && fileInputRef.current) {
       fileInputRef.current.click();
     }
     setShowAttachmentMenu(false);
   };
 
   const handleAttachmentType = (type) => {
-    // Xử lý các loại đính kèm khác nhau
     switch (type) {
       case 'image':
-        alert('Chọn hình ảnh để gửi');
-        openFileExplorer();
+        openFileExplorer('image');
         break;
       case 'document':
-        alert('Chọn tài liệu để gửi');
-        openFileExplorer();
-        break;
-      case 'location':
-        // Giả lập gửi vị trí
-        const locationMessage = {
-          id: messages.length + 1,
-          sender: 'user',
-          text: 'Đã gửi vị trí: 10.7758° N, 106.7025° E',
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          read: false,
-          attachment: {
-            type: 'location',
-            name: 'Vị trí của tôi'
-          }
-        };
-        setMessages([...messages, locationMessage]);
-        setShowAttachmentMenu(false);
+        openFileExplorer('document');
         break;
       default:
-        openFileExplorer();
+        openFileExplorer('document');
+    }
+  };
+
+  // Function to render attachment content based on type
+  const renderAttachmentContent = (attachment) => {
+    if (attachment.type === 'image') {
+      return (
+        <div className="image-preview">
+          <img src={attachment.url} alt={attachment.name} />
+          <div className="attachment-info">
+            <span className="attachment-name">{attachment.name}</span>
+            <span className="attachment-size">({(attachment.size / 1024).toFixed(1)} KB)</span>
+          </div>
+        </div>
+      );
+    } else {
+      return (
+        <>
+          <span className="attachment-icon">📎</span>
+          <span className="attachment-name">{attachment.name}</span>
+          <a 
+            href={attachment.url} 
+            download={attachment.name}
+            className="download-link"
+            onClick={(e) => e.stopPropagation()}
+          >
+            Tải xuống
+          </a>
+        </>
+      );
     }
   };
 
@@ -153,8 +198,7 @@ const MessageDialog = ({ onClose, contact }) => {
               <p>{msg.text}</p>
               {msg.attachment && (
                 <div className={`attachment-preview ${msg.attachment.type}`}>
-                  <span className="attachment-icon">📎</span>
-                  <span className="attachment-name">{msg.attachment.name}</span>
+                  {renderAttachmentContent(msg.attachment)}
                 </div>
               )}
               <span className="message-time">
@@ -205,10 +249,6 @@ const MessageDialog = ({ onClose, contact }) => {
                 <span className="attachment-icon">📄</span>
                 <span>Tài liệu</span>
               </button>
-              <button onClick={() => handleAttachmentType('location')}>
-                <span className="attachment-icon">📍</span>
-                <span>Vị trí</span>
-              </button>
             </div>
           )}
           
@@ -217,7 +257,15 @@ const MessageDialog = ({ onClose, contact }) => {
             ref={fileInputRef}
             style={{ display: 'none' }}
             onChange={handleFileSelect}
-            accept="image/*,.pdf,.doc,.docx"
+            accept=".pdf,.doc,.docx,.txt,.xls,.xlsx"
+          />
+          
+          <input
+            type="file"
+            ref={imageInputRef}
+            style={{ display: 'none' }}
+            onChange={handleImageSelect}
+            accept="image/*"
           />
         </div>
         

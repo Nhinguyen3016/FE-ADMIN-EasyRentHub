@@ -17,7 +17,7 @@ const MainLayout = () => {
     if (pathname === '/account') return 'user';
 
     if (pathname === '/post') return 'post';
-    if (pathname === '/notification') return 'notification';
+    if (pathname === '/messageManagement') return 'messageManagement';
     return '';
   };
 
@@ -54,8 +54,8 @@ const MainLayout = () => {
               <span className="menu-text">Quản lý bài đăng</span>
             </div>
           </Link>
-          <Link to="/notification" className="menu-link">
-            <div className={`menu-item ${activePage === 'notification' ? 'active' : ''}`}>
+          <Link to="/messageManagement" className="menu-link">
+            <div className={`menu-item ${activePage === 'messageManagement' ? 'active' : ''}`}>
               <img src={notificationImg} alt="Notification" className="menu-icon" />
               <span className="menu-text">Quản lý tin nhắn</span>
             </div>
