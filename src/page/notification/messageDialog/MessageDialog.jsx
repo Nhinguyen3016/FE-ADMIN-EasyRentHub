@@ -75,7 +75,6 @@ const MessageDialog = ({ onClose, contact }) => {
   };
 
   const sendFileMessage = (file) => {
-    // Create a file URL to reference the file
     const fileUrl = URL.createObjectURL(file);
     
     const newMessage = {
@@ -96,7 +95,6 @@ const MessageDialog = ({ onClose, contact }) => {
   };
 
   const sendImageMessage = (file) => {
-    // Create a URL for the image preview
     const imageUrl = URL.createObjectURL(file);
     
     const newMessage = {
@@ -138,7 +136,6 @@ const MessageDialog = ({ onClose, contact }) => {
     }
   };
 
-  // Function to render attachment content based on type
   const renderAttachmentContent = (attachment) => {
     if (attachment.type === 'image') {
       return (
