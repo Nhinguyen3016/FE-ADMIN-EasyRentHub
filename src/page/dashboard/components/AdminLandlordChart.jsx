@@ -20,7 +20,7 @@ const AdminLandlordChart = () => {
         datasets: [
           {
             data: [22, 28, 25, 32, 30, 35, 33, 38, 35, 42, 40, 45],
-            backgroundColor: '#E67E22',
+            backgroundColor: '#4A68D9',
             barPercentage: 0.6,
           }
         ]

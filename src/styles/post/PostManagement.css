@@ -1,0 +1,448 @@
+/* Base styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.estate-management {
+  flex: 1;
+  overflow: auto;
+  background-color: #f9fafb;
+}
+
+/* Header styles */
+.app-header {
+  background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.search-container {
+  position: relative;
+}
+
+.search-input {
+  padding: 0.5rem 0.5rem 0.5rem 2.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  width: 250px;
+  font-size: 0.875rem;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 0.625rem;
+  color: #9ca3af;
+}
+
+/* Button styles */
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.2s;
+}
+
+.btn-create {
+  background-color: #2563eb;
+  color: #ffffff;
+}
+
+.btn-create:hover {
+  background-color: #1d4ed8;
+}
+
+.btn-filter {
+  background-color: #ffffff;
+  color: #4b5563;
+  border: 1px solid #d1d5db;
+}
+
+.btn-filter:hover {
+  background-color: #f9fafb;
+}
+
+.btn-view {
+  flex: 1;
+  background-color: #2563eb;
+  color: #ffffff;
+}
+
+.btn-view:hover {
+  background-color: #1d4ed8;
+}
+
+/* Main content styles */
+.main-content {
+  padding: 1.5rem;
+}
+
+/* Stats card styles */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.stats-card {
+  background-color: #ffffff;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+}
+
+.stats-card-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stats-label {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.stats-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 0.25rem;
+}
+
+.stats-icon-container {
+  padding: 0.75rem;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stats-icon-container.blue {
+  background-color: #dbeafe;
+}
+
+.stats-icon-container.green {
+  background-color: #d1fae5;
+}
+
+.stats-icon-container.yellow {
+  background-color: #fef3c7;
+}
+
+.stats-icon {
+  color: #2563eb;
+}
+
+.stats-icon-container.green .stats-icon {
+  color: #10b981;
+}
+
+.stats-icon-container.yellow .stats-icon {
+  color: #f59e0b;
+}
+
+.stats-trend {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+}
+
+.stats-trend.positive {
+  color: #10b981;
+}
+
+.stats-trend.negative {
+  color: #ef4444;
+}
+
+/* Filter styles */
+.filter-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.filter-tabs {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.filter-tab {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  background-color: #ffffff;
+  color: #4b5563;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.2s;
+}
+
+.filter-tab:hover {
+  background-color: #f3f4f6;
+}
+
+.filter-tab-active {
+  font-weight: 600;
+}
+
+.filter-tab-blue {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.filter-tab-green {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.filter-tab-yellow {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+/* Estates grid styles */
+.estates-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+  .estates-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .estates-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.estate-card {
+  background-color: #ffffff;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: box-shadow 0.3s;
+}
+
+.estate-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.estate-card-image-container {
+  position: relative;
+}
+
+.estate-card-image {
+  width: 100%;
+  height: 12rem;
+  object-fit: cover;
+}
+
+.estate-card-status {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+}
+
+.estate-card-content {
+  padding: 1rem;
+}
+
+.estate-card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  height: 2.5rem;
+}
+
+.estate-card-address {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.375rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin-bottom: 0.75rem;
+}
+
+.estate-card-address p {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.estate-card-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.estate-card-rating {
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+  color: #f59e0b;
+}
+
+.estate-card-price {
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.estate-card-features {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.estate-card-feature {
+  display: flex;
+  align-items: center;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.estate-card-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.icon-small {
+  flex-shrink: 0;
+}
+
+.mr-1 {
+  margin-right: 0.25rem;
+}
+
+.mr-2 {
+  margin-right: 0.5rem;
+}
+
+/* Status badge styles - giữ lại vì có thể được sử dụng ở các component khác */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.status-available {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.status-pending {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.status-booked {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+/* Pagination styles */
+.pagination-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+}
+
+.pagination-info {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.pagination-info-bold {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.pagination-nav {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.pagination-btn {
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  background-color: #ffffff;
+  color: #4b5563;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  border: 1px solid #d1d5db;
+  transition: background-color 0.2s;
+}
+
+.pagination-btn:hover {
+  background-color: #f9fafb;
+}
+
+.pagination-btn-active {
+  background-color: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+

@@ -102,3 +102,21 @@
   padding: 20px;
   color: #666;
 }
+.search-container {
+  margin-left: 10px;
+  position: relative;
+}
+
+.search-input {
+  padding: 10px 15px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 14px;
+  width: 250px;
+  background-color: white;
+}
+
+.search-input:focus {
+  border-color: #ff9844;
+  outline: none;
+}

@@ -7,22 +7,24 @@ import postImg from '../images/postmagement.png';
 import userImg from '../images/user.png';
 import logoutImg from '../images/logout.png';
 import backgroundImg from '../images/Home_background.jpg';
-
+import notificationImg from '../images/notification.png';  
 const MainLayout = () => {
   const location = useLocation();
   const pathname = location.pathname;
- 
+
   const getActivePage = () => {
-    if (pathname === '/') return 'dashboard';
-    if (pathname === '/account') return 'account';
+    if (pathname === '/dashboard') return 'dashboard';
+    if (pathname === '/account') return 'user';
+
     if (pathname === '/post') return 'post';
+    if (pathname === '/messageManagement') return 'messageManagement';
     return '';
   };
-  
+
   const activePage = getActivePage();
- 
+
   const handleLogout = () => {
-    window.location.href = '/login';
+    window.location.href = '/';
   };
 
   return (
@@ -34,7 +36,7 @@ const MainLayout = () => {
           <p className="logo-text">An easy and convenient<br />rental connection platform</p>
         </div>
         <div className="menu">
-          <Link to="/" className="menu-link">
+          <Link to="/dashboard" className="menu-link">
             <div className={`menu-item ${activePage === 'dashboard' ? 'active' : ''}`}>
               <img src={dashboardImg} alt="Dashboard" className="menu-icon" />
               <span className="menu-text">Thống kê kinh doanh</span>
@@ -52,9 +54,15 @@ const MainLayout = () => {
               <span className="menu-text">Quản lý bài đăng</span>
             </div>
           </Link>
+          <Link to="/messageManagement" className="menu-link">
+            <div className={`menu-item ${activePage === 'messageManagement' ? 'active' : ''}`}>
+              <img src={notificationImg} alt="Notification" className="menu-icon" />
+              <span className="menu-text">Quản lý tin nhắn</span>
+            </div>
+          </Link>
         </div>
       </div>
-      
+
       {/* Main Content */}
       <div className="main-content">
         {/* Top Navigation Bar */}
@@ -73,13 +81,13 @@ const MainLayout = () => {
             <div className="header-title">EasyRentHub</div>
           </div>
         </div>
-        
-        {/* Content area with content frame */}
-        <div className="content-area">
+
+        <div className="content-area full-width">
           <div className="content-frame">
             <Outlet />
           </div>
         </div>
+
       </div>
     </div>
   );

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate from react-router-dom
 import '../../styles/login/Login.css';
 import googleLogo from '../../images/google.png';
 import facebookLogo from '../../images/facebook.png';
-import ForgotPasswordPage from './components/ForgotPasswordPage'; 
+import ForgotPasswordPage from './components/ForgotPasswordPage';
 
 const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
@@ -10,10 +11,15 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [isForgotPassword, setIsForgotPassword] = useState(false); // State để chuyển đổi form
 
+    const navigate = useNavigate(); // Initialize useNavigate
+
     const handleSubmit = (e) => {
         e.preventDefault();
         console.log('Login attempt with:', { username, password });
         // Add actual login logic here
+
+        // Navigate to the /dashboard page upon successful login
+        navigate('/dashboard'); // This will redirect the user to the dashboard page
     };
 
     return (
