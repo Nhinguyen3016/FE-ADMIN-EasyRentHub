@@ -5,7 +5,7 @@ import '../../../styles/login/component/SuccessfullyPage.css';
 const SuccessfullyPage = () => {
     const handleRedirectToLogin = () => {
         // This will reload the page and redirect to /login
-        window.location.href = '/login'; // Redirect to the login page
+        window.location.href = '/'; // Redirect to the login page
     };
 
     return (

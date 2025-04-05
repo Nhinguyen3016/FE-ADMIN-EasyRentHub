@@ -1,0 +1,126 @@
+
+.post-table-container {
+    width: 100%;
+    padding: 20px;
+  }
+  
+  .table-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    align-items: center;
+    justify-content: flex-end; 
+  }
+  
+  .role-dropdown, .author-dropdown {
+    position: relative;
+    width: 250px;
+  }
+  
+  .role-dropdown select, .author-dropdown select {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    background-color: white;
+    appearance: none;
+    font-size: 14px;
+  }
+  
+  .dropdown-arrow {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 10px;
+    height: 10px;
+    pointer-events: none;
+  }
+  
+  .add-button {
+    display: flex;
+    align-items: center;
+    background-color: #ff9844;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 20px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .add-icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+  }
+  
+  /* Post Table Styles */
+  .post-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: white;
+  }
+  
+  .post-table th, .post-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .post-table th {
+    background-color: #f8f8f8;
+    font-weight: bold;
+    color: #333;
+  }
+  
+  .post-table tbody tr:hover {
+    background-color: #f5f5f5;
+  }
+  
+  .action-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+  
+  .see-button, .edit-button, .delete-button {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 5px;
+  }
+  
+  .see-icon, .edit-icon, .delete-icon {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .no-posts-message {
+    text-align: center;
+    color: #666;
+    padding: 20px;
+  }
+  
+  /* Responsive adjustments for smaller screens */
+  @media (max-width: 768px) {
+    .table-actions {
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .role-dropdown, .author-dropdown {
+      width: 100%;
+    }
+    
+    .add-button {
+      width: 100%;
+      justify-content: center;
+    }
+    
+    .post-table {
+      display: block;
+      overflow-x: auto;
+    }
+  }

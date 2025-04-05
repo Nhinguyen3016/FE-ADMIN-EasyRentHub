@@ -38,30 +38,78 @@ const AccountManagementPage = () => {
     },
     {
       id: 5,
-      name: 'Đặng Thị Thu Hương',
+      name: 'Đặng HoaHoa',
+      email: 'thuhuong.dang@example.com',
+      address: '56 Hoàng Diệu, TP. Nha Trang, Khánh Hòa',
+      role: 'Người thuê'
+    },
+    {
+      id: 6,
+      name: 'ĐHương',
+      email: 'thuhuong.dang@example.com',
+      address: '56 Hoàng Diệu, TP. Nha Trang, Khánh Hòa',
+      role: 'Người thuê'
+    },
+    {
+      id: 7,
+      name: 'Đặng',
+      email: 'thuhuong.dang@example.com',
+      address: '56 Hoàng Diệu, TP. Nha Trang, Khánh Hòa',
+      role: 'Người thuê'
+    },
+    {
+      id: 8,
+      name: 'Thu Hương',
+      email: 'thuhuong.dang@example.com',
+      address: '56 Hoàng Diệu, TP. Nha Trang, Khánh Hòa',
+      role: 'Người thuê'
+    },
+    {
+      id: 9,
+      name: 'Đặng Thị',
+      email: 'thuhuong.dang@example.com',
+      address: '56 Hoàng Diệu, TP. Nha Trang, Khánh Hòa',
+      role: 'Người thuê'
+    },
+    {
+      id: 10,
+      name: 'Đặng Thị Thu ',
       email: 'thuhuong.dang@example.com',
       address: '56 Hoàng Diệu, TP. Nha Trang, Khánh Hòa',
       role: 'Người thuê'
     }
   ]);
-  
-  // Mặc định là chuỗi rỗng để hiển thị tất cả vai trò
-  const [selectedRole, setSelectedRole] = useState('');
 
-  // Hàm xử lý khi chọn vai trò
+  // Default empty string for role filtering
+  const [selectedRole, setSelectedRole] = useState('');
+  const [searchQuery, setSearchQuery] = useState(''); // Search query state
+
+  // Handle role change
   const handleRoleChange = (e) => {
     setSelectedRole(e.target.value);
   };
 
-  // Lọc người dùng theo vai trò đã chọn
-  const filteredUsers = selectedRole 
-    ? users.filter(user => {
-        if (selectedRole === 'admin') return user.role === 'Quản trị viên';
-        if (selectedRole === 'owner') return user.role === 'Chủ nhà';
-        if (selectedRole === 'tenant') return user.role === 'Người thuê';
-        return true;
-      })
-    : users;
+  // Handle search query change
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  // Filter users by role and search query
+  const filteredUsers = users.filter(user => {
+    const roleMatches = selectedRole
+      ? (selectedRole === 'admin' ? user.role === 'Quản trị viên' :
+         selectedRole === 'owner' ? user.role === 'Chủ nhà' :
+         selectedRole === 'tenant' ? user.role === 'Người thuê' : true)
+      : true;
+    
+    const searchMatches = searchQuery.split('').every(char => {
+      return user.name.toLowerCase().includes(char.toLowerCase()) || 
+             user.email.toLowerCase().includes(char.toLowerCase()) || 
+             user.address.toLowerCase().includes(char.toLowerCase());
+    });
+
+    return roleMatches && searchMatches;
+  });
 
   const handleDelete = (id) => {
     setUsers(users.filter(user => user.id !== id));
@@ -76,66 +124,75 @@ const AccountManagementPage = () => {
   };
 
   return (
-
-      <div className="user-table-container">
-        <div className="table-actions">
-          <div className="role-dropdown">
-            <select value={selectedRole} onChange={handleRoleChange}>
-              <option value="">Tất cả vai trò</option>
-              <option value="admin">Quản trị viên</option>
-              <option value="owner">Chủ nhà</option>
-              <option value="tenant">Người thuê</option>
-            </select>
-            <img src={arrowImg} alt="Dropdown arrow" className="dropdown-arrow" />
-          </div>
-          
-          <button className="add-button" onClick={handleAddUser}>
-            <img src={addImg} alt="Add" className="add-icon" />
-            <span>Tạo mới</span>
-          </button>
+    <div className="user-table-container">
+      <div className="table-actions">
+        <div className="role-dropdown">
+          <select value={selectedRole} onChange={handleRoleChange}>
+            <option value="">Tất cả vai trò</option>
+            <option value="admin">Quản trị viên</option>
+            <option value="owner">Chủ nhà</option>
+            <option value="tenant">Người thuê</option>
+          </select>
+          <img src={arrowImg} alt="Dropdown arrow" className="dropdown-arrow" />
         </div>
-        
-        {/* User Table with filtered data */}
-        <table className="user-table">
-          <thead>
-            <tr>
-              <th>Tên</th>
-              <th>Email</th>
-              <th>Địa chỉ</th>
-              <th>Vai trò</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredUsers.length > 0 ? (
-              filteredUsers.map(user => (
-                <tr key={user.id}>
-                  <td>{user.name}</td>
-                  <td>{user.email}</td>
-                  <td>{user.address}</td>
-                  <td>{user.role}</td>
-                  <td className="action-buttons">
-                    <button className="see-button" onClick={() => handleEdit(user.id)}>
-                      <img src={seeImg} alt="Xem" className="see-icon" />
-                    </button>
-                    <button className="edit-button" onClick={() => handleEdit(user.id)}>
-                      <img src={writeImg} alt="Edit" className="edit-icon" />
-                    </button>
-                    <button className="delete-button" onClick={() => handleDelete(user.id)}>
-                      <img src={deleteImg} alt="Delete" className="delete-icon" />
-                    </button>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="5" className="no-users-message">Không tìm thấy người dùng với vai trò này</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+
+        {/* Search input field */}
+        <div className="search-container">
+          <input
+            type="text"
+            placeholder="Tìm kiếm"
+            value={searchQuery}
+            onChange={handleSearchChange}
+            className="search-input"
+          />
+        </div>
+
+        <button className="add-button" onClick={handleAddUser}>
+          <img src={addImg} alt="Add" className="add-icon" />
+          <span>Tạo mới</span>
+        </button>
       </div>
- 
+
+      {/* User Table with filtered data */}
+      <table className="user-table">
+        <thead>
+          <tr>
+            <th>Tên</th>
+            <th>Email</th>
+            <th>Địa chỉ</th>
+            <th>Vai trò</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredUsers.length > 0 ? (
+            filteredUsers.map(user => (
+              <tr key={user.id}>
+                <td>{user.name}</td>
+                <td>{user.email}</td>
+                <td>{user.address}</td>
+                <td>{user.role}</td>
+                <td className="action-buttons">
+                  <button className="see-button" onClick={() => handleEdit(user.id)}>
+                    <img src={seeImg} alt="Xem" className="see-icon" />
+                  </button>
+                  <button className="edit-button" onClick={() => handleEdit(user.id)}>
+                    <img src={writeImg} alt="Edit" className="edit-icon" />
+                  </button>
+                  <button className="delete-button" onClick={() => handleDelete(user.id)}>
+                    <img src={deleteImg} alt="Delete" className="delete-icon" />
+                  </button>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="5" className="no-users-message">Không tìm thấy người dùng với vai trò này</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
   );
 };
 
