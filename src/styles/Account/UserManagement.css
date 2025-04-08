@@ -14,7 +14,7 @@
   position: relative;
 }
 
-.role-dropdown select {
+.role-dropdown-acc select {
   padding: 10px 15px;
   border: 1px solid #ccc;
   border-radius: 5px;
@@ -23,7 +23,9 @@
   background-color: white;
   appearance: none;
 }
-
+.form-input-udt.focused-udt, .form-select-udt.focused-udt {
+   border-color: #f7941d; outline: none; 
+  }
 .dropdown-arrow {
   position: absolute;
   right: 15px;

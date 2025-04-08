@@ -132,9 +132,12 @@
 }
 
 .btn-cancel-udt:hover {
-  background-color: #f7f7f7;
+  background-color: #f7941d;
+  color: white;
 }
 
 .btn-update-udt:hover {
-  background-color: #e5821a;
+  background-color: white;
+  border: 1px solid #f7941d;
+  color: #f7941d;
 }

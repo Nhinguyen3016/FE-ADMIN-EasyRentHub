@@ -123,5 +123,6 @@
   }
   
   .btn-close-seedp:hover {
-    background-color: #f7f7f7;
+    background-color: #f7941d;
+    color: white;
   }

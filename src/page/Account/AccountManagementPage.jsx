@@ -6,6 +6,7 @@ import seeImg from '../../images/see.png';
 import writeImg from '../../images/write.png';
 import deleteImg from '../../images/delete.png';
 import UpdatePage from './components/UpdatePage';
+import SeeDetailPage from './components/SeeDetailPage';
 
 const AccountManagementPage = () => {
   const [users, setUsers] = useState([
@@ -85,6 +86,7 @@ const AccountManagementPage = () => {
   const [selectedRole, setSelectedRole] = useState('');
   const [searchQuery, setSearchQuery] = useState(''); // Search query state
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
   // Handle role change
@@ -125,8 +127,9 @@ const AccountManagementPage = () => {
   };
 
   const handleViewUser = (id) => {
-    // Implementation for viewing user details
-    console.log('View user with id:', id);
+    const userToView = users.find(user => user.id === id);
+    setSelectedUser(userToView);
+    setIsDetailModalOpen(true);
   };
 
   const handleAddUser = () => {
@@ -137,6 +140,11 @@ const AccountManagementPage = () => {
 
   const handleCloseUpdateModal = () => {
     setIsUpdateModalOpen(false);
+    setSelectedUser(null);
+  };
+
+  const handleCloseDetailModal = () => {
+    setIsDetailModalOpen(false);
     setSelectedUser(null);
   };
 
@@ -163,7 +171,7 @@ const AccountManagementPage = () => {
   return (
     <div className="user-table-container">
       <div className="table-actions">
-        <div className="role-dropdown">
+        <div className="role-dropdown-acc">
           <select value={selectedRole} onChange={handleRoleChange}>
             <option value="">Tất cả vai trò</option>
             <option value="admin">Quản trị viên</option>
@@ -236,6 +244,14 @@ const AccountManagementPage = () => {
           user={selectedUser}
           onClose={handleCloseUpdateModal}
           onUpdate={handleUpdateUser}
+        />
+      )}
+
+      {/* User Detail Modal */}
+      {isDetailModalOpen && (
+        <SeeDetailPage 
+          user={selectedUser}
+          onClose={handleCloseDetailModal}
         />
       )}
     </div>
