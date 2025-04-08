@@ -1,0 +1,143 @@
+.update-page-container-udt {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.update-page-content-udt {
+  background-color: white;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 800px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.update-page-title-udt {
+  color: #1a3b8b;
+  font-size: 24px;
+  font-weight: bold;
+  padding: 10px;
+  margin: 0;
+  background-color: #1a3b8b;
+  color: white;
+  border-radius: 4px 4px 0 0;
+}
+
+.update-form-container-udt {
+  display: flex;
+  padding: 20px 10px;
+}
+
+.avatar-section-udt {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.avatar-container-udt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.avatar-preview-udt {
+  width: 180px;
+  height: 180px;
+  border-radius: 5px;
+  object-fit: cover;
+  border: 1px dashed #ccc;
+}
+
+.avatar-label-udt {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #666;
+}
+
+.update-form-udt {
+  flex: 2;
+  padding: 10px;
+}
+
+.form-group-udt {
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.form-input-udt, .form-select-udt {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  background-color: #f7f7f7;
+}
+
+.form-input-udt:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.form-input-udt.focused-udt, .form-select-udt.focused-udt {
+  border-color: #f7941d;
+  outline: none;
+  
+}
+
+.form-label-udt {
+  position: absolute;
+  top: -10px;
+  left: 10px;
+  background-color: white;
+  padding: 0 5px;
+  font-size: 12px;
+  color: #666;
+}
+
+.form-actions-udt {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 30px;
+}
+
+.btn-cancel-udt, .btn-update-udt {
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.btn-cancel-udt {
+  background-color: white;
+  border: 1px solid #f7941d;
+  color: #f7941d;
+}
+
+.btn-update-udt {
+  background-color: #f7941d;
+  border: none;
+  color: white;
+}
+
+.btn-cancel-udt:hover {
+  background-color: #f7941d;
+  color: white;
+}
+
+.btn-update-udt:hover {
+  background-color: white;
+  border: 1px solid #f7941d;
+  color: #f7941d;
+}
