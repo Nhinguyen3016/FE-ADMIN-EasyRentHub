@@ -5,6 +5,7 @@ import addImg from '../../images/add.png';
 import seeImg from '../../images/see.png';
 import writeImg from '../../images/write.png';
 import deleteImg from '../../images/delete.png';
+import UpdatePage from './components/UpdatePage';
 
 const AccountManagementPage = () => {
   const [users, setUsers] = useState([
@@ -83,6 +84,8 @@ const AccountManagementPage = () => {
   // Default empty string for role filtering
   const [selectedRole, setSelectedRole] = useState('');
   const [searchQuery, setSearchQuery] = useState(''); // Search query state
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   // Handle role change
   const handleRoleChange = (e) => {
@@ -116,11 +119,45 @@ const AccountManagementPage = () => {
   };
 
   const handleEdit = (id) => {
-    console.log('Edit user with id:', id);
+    const userToEdit = users.find(user => user.id === id);
+    setSelectedUser(userToEdit);
+    setIsUpdateModalOpen(true);
+  };
+
+  const handleViewUser = (id) => {
+    // Implementation for viewing user details
+    console.log('View user with id:', id);
   };
 
   const handleAddUser = () => {
-    console.log('Add new user');
+    // Set selectedUser to null to create a new user
+    setSelectedUser(null);
+    setIsUpdateModalOpen(true);
+  };
+
+  const handleCloseUpdateModal = () => {
+    setIsUpdateModalOpen(false);
+    setSelectedUser(null);
+  };
+
+  const handleUpdateUser = (updatedUserData) => {
+    if (selectedUser) {
+      // Update existing user
+      setUsers(users.map(user => 
+        user.id === selectedUser.id 
+          ? { ...user, ...updatedUserData } 
+          : user
+      ));
+    } else {
+      // Add new user
+      const newUser = {
+        id: users.length > 0 ? Math.max(...users.map(user => user.id)) + 1 : 1,
+        ...updatedUserData
+      };
+      setUsers([...users, newUser]);
+    }
+    setIsUpdateModalOpen(false);
+    setSelectedUser(null);
   };
 
   return (
@@ -173,7 +210,7 @@ const AccountManagementPage = () => {
                 <td>{user.address}</td>
                 <td>{user.role}</td>
                 <td className="action-buttons">
-                  <button className="see-button" onClick={() => handleEdit(user.id)}>
+                  <button className="see-button" onClick={() => handleViewUser(user.id)}>
                     <img src={seeImg} alt="Xem" className="see-icon" />
                   </button>
                   <button className="edit-button" onClick={() => handleEdit(user.id)}>
@@ -192,6 +229,15 @@ const AccountManagementPage = () => {
           )}
         </tbody>
       </table>
+
+      {/* Update User Modal */}
+      {isUpdateModalOpen && (
+        <UpdatePage 
+          user={selectedUser}
+          onClose={handleCloseUpdateModal}
+          onUpdate={handleUpdateUser}
+        />
+      )}
     </div>
   );
 };

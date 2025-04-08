@@ -38,7 +38,7 @@ const OTPPage = ({ onBack }) => {
                         ))}
                     </div>
                     <button className="otp-submit" onClick={handleSubmit}>
-                        Gửi
+                        Xác nhận
                     </button>
                     <button className="back-to-login-fgp" onClick={onBack}>
                         <FaArrowLeft className="icon-back-fgp" /> Quay lại
