@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom'; 
 import '../../styles/register/RegisterPage.css';
 
 const RegistrationForm = () => {
-  const navigate = useNavigate(); // Tạo instance của useNavigate
+  const navigate = useNavigate(); 
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -24,19 +24,18 @@ const RegistrationForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Handle form submission logic here
     console.log('Form submitted:', formData);
   };
 
-  // Function để quay lại trang trước
+
   const goBack = () => {
-    navigate(-1); // Điều hướng quay lại trang trước
+    navigate(-1);
   };
 
   return (
     <div className="registration-container-rg">
       <div className="back-button-rg">
-        <button onClick={goBack}>&#60;</button> {/* Thêm sự kiện onClick để quay lại */}
+        <button onClick={goBack}>&#60;</button> 
       </div>
       
       <div className="form-container-rg">
@@ -60,17 +59,6 @@ const RegistrationForm = () => {
               name="email"
               placeholder="Email"
               value={formData.email}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          
-          <div className="form-group-rg">
-            <input
-              type="text"
-              name="address"
-              placeholder="Địa chỉ"
-              value={formData.address}
               onChange={handleChange}
               required
             />
