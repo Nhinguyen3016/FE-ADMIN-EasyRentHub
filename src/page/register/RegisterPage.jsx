@@ -8,13 +8,13 @@ const RegistrationForm = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    address: '',
     role: '',
     password: '',
     confirmPassword: ''
   });
 
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -39,7 +39,7 @@ const RegistrationForm = () => {
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validateForm();
 
@@ -48,8 +48,38 @@ const RegistrationForm = () => {
       return;
     }
 
-    console.log('Form submitted:', formData);
-    // Gửi dữ liệu đăng ký đến server tại đây nếu cần
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('http://localhost:5000/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          full_name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          confirmPassword: formData.confirmPassword,
+          role: formData.role
+        })
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Đăng ký không thành công');
+      }
+
+      console.log('Đăng ký thành công:', data);
+      alert('Đăng ký thành công!');
+      navigate('/'); 
+    } catch (error) {
+      console.error('Lỗi đăng ký:', error);
+      setErrors({ submit: error.message || 'Đã xảy ra lỗi khi đăng ký. Vui lòng thử lại.' });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const goBack = () => {
@@ -95,8 +125,8 @@ const RegistrationForm = () => {
               onChange={handleChange}
             >
               <option value="" disabled>Vai trò</option>
-              <option value="user">Tenant</option>
-              <option value="manager">Landlord</option>
+              <option value="Tenant">Tenant</option>
+              <option value="Landlord">Landlord</option>
             </select>
             <div className="select-arrow-rg">&#9662;</div>
             {errors.role && <p className="input-error">{errors.role}</p>}
@@ -134,7 +164,11 @@ const RegistrationForm = () => {
             <label htmlFor="showPassword">Hiển thị mật khẩu</label>
           </div>
 
-          <button type="submit" className="submit-button-rg">Đăng ký</button>
+          {errors.submit && <p className="input-error submit-error">{errors.submit}</p>}
+
+          <button type="submit" className="submit-button-rg" disabled={isSubmitting}>
+            {isSubmitting ? 'Đang xử lý...' : 'Đăng ký'}
+          </button>
         </form>
       </div>
     </div>

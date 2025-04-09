@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../../styles/login/Login.css';
 import googleLogo from '../../images/google.png';
@@ -7,18 +7,50 @@ import ForgotPasswordPage from './components/ForgotPasswordPage';
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
   const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  // Kiểm tra nếu người dùng đã đăng nhập khi component mount
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      // Người dùng đã đăng nhập, chuyển hướng đến trang dashboard
+      navigate('/dashboard');
+    }
+  }, [navigate]);
+
+  // Lưu dữ liệu người dùng vào storage
+  const saveUserData = (data) => {
+    if (data.access_token) {
+      localStorage.setItem('token', data.access_token);
+    }
+    
+    // Lưu thông tin người dùng nếu có
+    if (data.user) {
+      localStorage.setItem('user', JSON.stringify(data.user));
+    }
+    
+    // Lưu thêm các thông tin khác nếu cần
+    if (data.expiresIn) {
+      const expirationTime = new Date().getTime() + data.expiresIn * 1000;
+      localStorage.setItem('tokenExpiration', expirationTime);
+    }
+    
+    if (data.refreshToken) {
+      localStorage.setItem('refreshToken', data.refreshToken);
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     let validationErrors = {};
-    if (!username.trim()) validationErrors.username = 'Tên không được để trống';
+    if (!email.trim()) validationErrors.email = 'Email không được để trống';
     if (!password.trim()) validationErrors.password = 'Mật khẩu không được để trống';
 
     if (Object.keys(validationErrors).length > 0) {
@@ -26,15 +58,47 @@ const Login = () => {
       return;
     }
 
-    console.log('Login attempt with:', { username, password });
-    navigate('/dashboard');
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('http://localhost:5000/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password
+        })
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Đăng nhập không thành công');
+      }
+
+      console.log('Đăng nhập thành công:', data);
+      
+      // Lưu token và thông tin người dùng
+      saveUserData(data);
+      
+      // Chuyển hướng đến trang dashboard
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Lỗi đăng nhập:', error);
+      setErrors({ 
+        submit: error.message || 'Đã xảy ra lỗi khi đăng nhập. Vui lòng kiểm tra email và mật khẩu.' 
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleInputChange = (field, value) => {
-    if (field === 'username') setUsername(value);
+    if (field === 'email') setEmail(value);
     if (field === 'password') setPassword(value);
 
-    // Xóa lỗi ngay khi người dùng nhập
     setErrors((prev) => ({ ...prev, [field]: '' }));
   };
 
@@ -52,13 +116,13 @@ const Login = () => {
             <h1 className="login-title">Đăng nhập</h1>
             <form className="login-form" onSubmit={handleSubmit}>
               <input
-                type="text"
+                type="email"
                 className="login-input"
-                placeholder="Tên"
-                value={username}
-                onChange={(e) => handleInputChange('username', e.target.value)}
+                placeholder="Email"
+                value={email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
               />
-              {errors.username && <p className="input-error">{errors.username}</p>}
+              {errors.email && <p className="input-error">{errors.email}</p>}
 
               <div className="password-container">
                 <input
@@ -70,6 +134,7 @@ const Login = () => {
                 />
               </div>
               {errors.password && <p className="input-error">{errors.password}</p>}
+              {errors.submit && <p className="input-error">{errors.submit}</p>}
 
               <div className="password-options">
                 <button
@@ -89,8 +154,8 @@ const Login = () => {
                 </label>
               </div>
 
-              <button type="submit" className="login-button">
-                Đăng nhập
+              <button type="submit" className="login-button" disabled={isSubmitting}>
+                {isSubmitting ? 'Đang xử lý...' : 'Đăng nhập'}
               </button>
 
               <div className="divider">

@@ -6,25 +6,47 @@ const MessageDialog = ({ onClose, contact }) => {
   const [messages, setMessages] = useState([
     {
       id: 1,
-      sender: 'contact',
-      text: 'Căn hộ này còn sẵn không bạn?',
+      sender: 'admin', // Changed from 'user' to 'admin'
+      text: 'Tôi đã cập nhật thông tin phòng nhưng vẫn chưa hiển thị trên trang chính, admin có thể kiểm tra giúp tôi không?',
       time: '14:35',
       read: true
     },
     {
       id: 2,
-      sender: 'user',
-      text: 'Vâng, căn hộ vẫn còn sẵn. Bạn có muốn xem thêm thông tin không?',
+      sender: 'admin', // Changed from 'user' to 'admin'
+      text: 'Khi tôi thử thanh toán phí dịch vụ, hệ thống báo lỗi. Nhờ admin hỗ trợ xử lý giúp!',
       time: '14:37',
       read: true
     },
     {
-      id: 3,
-      sender: 'contact',
-      text: 'Có ạ. Tôi muốn biết thêm về giá cả và các tiện ích. Căn hộ có bao gồm phí gửi xe và wifi không?',
-      time: '14:40',
-      read: true
+      id: 4,
+      sender: 'admin', // Changed from 'user' to 'admin'
+      text: 'Tôi không nhận được thông báo khi có người thuê gửi yêu cầu. Có phải hệ thống đang gặp lỗi không?',
+      time: '14:42',
+      read: false
+    },
+    {
+      id: 5,
+      sender: 'user', // Changed from 'admin' to 'user'
+      text: 'Chào bạn, chúng tôi sẽ kiểm tra hệ thống thông báo và phản hồi lại sớm nhất có thể.',
+      time: '14:43',
+      read: false
+    },
+    {
+      id: 6,
+      sender: 'admin', // Changed from 'user' to 'admin'
+      text: 'Tôi liên tục bị đăng xuất khỏi hệ thống. Có phải có vấn đề về bảo mật hoặc đăng nhập không?',
+      time: '14:45',
+      read: false
+    },
+    {
+      id: 7,
+      sender: 'user', // Changed from 'admin' to 'user'
+      text: 'Cảm ơn bạn đã báo lỗi. Bạn vui lòng thử xóa cache trình duyệt hoặc gửi mã lỗi cụ thể để chúng tôi kiểm tra chi tiết hơn.',
+      time: '14:46',
+      read: false
     }
+    
   ]);
   const [isTyping] = useState(true);
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
@@ -36,7 +58,7 @@ const MessageDialog = ({ onClose, contact }) => {
     
     const newMessage = {
       id: messages.length + 1,
-      sender: 'user',
+      sender: 'user', // Changed from 'user' to 'user' (admin sending the message)
       text: message,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       read: false
@@ -79,7 +101,7 @@ const MessageDialog = ({ onClose, contact }) => {
     
     const newMessage = {
       id: messages.length + 1,
-      sender: 'user',
+      sender: 'user', // Changed from 'user' to 'user' (admin sending the message)
       text: `Đã gửi file: ${file.name}`,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       read: false,
@@ -99,7 +121,7 @@ const MessageDialog = ({ onClose, contact }) => {
     
     const newMessage = {
       id: messages.length + 1,
-      sender: 'user',
+      sender: 'user', // Changed from 'user' to 'user' (admin sending the message)
       text: `Đã gửi hình ảnh: ${file.name}`,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       read: false,
@@ -170,7 +192,15 @@ const MessageDialog = ({ onClose, contact }) => {
       <div className="message-header">
         <div className="contact-info">
           <div className="profile-image">
-            <div className="profile-placeholder"></div>
+            {contact?.avatar ? (
+              <img 
+                src={contact.avatar} 
+                alt={`Avatar của ${contact.name || 'Trần Thị Hoa'}`} 
+                className="profile-avatar"
+              />
+            ) : (
+              <div className="profile-placeholder"></div>
+            )}
           </div>
           <div className="contact-details">
             <h3>{contact?.name || 'Trần Thị Hoa'}</h3>
@@ -217,7 +247,7 @@ const MessageDialog = ({ onClose, contact }) => {
               <span></span>
               <span></span>
             </div>
-            <p>Trần Thị Hoa đang nhập...</p>
+            <p> đang nhập...</p>
           </div>
         )}
       </div>
