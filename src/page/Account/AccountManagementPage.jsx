@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
-import '../../styles/Account/UserManagement.css';
+// Import các biểu tượng từ thư viện của bạn hoặc sử dụng các hình ảnh đã có
 import arrowImg from '../../images/arrow.png';
 import addImg from '../../images/add.png';
 import seeImg from '../../images/see.png';
 import writeImg from '../../images/write.png';
 import deleteImg from '../../images/delete.png';
+// Import các components
 import UpdatePage from './components/UpdatePage';
 import SeeDetailPage from './components/SeeDetailPage';
+import AddAccountPage from './components/AddAccountPage';
+// Import CSS
+import '../../styles/Account/UserManagement.css';
 
 const AccountManagementPage = () => {
   const [users, setUsers] = useState([
@@ -29,7 +33,7 @@ const AccountManagementPage = () => {
       name: 'Lê Minh Hoàng',
       email: 'hoang.le@example.com',
       address: '78 Trường Chinh, Quận Thanh Xuân, Hà Nội',
-      role: 'Người thuê'
+      role: 'Chủ nhà'
     },
     {
       id: 4,
@@ -40,43 +44,43 @@ const AccountManagementPage = () => {
     },
     {
       id: 5,
-      name: 'Đặng HoaHoa',
+      name: 'Đặng Thu Hương',
       email: 'thuhuong.dang@example.com',
       address: '56 Hoàng Diệu, TP. Nha Trang, Khánh Hòa',
       role: 'Người thuê'
     },
     {
       id: 6,
-      name: 'ĐHương',
-      email: 'thuhuong.dang@example.com',
+      name: 'Đinh Hương',
+      email: 'dinh.huong@example.com',
       address: '56 Hoàng Diệu, TP. Nha Trang, Khánh Hòa',
-      role: 'Người thuê'
+      role: 'Chủ nhà'
     },
     {
       id: 7,
-      name: 'Đặng',
-      email: 'thuhuong.dang@example.com',
+      name: 'Đặng Minh',
+      email: 'minh.dang@example.com',
       address: '56 Hoàng Diệu, TP. Nha Trang, Khánh Hòa',
       role: 'Người thuê'
     },
     {
       id: 8,
       name: 'Thu Hương',
-      email: 'thuhuong.dang@example.com',
+      email: 'thu.huong@example.com',
       address: '56 Hoàng Diệu, TP. Nha Trang, Khánh Hòa',
       role: 'Người thuê'
     },
     {
       id: 9,
       name: 'Đặng Thị',
-      email: 'thuhuong.dang@example.com',
+      email: 'thi.dang@example.com',
       address: '56 Hoàng Diệu, TP. Nha Trang, Khánh Hòa',
       role: 'Người thuê'
     },
     {
       id: 10,
-      name: 'Đặng Thị Thu ',
-      email: 'thuhuong.dang@example.com',
+      name: 'Đặng Thị Thu',
+      email: 'thithu.dang@example.com',
       address: '56 Hoàng Diệu, TP. Nha Trang, Khánh Hòa',
       role: 'Người thuê'
     }
@@ -87,6 +91,7 @@ const AccountManagementPage = () => {
   const [searchQuery, setSearchQuery] = useState(''); // Search query state
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
   // Handle role change
@@ -107,17 +112,18 @@ const AccountManagementPage = () => {
          selectedRole === 'tenant' ? user.role === 'Người thuê' : true)
       : true;
     
-    const searchMatches = searchQuery.split('').every(char => {
-      return user.name.toLowerCase().includes(char.toLowerCase()) || 
-             user.email.toLowerCase().includes(char.toLowerCase()) || 
-             user.address.toLowerCase().includes(char.toLowerCase());
-    });
+    const searchMatches = searchQuery === '' || 
+      user.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      user.email.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      user.address.toLowerCase().includes(searchQuery.toLowerCase());
 
     return roleMatches && searchMatches;
   });
 
   const handleDelete = (id) => {
-    setUsers(users.filter(user => user.id !== id));
+    if (window.confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
+      setUsers(users.filter(user => user.id !== id));
+    }
   };
 
   const handleEdit = (id) => {
@@ -133,9 +139,8 @@ const AccountManagementPage = () => {
   };
 
   const handleAddUser = () => {
-    // Set selectedUser to null to create a new user
-    setSelectedUser(null);
-    setIsUpdateModalOpen(true);
+    // Mở modal thêm tài khoản mới
+    setIsAddModalOpen(true);
   };
 
   const handleCloseUpdateModal = () => {
@@ -148,54 +153,66 @@ const AccountManagementPage = () => {
     setSelectedUser(null);
   };
 
+  const handleCloseAddModal = () => {
+    setIsAddModalOpen(false);
+  };
+
   const handleUpdateUser = (updatedUserData) => {
-    if (selectedUser) {
-      // Update existing user
-      setUsers(users.map(user => 
-        user.id === selectedUser.id 
-          ? { ...user, ...updatedUserData } 
-          : user
-      ));
-    } else {
-      // Add new user
-      const newUser = {
-        id: users.length > 0 ? Math.max(...users.map(user => user.id)) + 1 : 1,
-        ...updatedUserData
-      };
-      setUsers([...users, newUser]);
-    }
+    // Update existing user
+    setUsers(users.map(user => 
+      user.id === selectedUser.id 
+        ? { ...user, ...updatedUserData } 
+        : user
+    ));
+    
     setIsUpdateModalOpen(false);
     setSelectedUser(null);
   };
 
+  const handleCreateUser = (newUserData) => {
+    // Add new user
+    const newUser = {
+      id: users.length > 0 ? Math.max(...users.map(user => user.id)) + 1 : 1,
+      ...newUserData
+    };
+    setUsers([...users, newUser]);
+    setIsAddModalOpen(false);
+  };
+
   return (
     <div className="user-table-container">
+      <h1 className="account-management-title">Quản lý tài khoản</h1>
+      
       <div className="table-actions">
-        <div className="role-dropdown-acc">
-          <select value={selectedRole} onChange={handleRoleChange}>
-            <option value="">Tất cả vai trò</option>
-            <option value="admin">Quản trị viên</option>
-            <option value="owner">Chủ nhà</option>
-            <option value="tenant">Người thuê</option>
-          </select>
-          <img src={arrowImg} alt="Dropdown arrow" className="dropdown-arrow" />
-        </div>
-
-        {/* Search input field */}
+        {/* Search input field - căn trái */}
         <div className="search-container">
           <input
             type="text"
-            placeholder="Tìm kiếm"
+            placeholder="Tìm kiếm người dùng..."
             value={searchQuery}
             onChange={handleSearchChange}
             className="search-input"
           />
+          <span className="search-icon">🔍</span>
         </div>
 
-        <button className="add-button" onClick={handleAddUser}>
-          <img src={addImg} alt="Add" className="add-icon" />
-          <span>Tạo mới</span>
-        </button>
+        {/* Container cho các thành phần bên phải */}
+        <div className="right-actions">
+          <div className="role-dropdown-acc">
+            <select value={selectedRole} onChange={handleRoleChange}>
+              <option value="">Tất cả vai trò</option>
+              <option value="admin">Quản trị viên</option>
+              <option value="owner">Chủ nhà</option>
+              <option value="tenant">Người thuê</option>
+            </select>
+            <img src={arrowImg} alt="Dropdown arrow" className="dropdown-arrow" />
+          </div>
+
+          <button className="add-button" onClick={handleAddUser}>
+            <img src={addImg} alt="Add" className="add-icon" />
+            <span>Tạo mới</span>
+          </button>
+        </div>
       </div>
 
       {/* User Table with filtered data */}
@@ -206,7 +223,7 @@ const AccountManagementPage = () => {
             <th>Email</th>
             <th>Địa chỉ</th>
             <th>Vai trò</th>
-            <th></th>
+            <th>Thao tác</th>
           </tr>
         </thead>
         <tbody>
@@ -216,7 +233,14 @@ const AccountManagementPage = () => {
                 <td>{user.name}</td>
                 <td>{user.email}</td>
                 <td>{user.address}</td>
-                <td>{user.role}</td>
+                <td>
+                  <span className={`role-badge ${
+                    user.role === 'Quản trị viên' ? 'admin-role' :
+                    user.role === 'Chủ nhà' ? 'owner-role' : 'tenant-role'
+                  }`}>
+                    {user.role}
+                  </span>
+                </td>
                 <td className="action-buttons">
                   <button className="see-button" onClick={() => handleViewUser(user.id)}>
                     <img src={seeImg} alt="Xem" className="see-icon" />
@@ -232,13 +256,21 @@ const AccountManagementPage = () => {
             ))
           ) : (
             <tr>
-              <td colSpan="5" className="no-users-message">Không tìm thấy người dùng với vai trò này</td>
+              <td colSpan="5" className="no-users-message">Không tìm thấy người dùng phù hợp</td>
             </tr>
           )}
         </tbody>
       </table>
-
-      {/* Update User Modal */}
+      
+      {/* Thêm tài khoản mới Modal */}
+      {isAddModalOpen && (
+        <AddAccountPage 
+          onClose={handleCloseAddModal}
+          onAdd={handleCreateUser}
+        />
+      )}
+      
+      {/* Cập nhật thông tin Modal */}
       {isUpdateModalOpen && (
         <UpdatePage 
           user={selectedUser}
@@ -247,7 +279,7 @@ const AccountManagementPage = () => {
         />
       )}
 
-      {/* User Detail Modal */}
+      {/* Xem chi tiết Modal */}
       {isDetailModalOpen && (
         <SeeDetailPage 
           user={selectedUser}

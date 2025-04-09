@@ -19,6 +19,8 @@ const EstateManagement = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedEstate, setSelectedEstate] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 9;
 
   // Sample data based on schema
   const estates = [
@@ -401,198 +403,6 @@ const EstateManagement = () => {
       distance: 4.1,
       createdAt: '2025-03-28T15:20:00',
       updatedAt: '2025-04-03T11:45:00',
-    },
-    {
-      id: '11',
-      name: 'Phòng trọ sinh viên Thủ Đức',
-      address: {
-        house_number: 75,
-        road: 'Đường số 8',
-        quarter: 'Linh Trung',
-        city: 'Hồ Chí Minh',
-        country: 'Việt Nam',
-        lat: '10.8712',
-        lng: '106.7913'
-      },
-      images: [
-        bd3,
-        bd5,
-      ],
-      rating_star: 3.7,
-      price: 2400000,
-      rental: true,
-      property: {
-        bedroom: 1,
-        bathroom: 1,
-        floors: 1
-      },
-      status: 'pending',
-      likes: ['user16'],
-      reviews: ['review22'],
-      user: {
-        _id: 'user108',
-        name: 'Nguyễn Thị Mai',
-        email: 'mai@example.com',
-        phone: '0967890123'
-      },
-      distance: 2.8,
-      createdAt: '2025-04-03T09:10:00',
-      updatedAt: '2025-04-03T09:10:00',
-    },
-    {
-      id: '12',
-      name: 'Villa nghỉ dưỡng Bảo Lộc',
-      address: {
-        house_number: 42,
-        road: 'Đường Trần Phú',
-        quarter: 'Phường 2',
-        city: 'Bảo Lộc',
-        country: 'Việt Nam',
-        lat: '11.5448',
-        lng: '107.8283'
-      },
-      images: [
-        bd7,
-        bd8,
-        bd6,
-        bd2,
-      ],
-      rating_star: 4.8,
-      price: 7800000,
-      rental: true,
-      property: {
-        bedroom: 4,
-        bathroom: 3,
-        floors: 2
-      },
-      status: 'available',
-      likes: ['user2', 'user5', 'user9', 'user12', 'user17'],
-      reviews: ['review23', 'review24', 'review25'],
-      user: {
-        _id: 'user109',
-        name: 'Trần Đức Hiếu',
-        email: 'hieu@example.com',
-        phone: '0978901234'
-      },
-      distance: 1.9,
-      createdAt: '2025-03-15T14:30:00',
-      updatedAt: '2025-04-02T10:15:00',
-    },
-    {
-      id: '13',
-      name: 'Căn hộ River City Thủ Thiêm',
-      address: {
-        house_number: 34,
-        road: 'Mai Chí Thọ',
-        quarter: 'Thủ Thiêm',
-        city: 'Hồ Chí Minh',
-        country: 'Việt Nam',
-        lat: '10.7738',
-        lng: '106.7512'
-      },
-      images: [
-        bd1,
-        bd3,
-        bd2,
-      ],
-      rating_star: 4.7,
-      price: 13000000,
-      rental: true,
-      property: {
-        bedroom: 3,
-        bathroom: 2,
-        floors: 1
-      },
-      status: 'booked',
-      likes: ['user3', 'user6', 'user11', 'user18'],
-      reviews: ['review26', 'review27', 'review28'],
-      user: {
-        _id: 'user110',
-        name: 'Lê Thị Hương',
-        email: 'huong@example.com',
-        phone: '0989012345'
-      },
-      distance: 5.6,
-      createdAt: '2025-03-25T11:20:00',
-      updatedAt: '2025-04-04T16:45:00',
-    },
-    {
-      id: '14',
-      name: 'Nhà phố trung tâm Hội An',
-      address: {
-        house_number: 15,
-        road: 'Trần Phú',
-        quarter: 'Minh An',
-        city: 'Hội An',
-        country: 'Việt Nam',
-        lat: '15.8845',
-        lng: '108.3348'
-      },
-      images: [
-        bd4,
-        bd6,
-        bd8,
-        bd5,
-      ],
-      rating_star: 4.9,
-      price: 8900000,
-      rental: true,
-      property: {
-        bedroom: 3,
-        bathroom: 2,
-        floors: 2
-      },
-      status: 'available',
-      likes: ['user1', 'user7', 'user13', 'user19', 'user20', 'user21'],
-      reviews: ['review29', 'review30', 'review31', 'review32'],
-      user: {
-        _id: 'user111',
-        name: 'Nguyễn Anh Dũng',
-        email: 'dung@example.com',
-        phone: '0990123456'
-      },
-      distance: 0.8,
-      createdAt: '2025-03-18T09:30:00',
-      updatedAt: '2025-04-01T14:15:00',
-    },
-    {
-      id: '15',
-      name: 'Căn hộ duplex Landmark 81',
-      address: {
-        house_number: 720,
-        road: 'Điện Biên Phủ',
-        quarter: 'Bình Thạnh',
-        city: 'Hồ Chí Minh',
-        country: 'Việt Nam',
-        lat: '10.7952',
-        lng: '106.7215'
-      },
-      images: [
-        bd2,
-        bd1,
-        bd3,
-        bd5,
-      ],
-      rating_star: 5.0,
-      price: 25000000,
-      rental: true,
-      property: {
-        bedroom: 4,
-        bathroom: 3,
-        floors: 2
-      },
-      status: 'booked',
-      likes: ['user4', 'user8', 'user12', 'user16', 'user20', 'user22', 'user23'],
-      reviews: ['review33', 'review34', 'review35', 'review36', 'review37'],
-      user: {
-        _id: 'user112',
-        name: 'Trần Bình Minh',
-        email: 'minh@example.com',
-        phone: '0901234567'
-      },
-      distance: 3.9,
-      createdAt: '2025-03-10T16:45:00',
-      updatedAt: '2025-04-02T13:20:00',
     }
   ];
 
@@ -605,6 +415,34 @@ const EstateManagement = () => {
       if (activeTab === 'booked') return estate.status === 'booked';
       return true;
     });
+  };
+
+  // Get current items for pagination
+  const getCurrentItems = () => {
+    const filteredEstates = getFilteredEstates();
+    const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
+    const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
+    return filteredEstates.slice(indexOfFirstItem, indexOfLastItem);
+  };
+
+  // Total pages calculation
+  const totalPages = Math.ceil(getFilteredEstates().length / ITEMS_PER_PAGE);
+
+  // Change page
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  // Go to previous page
+  const prevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  // Go to next page
+  const nextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
   };
 
   // Show post details
@@ -738,25 +576,37 @@ const EstateManagement = () => {
         <div className="filter-container">
           <div className="filter-tabs">
             <button
-              onClick={() => setActiveTab('all')}
+              onClick={() => {
+                setActiveTab('all');
+                setCurrentPage(1);
+              }}
               className={`filter-tab ${activeTab === 'all' ? 'filter-tab-active filter-tab-blue' : ''}`}
             >
               Tất cả
             </button>
             <button
-              onClick={() => setActiveTab('available')}
+              onClick={() => {
+                setActiveTab('available');
+                setCurrentPage(1);
+              }}
               className={`filter-tab ${activeTab === 'available' ? 'filter-tab-active filter-tab-green' : ''}`}
             >
               Có sẵn
             </button>
             <button
-              onClick={() => setActiveTab('pending')}
+              onClick={() => {
+                setActiveTab('pending');
+                setCurrentPage(1);
+              }}
               className={`filter-tab ${activeTab === 'pending' ? 'filter-tab-active filter-tab-yellow' : ''}`}
             >
               Chờ duyệt
             </button>
             <button
-              onClick={() => setActiveTab('booked')}
+              onClick={() => {
+                setActiveTab('booked');
+                setCurrentPage(1);
+              }}
               className={`filter-tab ${activeTab === 'booked' ? 'filter-tab-active filter-tab-blue' : ''}`}
             >
               Đã đặt
@@ -769,7 +619,7 @@ const EstateManagement = () => {
 
         {/* Estates Grid */}
         <div className="estates-grid">
-          {getFilteredEstates().map((estate) => (
+          {getCurrentItems().map((estate) => (
             <div key={estate.id} className="estate-card">
               <div className="estate-card-image-container">
                 <img 
@@ -830,16 +680,36 @@ const EstateManagement = () => {
         {/* Pagination */}
         <div className="pagination-container">
           <div className="pagination-info">
-            Hiển thị <span className="pagination-info-bold">1</span> đến <span className="pagination-info-bold">5</span> của <span className="pagination-info-bold">132</span> bài đăng
+            Hiển thị <span className="pagination-info-bold">
+              {(currentPage - 1) * ITEMS_PER_PAGE + 1}
+            </span> đến <span className="pagination-info-bold">
+              {Math.min(currentPage * ITEMS_PER_PAGE, getFilteredEstates().length)}
+            </span> của <span className="pagination-info-bold">{getFilteredEstates().length}</span> bài đăng
           </div>
           <nav className="pagination-nav">
-            <button className="pagination-btn">
+            <button 
+              className="pagination-btn" 
+              onClick={prevPage}
+              disabled={currentPage === 1}
+            >
               Trước
             </button>
-            <button className="pagination-btn pagination-btn-active">1</button>
-            <button className="pagination-btn">2</button>
-            <button className="pagination-btn">3</button>
-            <button className="pagination-btn">
+            
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button 
+                key={i + 1}
+                onClick={() => paginate(i + 1)}
+                className={`pagination-btn ${currentPage === i + 1 ? 'pagination-btn-active' : ''}`}
+              >
+                {i + 1}
+              </button>
+            ))}
+            
+            <button 
+              className="pagination-btn" 
+              onClick={nextPage}
+              disabled={currentPage === totalPages}
+            >
               Sau
             </button>
           </nav>

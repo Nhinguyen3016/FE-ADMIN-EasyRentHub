@@ -20,7 +20,7 @@ const UpdatePage = ({ user, onClose, onUpdate }) => {
         name: user.name || '',
         email: user.email || '',
         address: user.address || '',
-        role: user.role || 'Admin',
+        role: user.role || 'Quản trị viên',
         avatar: null
       });
     }
@@ -67,7 +67,9 @@ const UpdatePage = ({ user, onClose, onUpdate }) => {
   return (
     <div className="update-page-container-udt">
       <div className="update-page-content-udt">
-        <h1 className="update-page-title-udt">Chỉnh sửa tài khoản</h1>
+        <div className="update-page-header-udt">
+          <h1 className="update-page-title-udt">Chỉnh sửa tài khoản</h1>
+        </div>
         
         <div className="update-form-container-udt">
           <div className="avatar-section-udt">
@@ -77,60 +79,75 @@ const UpdatePage = ({ user, onClose, onUpdate }) => {
                 alt="Ảnh đại diện" 
                 className="avatar-preview-udt" 
               />
+              <div className="avatar-upload-btn-udt">
+                <label htmlFor="avatar" className="custom-file-upload-udt">
+                  <i className="upload-icon-udt"></i>
+                  Tải lên ảnh mới
+                </label>
+                <input 
+                  type="file"
+                  id="avatar"
+                  name="avatar"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="avatar-input-udt"
+                />
+              </div>
               <span className="avatar-label-udt">Ảnh đại diện</span>
             </div>
           </div>
           
           <form className="update-form-udt" onSubmit={handleSubmit}>
             <div className="form-group-udt">
+              <label className="form-label-udt" htmlFor="name">Họ và tên</label>
               <input
                 type="text"
                 id="name"
                 name="name"
                 value={userData.name}
                 onChange={handleChange}
-                placeholder="Họ và tên"
+                placeholder="Nguyễn Thị Tố Nhi"
                 className={`form-input-udt ${focusedField === 'name' ? 'focused-udt' : ''}`}
                 onFocus={() => handleFocus('name')}
                 onBlur={handleBlur}
                 disabled
               />
-              <label className="form-label-udt">{userData.name || "Nguyễn Thị Tố Nhi"}</label>
             </div>
             
             <div className="form-group-udt">
+              <label className="form-label-udt" htmlFor="email">Email</label>
               <input
                 type="email"
                 id="email"
                 name="email"
                 value={userData.email}
                 onChange={handleChange}
-                placeholder="Email"
+                placeholder="tonhi3016@gmail.com"
                 className={`form-input-udt ${focusedField === 'email' ? 'focused-udt' : ''}`}
                 onFocus={() => handleFocus('email')}
                 onBlur={handleBlur}
                 disabled
               />
-              <label className="form-label-udt">{userData.email || "tonhi3016@gmail.com"}</label>
             </div>
             
             <div className="form-group-udt">
+              <label className="form-label-udt" htmlFor="address">Địa chỉ</label>
               <input
                 type="text"
                 id="address"
                 name="address"
                 value={userData.address}
                 onChange={handleChange}
-                placeholder="Địa chỉ"
+                placeholder="Quế Sơn, Quảng Nam"
                 className={`form-input-udt ${focusedField === 'address' ? 'focused-udt' : ''}`}
                 onFocus={() => handleFocus('address')}
                 onBlur={handleBlur}
                 disabled
               />
-              <label className="form-label-udt">{userData.address || "Quế Sơn,Quảng Nam"}</label>
             </div>
             
             <div className="form-group-udt">
+              <label className="form-label-udt" htmlFor="role">Vai trò</label>
               <select
                 id="role"
                 name="role"
@@ -140,11 +157,10 @@ const UpdatePage = ({ user, onClose, onUpdate }) => {
                 onFocus={() => handleFocus('role')}
                 onBlur={handleBlur}
               >
-                <option value="Admin">Admin</option>
+                <option value="Quản trị viên">Quản trị viên</option>
                 <option value="Chủ nhà">Chủ nhà</option>
                 <option value="Người thuê">Người thuê</option>
               </select>
-              <label className="form-label-udt">Role</label>
             </div>
             
             <div className="form-actions-udt">

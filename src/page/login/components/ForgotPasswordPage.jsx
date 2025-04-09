@@ -1,16 +1,34 @@
 import React, { useState } from 'react';
-import { FaArrowLeft } from 'react-icons/fa'; 
-import OTPPage from './OTPPage'; 
+import { FaArrowLeft } from 'react-icons/fa';
+import OTPPage from './OTPPage';
 import '../../../styles/login/component/ForgotPasswordPage.css';
 
 const ForgotPasswordPage = ({ onBack }) => {
     const [email, setEmail] = useState('');
-    const [showOTP, setShowOTP] = useState(false); 
+    const [emailError, setEmailError] = useState('');
+    const [showOTP, setShowOTP] = useState(false);
+
+    const validateEmail = (email) => {
+        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return regex.test(email);
+    };
 
     const handleForgotPassword = (e) => {
         e.preventDefault();
+
+        if (!validateEmail(email)) {
+            setEmailError('Email không hợp lệ');
+            return;
+        }
+
+        setEmailError('');
         console.log('Gửi yêu cầu reset mật khẩu:', email);
-        setShowOTP(true); 
+        setShowOTP(true);
+    };
+
+    const handleEmailChange = (e) => {
+        setEmail(e.target.value);
+        setEmailError(''); // Xóa lỗi khi bắt đầu nhập
     };
 
     return (
@@ -26,9 +44,10 @@ const ForgotPasswordPage = ({ onBack }) => {
                             className="login-input-fgp"
                             placeholder="Nhập email của bạn"
                             value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
+                            onChange={handleEmailChange}
                         />
+                        {emailError && <p className="input-error">{emailError}</p>}
+
                         <button type="submit" className="login-button-fgp">
                             Gửi yêu cầu
                         </button>
