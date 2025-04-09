@@ -45,3 +45,11 @@
 .otp-submit:hover {
     background-color: #7fa523;
 }
+.otp-error {
+    color: red;
+    font-size: 0.85rem;
+    margin-top: 6px;
+    text-align: left;
+    margin-left: 4px;
+  }
+  

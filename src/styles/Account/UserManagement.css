@@ -1,124 +1,260 @@
-/* Table container styles - keep only the specific styles for UserManagement */
+/* Tệp UserManagement.css - CSS được cải thiện cho trang quản lý tài khoản */
+
+/* Container chính */
 .user-table-container {
   width: 100%;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
+/* Tiêu đề trang */
+.account-management-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 24px;
+  color: #333;
+}
+
+/* Khu vực hành động phía trên bảng */
 .table-actions {
   display: flex;
-  justify-content: flex-end;
-  gap: 10px;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
-.role-dropdown {
+/* Container cho các thành phần bên phải */
+.right-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Search input */
+.search-container {
   position: relative;
+  max-width: 250px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.5rem 0.5rem 0.5rem 2.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  transition: border-color 0.3s;
+}
+
+.search-input:focus {
+  border-color: #f7941d;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(247, 148, 29, 0.2);
+}
+
+.search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+}
+
+/* Dropdown role */
+.role-dropdown-acc {
+  position: relative;
+  min-width: 180px;
 }
 
 .role-dropdown-acc select {
+  width: 100%;
   padding: 10px 15px;
-  border: 1px solid #ccc;
+  border: 1px solid #ddd;
   border-radius: 5px;
   font-size: 14px;
-  width: 200px;
   background-color: white;
   appearance: none;
+  cursor: pointer;
+  transition: border-color 0.3s;
 }
-.form-input-udt.focused-udt, .form-select-udt.focused-udt {
-   border-color: #f7941d; outline: none; 
-  }
+
+.role-dropdown-acc select:focus {
+  border-color: #f7941d;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(247, 148, 29, 0.2);
+}
+
 .dropdown-arrow {
   position: absolute;
   right: 15px;
   top: 50%;
   transform: translateY(-50%);
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   pointer-events: none;
 }
 
+/* Add button */
 .add-button {
+  display: flex;
+  align-items: center;
   background-color: #2563eb;
   color: white;
   border: none;
   border-radius: 5px;
-  padding: 10px 20px;
-  display: flex;
-  align-items: center;
+  padding: 10px 16px;
+  font-size: 14px;
   cursor: pointer;
+  transition: background-color 0.3s;
+  white-space: nowrap;
+}
+
+.add-button:hover {
+  background-color: #1d4ed8;
 }
 
 .add-icon {
-  margin-right: 8px;
   width: 16px;
   height: 16px;
+  margin-right: 8px;
 }
 
-/* Table styles */
+/* User table */
 .user-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   background-color: white;
   border-radius: 5px;
   overflow: hidden;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .user-table th,
 .user-table td {
-  padding: 15px;
+  padding: 14px 16px;
   text-align: left;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid #eee;
 }
 
 .user-table th {
-  background-color: white;
-  font-weight: normal;
-  color: #333;
+  background-color: #f9fafb;
+  font-weight: 500;
+  color: #6b7280;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
+.user-table tr:last-child td {
+  border-bottom: none;
+}
+
+.user-table tr:hover {
+  background-color: #f9fafb;
+}
+
+/* Role badges */
+.role-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.admin-role {
+  background-color: #FEF7E9;
+  color: #f46f03;
+}
+
+.owner-role {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.tenant-role {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+/* Action buttons */
 .action-buttons {
   display: flex;
   gap: 10px;
+  justify-content: flex-end;
 }
 
-.edit-button,
-.delete-button,
-.see-button {
+.see-button, .edit-button, .delete-button {
   background: none;
   border: none;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 5px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
 }
 
-.edit-icon,
-.delete-icon,
-.see-icon {
+.see-button:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.edit-button:hover {
+  background-color: rgba(247, 148, 29, 0.1);
+}
+
+.delete-button:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.see-icon, .edit-icon, .delete-icon {
   width: 18px;
   height: 18px;
 }
 
+/* No users message */
 .no-users-message {
   text-align: center;
   padding: 20px;
-  color: #666;
-}
-.search-container {
-  margin-left: 10px;
-  position: relative;
+  color: #6b7280;
 }
 
-.search-input {
-  padding: 10px 15px;
-  border: 1px solid #ccc;
+/* Form input & select styles for modals */
+.form-input-udt, .form-select-udt {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
   border-radius: 5px;
   font-size: 14px;
-  width: 250px;
-  background-color: white;
+  transition: border-color 0.3s;
 }
 
-.search-input:focus {
-  border-color: #ff9844;
+.form-input-udt:focus, .form-select-udt:focus {
+  border-color: #f7941d;
   outline: none;
+}
+
+.form-input-udt.focused-udt, .form-select-udt.focused-udt {
+  border-color: #f7941d;
+  outline: none;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .table-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .right-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .search-container {
+    max-width: 100%;
+    width: 100%;
+  }
 }

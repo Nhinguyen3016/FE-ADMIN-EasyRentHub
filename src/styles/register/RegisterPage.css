@@ -148,6 +148,13 @@ input::placeholder {
 input:focus,
 select:focus {
   outline: none;
-  border: 2px solid #8ac640; /* Viền khi focus */
-  transition: border-color 0.3s ease; /* Hiệu ứng chuyển viền */
+  border: 2px solid #8ac640; 
+  transition: border-color 0.3s ease; 
+}
+.input-error {
+  color: red;
+  font-size: 0.85rem;
+  margin-top: 4px;
+  margin-left: 4px;
+  text-align: left;
 }
