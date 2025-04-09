@@ -18,9 +18,21 @@ const Login = () => {
   // Kiểm tra nếu người dùng đã đăng nhập khi component mount
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token) {
-      // Người dùng đã đăng nhập, chuyển hướng đến trang dashboard
-      navigate('/dashboard');
+    const userData = localStorage.getItem('user');
+    
+    if (token && userData) {
+      try {
+        const user = JSON.parse(userData);
+        // Chỉ chuyển hướng đến dashboard nếu là Admin
+        if (user.role === 'Admin') {
+          navigate('/dashboard');
+        }
+      } catch (e) {
+        console.error('Error parsing user data:', e);
+        // Xóa dữ liệu không hợp lệ
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
     }
   }, [navigate]);
 
@@ -83,8 +95,19 @@ const Login = () => {
       // Lưu token và thông tin người dùng
       saveUserData(data);
       
-      // Chuyển hướng đến trang dashboard
-      navigate('/dashboard');
+      // Kiểm tra role của người dùng
+      if (data.user && data.user.role === 'Admin') {
+        // Nếu là Admin thì chuyển hướng đến dashboard
+        navigate('/dashboard');
+      } else {
+        // Nếu không phải Admin thì hiển thị thông báo lỗi
+        setErrors({
+          submit: 'Bạn không có quyền truy cập vào hệ thống quản trị. Chỉ tài khoản Admin mới có thể đăng nhập.'
+        });
+        // Xóa token và thông tin người dùng nếu không phải Admin
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
     } catch (error) {
       console.error('Lỗi đăng nhập:', error);
       setErrors({ 
