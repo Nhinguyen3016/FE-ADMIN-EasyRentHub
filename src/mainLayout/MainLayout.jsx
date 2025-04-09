@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLocation, Outlet, Link } from 'react-router-dom';
+import { useLocation, Outlet, Link, useNavigate } from 'react-router-dom';
 import '../styles/mainLayout/MainLayout.css';
 import logoImg from '../images/logo.png';
 import dashboardImg from '../images/dashboard.png';
@@ -8,14 +8,15 @@ import userImg from '../images/user.png';
 import logoutImg from '../images/logout.png';
 import backgroundImg from '../images/Home_background.jpg';
 import notificationImg from '../images/notification.png';  
+
 const MainLayout = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const pathname = location.pathname;
 
   const getActivePage = () => {
     if (pathname === '/dashboard') return 'dashboard';
     if (pathname === '/account') return 'user';
-
     if (pathname === '/post') return 'post';
     if (pathname === '/messageManagement') return 'messageManagement';
     return '';
@@ -23,8 +24,43 @@ const MainLayout = () => {
 
   const activePage = getActivePage();
 
-  const handleLogout = () => {
-    window.location.href = '/';
+  const handleLogout = async () => {
+    try {
+      
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+       
+        localStorage.clear();
+        navigate('/');
+        return;
+      }
+      
+    
+      await fetch('http://localhost:5000/api/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('tokenExpiration');
+      localStorage.removeItem('refreshToken');
+      
+      console.log('Đăng xuất thành công');
+   
+      navigate('/');
+    } catch (error) {
+      console.error('Lỗi khi đăng xuất:', error);
+   
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      navigate('/');
+    }
   };
 
   return (

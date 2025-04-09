@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../../styles/login/Login.css';
 import googleLogo from '../../images/google.png';
@@ -14,6 +14,37 @@ const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const navigate = useNavigate();
+
+  // Kiểm tra nếu người dùng đã đăng nhập khi component mount
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      // Người dùng đã đăng nhập, chuyển hướng đến trang dashboard
+      navigate('/dashboard');
+    }
+  }, [navigate]);
+
+  // Lưu dữ liệu người dùng vào storage
+  const saveUserData = (data) => {
+    if (data.access_token) {
+      localStorage.setItem('token', data.access_token);
+    }
+    
+    // Lưu thông tin người dùng nếu có
+    if (data.user) {
+      localStorage.setItem('user', JSON.stringify(data.user));
+    }
+    
+    // Lưu thêm các thông tin khác nếu cần
+    if (data.expiresIn) {
+      const expirationTime = new Date().getTime() + data.expiresIn * 1000;
+      localStorage.setItem('tokenExpiration', expirationTime);
+    }
+    
+    if (data.refreshToken) {
+      localStorage.setItem('refreshToken', data.refreshToken);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -49,12 +80,10 @@ const Login = () => {
 
       console.log('Đăng nhập thành công:', data);
       
-      // Nếu có token thì lưu vào localStorage
-      if (data.token) {
-        localStorage.setItem('token', data.token);
-      }
+      // Lưu token và thông tin người dùng
+      saveUserData(data);
       
-      // Chuyển hướng đến trang dashboard sau khi đăng nhập thành công
+      // Chuyển hướng đến trang dashboard
       navigate('/dashboard');
     } catch (error) {
       console.error('Lỗi đăng nhập:', error);
@@ -70,7 +99,6 @@ const Login = () => {
     if (field === 'email') setEmail(value);
     if (field === 'password') setPassword(value);
 
-    // Xóa lỗi ngay khi người dùng nhập
     setErrors((prev) => ({ ...prev, [field]: '' }));
   };
 
