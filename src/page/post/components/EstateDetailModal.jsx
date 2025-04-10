@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ChevronLeft, MapPin, Star, Heart, MessageSquare, DollarSign, Bed, Bath, Building, CheckCircle, Edit, Trash2 } from 'lucide-react';
 import { Clock, AlertCircle } from 'lucide-react';
 import '../../../styles/post/components/EstateDetailModal.css';
-const EstateDetailModal = ({ estate, onClose }) => {
+
+const EstateDetailModal = ({ estate, onClose, onDelete, onEdit, onApprove }) => {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  
   if (!estate) return null;
   
   const fullAddress = `${estate.address.house_number} ${estate.address.road}, ${estate.address.quarter}, ${estate.address.city}, ${estate.address.country}`;
@@ -45,6 +48,43 @@ const EstateDetailModal = ({ estate, onClose }) => {
         {config.icon} {config.label}
       </span>
     );
+  };
+
+  // Handle delete confirmation
+  const handleDeleteClick = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (typeof onDelete === 'function') {
+      onDelete(estate.id);
+      setShowDeleteConfirm(false);
+      onClose();
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteConfirm(false);
+  };
+
+  // Handle edit click with safety check
+  const handleEditClick = () => {
+    if (typeof onEdit === 'function') {
+      onEdit(estate);
+      onClose();
+    } else {
+      console.warn('onEdit function is not provided to EstateDetailModal');
+    }
+  };
+
+  // Handle approve click with safety check
+  const handleApproveClick = () => {
+    if (typeof onApprove === 'function') {
+      onApprove(estate.id);
+      onClose();
+    } else {
+      console.warn('onApprove function is not provided to EstateDetailModal');
+    }
   };
   
   return (
@@ -146,15 +186,17 @@ const EstateDetailModal = ({ estate, onClose }) => {
               </div>
               
               <div className="estate-actions">
-                <button className="btn btn-approve">
-                  <CheckCircle size={16} className="mr-2" />
-                  Phê duyệt
-                </button>
-                <button className="btn btn-edit">
+                {estate.status === 'pending' && (
+                  <button className="btn btn-approve" onClick={handleApproveClick}>
+                    <CheckCircle size={16} className="mr-2" />
+                    Phê duyệt
+                  </button>
+                )}
+                <button className="btn btn-edit" onClick={handleEditClick}>
                   <Edit size={16} className="mr-2" />
                   Chỉnh sửa
                 </button>
-                <button className="btn btn-delete">
+                <button className="btn btn-delete" onClick={handleDeleteClick}>
                   <Trash2 size={16} className="mr-2" />
                   Xóa
                 </button>
@@ -163,6 +205,26 @@ const EstateDetailModal = ({ estate, onClose }) => {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="delete-confirmation-overlay">
+          <div className="delete-confirmation-modal">
+            <h3 className="delete-confirmation-title">Xác nhận xóa</h3>
+            <p className="delete-confirmation-message">
+              Bạn có chắc chắn muốn xóa bài đăng "{estate.name}"?
+            </p>
+            <div className="delete-confirmation-actions">
+              <button className="btn btn-cancel" onClick={handleDeleteCancel}>
+                Hủy
+              </button>
+              <button className="btn btn-delete" onClick={handleDeleteConfirm}>
+                Xác nhận xóa
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
