@@ -57,7 +57,10 @@
   .edit-form {
     padding: 1rem;
     overflow-y: auto;
-    max-height: calc(90vh - 4rem); /* Adjust for header */
+    max-height: calc(90vh - 4rem); 
+    width: 100%;
+    max-width: 100vw;
+    box-sizing: border-box;
   }
   
   .form-section {
