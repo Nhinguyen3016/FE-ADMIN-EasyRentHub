@@ -1,47 +1,50 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, Upload, X, Plus, Save } from 'lucide-react';
-import './EstateEditForm.css';
+import '../../../styles/post/components/EstateEditForm.css';
 
 const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
-  const initialState = estate ? {
-    id: estate.id || '',
-    name: estate.name || '',
-    address: estate.address || {
-      house_number: '',
-      road: '',
-      quarter: '',
-      city: '',
-      country: 'Việt Nam'
-    },
-    price: estate.price || 0,
-    status: estate.status || 'pending',
-    property: estate.property || {
-      bedroom: 1,
-      bathroom: 1,
-      floors: 1
-    },
-    description: estate.description || '',
-    images: estate.images || []
-  } : {
-    name: '',
-    address: {
-      house_number: '',
-      road: '',
-      quarter: '',
-      city: '',
-      country: 'Việt Nam'
-    },
-    price: 0,
-    status: 'pending',
-    property: {
-      bedroom: 1,
-      bathroom: 1,
-      floors: 1
-    },
-    description: '',
-    images: []
+  const getInitialState = (estateData) => {
+    return estateData ? {
+      id: estateData.id || '',
+      name: estateData.name || '',
+      address: estateData.address || {
+        house_number: '',
+        road: '',
+        quarter: '',
+        city: '',
+        country: 'Việt Nam'
+      },
+      price: estateData.price || 0,
+      status: estateData.status || 'pending',
+      property: estateData.property || {
+        bedroom: 1,
+        bathroom: 1,
+        floors: 1
+      },
+      description: estateData.description || '',
+      images: estateData.images || []
+    } : {
+      name: '',
+      address: {
+        house_number: '',
+        road: '',
+        quarter: '',
+        city: '',
+        country: 'Việt Nam'
+      },
+      price: 0,
+      status: 'pending',
+      property: {
+        bedroom: 1,
+        bathroom: 1,
+        floors: 1
+      },
+      description: '',
+      images: []
+    };
   };
 
+  const initialState = getInitialState(estate);
   const [formData, setFormData] = useState(initialState);
   const [errors, setErrors] = useState({});
   const [imageFiles, setImageFiles] = useState([]);
@@ -50,7 +53,8 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
   useEffect(() => {
     // Reset form when estate prop changes
     if (estate) {
-      setFormData(initialState);
+      const newInitialState = getInitialState(estate);
+      setFormData(newInitialState);
       setPreviewImages(estate.images || []);
     }
   }, [estate]);
@@ -138,7 +142,9 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
       newErrors.name = 'Tên bài đăng không được để trống';
     }
 
-    if (!formData.address.house_number.trim()) {
+    // Convert house_number to string before checking if it's empty
+    const houseNumber = String(formData.address.house_number);
+    if (!houseNumber || houseNumber.trim() === '') {
       newErrors['address.house_number'] = 'Số nhà không được để trống';
     }
 

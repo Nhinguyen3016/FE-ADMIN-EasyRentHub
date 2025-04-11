@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, MapPin, Star, Heart, MessageSquare, DollarSign, Bed, Bath, Building, CheckCircle, Edit, Trash2 } from 'lucide-react';
-import { Clock, AlertCircle } from 'lucide-react';
+import { ChevronLeft, MapPin, Star, Heart, MessageSquare, DollarSign, Bed, Bath, Building, CheckCircle, Edit, Trash2, Clock, AlertCircle } from 'lucide-react';
 import '../../../styles/post/components/EstateDetailModal.css';
 
 const EstateDetailModal = ({ estate, onClose, onDelete, onEdit, onApprove }) => {
@@ -8,7 +7,7 @@ const EstateDetailModal = ({ estate, onClose, onDelete, onEdit, onApprove }) => 
   
   if (!estate) return null;
   
-  const fullAddress = `${estate.address.house_number} ${estate.address.road}, ${estate.address.quarter}, ${estate.address.city}, ${estate.address.country}`;
+  const fullAddress = `${estate.address?.house_number || ''} ${estate.address?.road || ''}, ${estate.address?.quarter || ''}, ${estate.address?.city || ''}, ${estate.address?.country || ''}`;
   
   // Format currency
   const formatCurrency = (amount) => {
@@ -17,8 +16,13 @@ const EstateDetailModal = ({ estate, onClose, onDelete, onEdit, onApprove }) => 
 
   // Format datetime
   const formatDateTime = (dateTimeStr) => {
-    const date = new Date(dateTimeStr);
-    return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')} ${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+    if (!dateTimeStr) return 'N/A';
+    try {
+      const date = new Date(dateTimeStr);
+      return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')} ${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+    } catch (e) {
+      return 'Invalid date';
+    }
   };
 
   // Display status
@@ -71,7 +75,6 @@ const EstateDetailModal = ({ estate, onClose, onDelete, onEdit, onApprove }) => 
   const handleEditClick = () => {
     if (typeof onEdit === 'function') {
       onEdit(estate);
-      onClose();
     } else {
       console.warn('onEdit function is not provided to EstateDetailModal');
     }
@@ -86,6 +89,11 @@ const EstateDetailModal = ({ estate, onClose, onDelete, onEdit, onApprove }) => 
       console.warn('onApprove function is not provided to EstateDetailModal');
     }
   };
+
+  // Safely access arrays
+  const images = estate.images || [];
+  const likes = estate.likes || [];
+  const reviews = estate.reviews || [];
   
   return (
     <div className="modal-overlay">
@@ -103,16 +111,16 @@ const EstateDetailModal = ({ estate, onClose, onDelete, onEdit, onApprove }) => 
             <div className="estate-images">
               <div className="estate-main-image">
                 <img 
-                  src={estate.images[0]} 
-                  alt={estate.name} 
+                  src={images.length > 0 ? images[0] : '/placeholder-image.jpg'} 
+                  alt={estate.name || 'Property'} 
                 />
               </div>
               <div className="estate-thumbnail-grid">
-                {estate.images.slice(1).map((img, index) => (
+                {images.slice(1).map((img, index) => (
                   <div key={index} className="estate-thumbnail">
                     <img 
                       src={img} 
-                      alt={`${estate.name} ${index + 1}`}
+                      alt={`${estate.name || 'Property'} ${index + 1}`}
                     />
                   </div>
                 ))}
@@ -122,7 +130,7 @@ const EstateDetailModal = ({ estate, onClose, onDelete, onEdit, onApprove }) => 
             {/* Right column - Details */}
             <div className="estate-details">
               <div className="estate-header">
-                <h3 className="estate-title">{estate.name}</h3>
+                <h3 className="estate-title">{estate.name || 'Untitled Property'}</h3>
                 {renderStatus(estate.status)}
               </div>
               
@@ -134,22 +142,22 @@ const EstateDetailModal = ({ estate, onClose, onDelete, onEdit, onApprove }) => 
               <div className="estate-stats">
                 <div className="estate-rating">
                   <Star size={16} className="mr-1" />
-                  <span>{estate.rating_star}</span>
+                  <span>{estate.rating_star || 0}</span>
                 </div>
                 <div className="estate-likes">
                   <Heart size={16} className="mr-1" />
-                  <span>{estate.likes.length}</span>
+                  <span>{likes.length}</span>
                 </div>
                 <div className="estate-reviews">
                   <MessageSquare size={16} className="mr-1" />
-                  <span>{estate.reviews.length} đánh giá</span>
+                  <span>{reviews.length} đánh giá</span>
                 </div>
               </div>
               
               <div className="estate-price-box">
                 <div className="estate-price">
                   <DollarSign size={20} className="mr-1" />
-                  {formatCurrency(estate.price)}
+                  {formatCurrency(estate.price || 0)}
                 </div>
                 <p className="estate-price-note">Giá cho thuê hàng tháng</p>
               </div>
@@ -158,25 +166,25 @@ const EstateDetailModal = ({ estate, onClose, onDelete, onEdit, onApprove }) => 
                 <div className="estate-property">
                   <Bed size={20} className="property-icon" />
                   <span className="property-label">Phòng ngủ</span>
-                  <p className="property-value">{estate.property.bedroom}</p>
+                  <p className="property-value">{estate.property?.bedroom || 0}</p>
                 </div>
                 <div className="estate-property">
                   <Bath size={20} className="property-icon" />
                   <span className="property-label">Phòng tắm</span>
-                  <p className="property-value">{estate.property.bathroom}</p>
+                  <p className="property-value">{estate.property?.bathroom || 0}</p>
                 </div>
                 <div className="estate-property">
                   <Building size={20} className="property-icon" />
                   <span className="property-label">Tầng</span>
-                  <p className="property-value">{estate.property.floors}</p>
+                  <p className="property-value">{estate.property?.floors || 0}</p>
                 </div>
               </div>
               
               <div className="estate-owner-info">
                 <h4 className="info-title">Thông tin chủ sở hữu</h4>
-                <p><span className="info-label">Tên:</span> {estate.user.name}</p>
-                <p><span className="info-label">Email:</span> {estate.user.email}</p>
-                <p><span className="info-label">Điện thoại:</span> {estate.user.phone}</p>
+                <p><span className="info-label">Tên:</span> {estate.user?.name || 'N/A'}</p>
+                <p><span className="info-label">Email:</span> {estate.user?.email || 'N/A'}</p>
+                <p><span className="info-label">Điện thoại:</span> {estate.user?.phone || 'N/A'}</p>
               </div>
               
               <div className="estate-post-info">
@@ -212,7 +220,7 @@ const EstateDetailModal = ({ estate, onClose, onDelete, onEdit, onApprove }) => 
           <div className="delete-confirmation-modal">
             <h3 className="delete-confirmation-title">Xác nhận xóa</h3>
             <p className="delete-confirmation-message">
-              Bạn có chắc chắn muốn xóa bài đăng "{estate.name}"?
+              Bạn có chắc chắn muốn xóa bài đăng "{estate.name || 'Untitled Property'}"?
             </p>
             <div className="delete-confirmation-actions">
               <button className="btn btn-cancel" onClick={handleDeleteCancel}>

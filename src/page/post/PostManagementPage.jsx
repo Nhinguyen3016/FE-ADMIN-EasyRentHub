@@ -2,6 +2,7 @@ import '../../styles/post/PostManagement.css';
 import React, { useState } from 'react';
 import { Search, PlusCircle, Filter, CheckCircle, AlertCircle, Clock, Home, Eye, Flag, MapPin, Star, Bed, Bath } from 'lucide-react';
 import EstateDetailModal from './components/EstateDetailModal'; 
+import EstateEditForm from './components/EstateEditForm';
 import { FileText } from "lucide-react";
 
 
@@ -18,12 +19,13 @@ import bd8 from '../../images/bd8.jpg';
 const EstateManagement = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
   const [selectedEstate, setSelectedEstate] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 9;
 
   // Sample data based on schema
-  const estates = [
+  const [estates, setEstates] = useState([
     {
       id: '1',
       name: 'Căn hộ cao cấp Sunshine',
@@ -404,7 +406,7 @@ const EstateManagement = () => {
       createdAt: '2025-03-28T15:20:00',
       updatedAt: '2025-04-03T11:45:00',
     }
-  ];
+  ]);
 
   // Filter posts based on current tab
   const getFilteredEstates = () => {
@@ -485,6 +487,79 @@ const EstateManagement = () => {
     );
   };
 
+  // Handle edit action from the detail modal
+  const handleEditEstate = (estate) => {
+    setSelectedEstate(estate);
+    setShowDetailModal(false);
+    setShowEditForm(true);
+  };
+
+  // Handle save from edit form
+  const handleSaveEstate = (updatedEstate) => {
+    const updatedEstates = estates.map(estate => 
+      estate.id === updatedEstate.id ? {...updatedEstate, updatedAt: new Date().toISOString()} : estate
+    );
+    setEstates(updatedEstates);
+    setShowEditForm(false);
+  };
+
+  // Handle delete action
+  const handleDeleteEstate = (estateId) => {
+    const updatedEstates = estates.filter(estate => estate.id !== estateId);
+    setEstates(updatedEstates);
+  };
+
+  // Handle approve action
+  const handleApproveEstate = (estateId) => {
+    const updatedEstates = estates.map(estate => 
+      estate.id === estateId ? {...estate, status: 'available', updatedAt: new Date().toISOString()} : estate
+    );
+    setEstates(updatedEstates);
+  };
+
+  // Create new estate
+  const handleCreateEstate = () => {
+    setSelectedEstate(null); // No estate selected means creating new
+    setShowEditForm(true);
+  };
+
+  // Handle save for new estate
+  const handleSaveNewEstate = (newEstate) => {
+    const newId = (Math.max(...estates.map(e => parseInt(e.id))) + 1).toString();
+    const now = new Date().toISOString();
+    
+    const estateToAdd = {
+      ...newEstate,
+      id: newId,
+      createdAt: now,
+      updatedAt: now,
+      likes: [],
+      reviews: [],
+      rating_star: 0,
+      user: {
+        _id: 'user999', // This would be the current user in a real app
+        name: 'Người dùng hiện tại',
+        email: 'current@example.com',
+        phone: '0912345678'
+      }
+    };
+    
+    setEstates([...estates, estateToAdd]);
+    setShowEditForm(false);
+  };
+
+  // Function to safely get the last part of a user's name or a default value
+  const getUserLastName = (estate) => {
+    if (!estate || !estate.user || !estate.user.name) {
+      return 'N/A'; // Return a default value if user or name is not available
+    }
+    try {
+      return estate.user.name.split(' ').pop();
+    } catch (error) {
+      return 'N/A'; // Return default value in case of any error during splitting
+    }
+  };
+
   return (
     <div className="estate-management">
       {/* Header */}
@@ -500,7 +575,7 @@ const EstateManagement = () => {
               />
               <Search className="search-icon" size={18} />
             </div>
-            <button className="btn btn-create">
+            <button className="btn btn-create" onClick={handleCreateEstate}>
               <PlusCircle className="mr-2" size={18} /> Tạo mới
             </button>
           </div>
@@ -515,7 +590,7 @@ const EstateManagement = () => {
             <div className="stats-card-content">
               <div>
                 <p className="stats-label">Tổng bài đăng</p>
-                <h3 className="stats-value">132</h3>
+                <h3 className="stats-value">{estates.length}</h3>
               </div>
               <div className="stats-icon-container blue">
                 <FileText className="stats-icon" />
@@ -530,7 +605,7 @@ const EstateManagement = () => {
             <div className="stats-card-content">
               <div>
                 <p className="stats-label">Đã duyệt</p>
-                <h3 className="stats-value">87</h3>
+                <h3 className="stats-value">{estates.filter(e => e.status === 'available').length}</h3>
               </div>
               <div className="stats-icon-container green">
                 <CheckCircle className="stats-icon" />
@@ -545,7 +620,7 @@ const EstateManagement = () => {
             <div className="stats-card-content">
               <div>
                 <p className="stats-label">Đã đặt</p>
-                <h3 className="stats-value">45</h3>
+                <h3 className="stats-value">{estates.filter(e => e.status === 'booked').length}</h3>
               </div>
               <div className="stats-icon-container blue">
                 <Flag className="stats-icon" />
@@ -560,7 +635,7 @@ const EstateManagement = () => {
             <div className="stats-card-content">
               <div>
                 <p className="stats-label">Chờ duyệt</p>
-                <h3 className="stats-value">24</h3>
+                <h3 className="stats-value">{estates.filter(e => e.status === 'pending').length}</h3>
               </div>
               <div className="stats-icon-container yellow">
                 <Clock className="stats-icon" />
@@ -657,7 +732,7 @@ const EstateManagement = () => {
                   </div>
                   <div className="estate-card-feature">
                     <Home size={16} className="mr-1" />
-                    <span>{estate.user.name.split(' ').pop()}</span>
+                    <span>{getUserLastName(estate)}</span>
                   </div>
                 </div>
                 
@@ -668,9 +743,14 @@ const EstateManagement = () => {
                   >
                     <Eye size={14} className="mr-1" /> Xem chi tiết
                   </button>
-                  <button className="btn btn-approve">
-                    <CheckCircle size={14} className="mr-1" /> Duyệt
-                  </button>
+                  {estate.status === 'pending' && (
+                    <button 
+                      className="btn btn-approve" 
+                      onClick={() => handleApproveEstate(estate.id)}
+                    >
+                      <CheckCircle size={14} className="mr-1" /> Duyệt
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -717,10 +797,23 @@ const EstateManagement = () => {
       </main>
       
       {/* Estate Detail Modal */}
-      {showDetailModal && 
+      {showDetailModal && selectedEstate && 
         <EstateDetailModal 
           estate={selectedEstate} 
-          onClose={() => setShowDetailModal(false)} 
+          onClose={() => setShowDetailModal(false)}
+          onEdit={handleEditEstate}
+          onDelete={handleDeleteEstate}
+          onApprove={handleApproveEstate}
+        />
+      }
+
+      {/* Estate Edit Form */}
+      {showEditForm && 
+        <EstateEditForm 
+          estate={selectedEstate}
+          isNew={!selectedEstate}
+          onClose={() => setShowEditForm(false)}
+          onSave={selectedEstate ? handleSaveEstate : handleSaveNewEstate}
         />
       }
     </div>
