@@ -23,20 +23,72 @@ const RegistrationForm = () => {
       [name]: value
     }));
 
-    // Xóa lỗi khi bắt đầu nhập
     setErrors(prev => ({ ...prev, [name]: '' }));
+  };
+
+  const validateEmail = (email) => {
+    const basicEmailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    
+    if (!basicEmailRegex.test(email)) {
+      return { valid: false, error: 'Email không đúng định dạng' };
+    }
+
+    if (email.toLowerCase().endsWith('@gmail.com')) {
+      const username = email.split('@')[0];
+
+      if (username.includes('..')) {
+        return { valid: false, error: 'Email Gmail không được chứa dấu chấm liên tiếp' };
+      }
+
+      const validGmailChars = /^[a-zA-Z0-9]([a-zA-Z0-9._-]{0,28}[a-zA-Z0-9])?$/;
+      if (!validGmailChars.test(username)) {
+        return { valid: false, error: 'Email Gmail chỉ được chứa chữ cái, số, dấu chấm, dấu gạch dưới và dấu gạch ngang' };
+      }
+      
+      // Kiểm tra các ký tự đặc biệt không hợp lệ
+      const invalidSpecialChars = /[@#$%^&*()+={}\[\]|\\:;"'<>,?/]/;
+      if (invalidSpecialChars.test(username)) {
+        return { valid: false, error: 'Email Gmail không được chứa các ký tự đặc biệt' };
+      }
+      
+      // Gmail yêu cầu độ dài username từ 6-30 ký tự
+      if (username.length < 6 || username.length > 30) {
+        return { valid: false, error: 'Tên người dùng Gmail phải có độ dài từ 6 đến 30 ký tự' };
+      }
+    }
+    
+    return { valid: true, error: '' };
   };
 
   const validateForm = () => {
     const newErrors = {};
     if (!formData.name.trim()) newErrors.name = 'Tên không được để trống';
-    if (!formData.email.trim()) newErrors.email = 'Email không được để trống';
+    
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email không được để trống';
+    } else {
+      const emailValidation = validateEmail(formData.email);
+      if (!emailValidation.valid) {
+        newErrors.email = emailValidation.error;
+      }
+    }
+    
     if (!formData.role) newErrors.role = 'Vui lòng chọn vai trò';
     if (!formData.password.trim()) newErrors.password = 'Mật khẩu không được để trống';
     if (formData.password !== formData.confirmPassword)
       newErrors.confirmPassword = 'Mật khẩu không khớp';
 
     return newErrors;
+  };
+
+  // Kiểm tra email khi rời khỏi ô input
+  const handleEmailBlur = () => {
+    if (formData.email.trim()) {
+      const emailValidation = validateEmail(formData.email);
+      if (!emailValidation.valid) {
+        setErrors(prev => ({ ...prev, email: emailValidation.error }));
+      }
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -114,8 +166,10 @@ const RegistrationForm = () => {
               placeholder="Email"
               value={formData.email}
               onChange={handleChange}
+              onBlur={handleEmailBlur}
             />
             {errors.email && <p className="input-error">{errors.email}</p>}
+            {!errors.email && <p className="input-hint">Vui lòng nhập email hợp lệ (ví dụ: username@gmail.com)</p>}
           </div>
 
           <div className="form-group-rg">

@@ -6,9 +6,11 @@ const SeeDetailPage = ({ user, onClose }) => {
   const [userData, setUserData] = useState({
     name: '',
     email: '',
-    address: '',
+    address: {},
     role: '',
-    avatar: null
+    avatar: null,
+    createdAt: '',
+    updatedAt: ''
   });
   
   const [focusedField, setFocusedField] = useState(null);
@@ -18,9 +20,11 @@ const SeeDetailPage = ({ user, onClose }) => {
       setUserData({
         name: user.name || '',
         email: user.email || '',
-        address: user.address || '',
+        address: user.originalData?.address || {},
         role: user.role || 'Admin',
-        avatar: null
+        avatar: user.avatar || null,
+        createdAt: user.originalData?.createdAt || '',
+        updatedAt: user.originalData?.updatedAt || ''
       });
     }
   }, [user]);
@@ -31,6 +35,26 @@ const SeeDetailPage = ({ user, onClose }) => {
 
   const handleBlur = () => {
     setFocusedField(null);
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleString('vi-VN');
+  };
+
+  // Format the address from object to string for display
+  const getFormattedAddress = () => {
+    if (typeof userData.address === 'string') return userData.address;
+    
+    if (userData.address?.name) return userData.address.name;
+    
+    return [
+      userData.address?.road,
+      userData.address?.quarter,
+      userData.address?.city,
+      userData.address?.country
+    ].filter(Boolean).join(', ');
   };
 
   return (
@@ -50,7 +74,7 @@ const SeeDetailPage = ({ user, onClose }) => {
           <div className="avatar-section-seedp">
             <div className="avatar-container-seedp">
               <img 
-                src={avatar} 
+                src={userData.avatar || avatar} 
                 alt="Ảnh đại diện" 
                 className="avatar-preview-seedp" 
               />
@@ -71,7 +95,7 @@ const SeeDetailPage = ({ user, onClose }) => {
                 onBlur={handleBlur}
                 disabled
               />
-              <label className="form-label-seedp">{userData.name || "Nguyễn Thị Tố Nhi"}</label>
+              <label className="form-label-seedp">Họ và tên</label>
             </div>
             
             <div className="form-group-seedp">
@@ -86,7 +110,7 @@ const SeeDetailPage = ({ user, onClose }) => {
                 onBlur={handleBlur}
                 disabled
               />
-              <label className="form-label-seedp">{userData.email || "tonhi3016@gmail.com"}</label>
+              <label className="form-label-seedp">Email</label>
             </div>
             
             <div className="form-group-seedp">
@@ -94,14 +118,14 @@ const SeeDetailPage = ({ user, onClose }) => {
                 type="text"
                 id="address"
                 name="address"
-                value={userData.address}
+                value={getFormattedAddress()}
                 placeholder="Địa chỉ"
                 className={`form-input-seedp ${focusedField === 'address' ? 'focused-seedp' : ''}`}
                 onFocus={() => handleFocus('address')}
                 onBlur={handleBlur}
                 disabled
               />
-              <label className="form-label-seedp">{userData.address || "Quế Sơn,Quảng Nam"}</label>
+              <label className="form-label-seedp">Địa chỉ</label>
             </div>
             
             <div className="form-group-seedp">
@@ -114,11 +138,41 @@ const SeeDetailPage = ({ user, onClose }) => {
                 onBlur={handleBlur}
                 disabled
               >
-                <option value="Admin">Admin</option>
+                <option value="Quản trị viên">Quản trị viên</option>
                 <option value="Chủ nhà">Chủ nhà</option>
                 <option value="Người thuê">Người thuê</option>
               </select>
-              <label className="form-label-seedp">Role</label>
+              <label className="form-label-seedp">Vai trò</label>
+            </div>
+            
+            <div className="form-group-seedp">
+              <input
+                type="text"
+                id="createdAt"
+                name="createdAt"
+                value={formatDate(userData.createdAt)}
+                placeholder="Ngày tạo"
+                className={`form-input-seedp ${focusedField === 'createdAt' ? 'focused-seedp' : ''}`}
+                onFocus={() => handleFocus('createdAt')}
+                onBlur={handleBlur}
+                disabled
+              />
+              <label className="form-label-seedp">Ngày tạo</label>
+            </div>
+            
+            <div className="form-group-seedp">
+              <input
+                type="text"
+                id="updatedAt"
+                name="updatedAt"
+                value={formatDate(userData.updatedAt)}
+                placeholder="Ngày cập nhật"
+                className={`form-input-seedp ${focusedField === 'updatedAt' ? 'focused-seedp' : ''}`}
+                onFocus={() => handleFocus('updatedAt')}
+                onBlur={handleBlur}
+                disabled
+              />
+              <label className="form-label-seedp">Ngày cập nhật</label>
             </div>
             
             <div className="form-actions-seedp">
