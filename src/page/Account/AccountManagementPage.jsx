@@ -1,110 +1,84 @@
-import React, { useState } from 'react';
-// Import các biểu tượng từ thư viện của bạn hoặc sử dụng các hình ảnh đã có
+import React, { useState, useEffect, useCallback } from 'react';
 import arrowImg from '../../images/arrow.png';
 import addImg from '../../images/add.png';
 import seeImg from '../../images/see.png';
 import writeImg from '../../images/write.png';
 import deleteImg from '../../images/delete.png';
-// Import các components
 import UpdatePage from './components/UpdatePage';
 import SeeDetailPage from './components/SeeDetailPage';
 import AddAccountPage from './components/AddAccountPage';
-// Import CSS
 import '../../styles/Account/UserManagement.css';
 
 const AccountManagementPage = () => {
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      name: 'Nguyễn Văn An',
-      email: 'an.nguyen@example.com',
-      address: '123 Đường Lê Lợi, Quận 1, TP. Hồ Chí Minh',
-      role: 'Quản trị viên'
-    },
-    {
-      id: 2,
-      name: 'Trần Thị Bích Ngọc',
-      email: 'bichngoc.tran@example.com',
-      address: '45A Nguyễn Huệ, Quận Hải Châu, Đà Nẵng',
-      role: 'Chủ nhà'
-    },
-    {
-      id: 3,
-      name: 'Lê Minh Hoàng',
-      email: 'hoang.le@example.com',
-      address: '78 Trường Chinh, Quận Thanh Xuân, Hà Nội',
-      role: 'Chủ nhà'
-    },
-    {
-      id: 4,
-      name: 'Phạm Hồng Phúc',
-      email: 'phuc.pham@example.com',
-      address: '21 Đường 3/2, Quận Ninh Kiều, Cần Thơ',
-      role: 'Người thuê'
-    },
-    {
-      id: 5,
-      name: 'Đặng Thu Hương',
-      email: 'thuhuong.dang@example.com',
-      address: '56 Hoàng Diệu, TP. Nha Trang, Khánh Hòa',
-      role: 'Người thuê'
-    },
-    {
-      id: 6,
-      name: 'Đinh Hương',
-      email: 'dinh.huong@example.com',
-      address: '56 Hoàng Diệu, TP. Nha Trang, Khánh Hòa',
-      role: 'Chủ nhà'
-    },
-    {
-      id: 7,
-      name: 'Đặng Minh',
-      email: 'minh.dang@example.com',
-      address: '56 Hoàng Diệu, TP. Nha Trang, Khánh Hòa',
-      role: 'Người thuê'
-    },
-    {
-      id: 8,
-      name: 'Thu Hương',
-      email: 'thu.huong@example.com',
-      address: '56 Hoàng Diệu, TP. Nha Trang, Khánh Hòa',
-      role: 'Người thuê'
-    },
-    {
-      id: 9,
-      name: 'Đặng Thị',
-      email: 'thi.dang@example.com',
-      address: '56 Hoàng Diệu, TP. Nha Trang, Khánh Hòa',
-      role: 'Người thuê'
-    },
-    {
-      id: 10,
-      name: 'Đặng Thị Thu',
-      email: 'thithu.dang@example.com',
-      address: '56 Hoàng Diệu, TP. Nha Trang, Khánh Hòa',
-      role: 'Người thuê'
-    }
-  ]);
-
-  // Default empty string for role filtering
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedRole, setSelectedRole] = useState('');
-  const [searchQuery, setSearchQuery] = useState(''); // Search query state
+  const [searchQuery, setSearchQuery] = useState('');
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
-  // Handle role change
+  const userRole = localStorage.getItem('userRole');
+  const token = localStorage.getItem('token');
+
+  const fetchUsers = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://localhost:5000/api/users', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
+      }
+      
+      const data = await response.json();
+      
+      const formattedUsers = data.users.map(user => {
+        return {
+          id: user._id,
+          name: user.full_name,
+          email: user.email,
+          address: user.address.name || 
+                  [user.address.road, user.address.quarter, user.address.city, user.address.country]
+                  .filter(Boolean).join(', '),
+          role: user.role === 'Admin' ? 'Quản trị viên' : 
+               user.role === 'Landlord' ? 'Chủ nhà' : 'Người thuê',
+          avatar: user.avatar,
+          originalData: user
+        };
+      });
+      
+      setUsers(formattedUsers);
+      setLoading(false);
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+      console.error('Error fetching users:', err);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (userRole) {
+      fetchUsers();
+    } else {
+      setError('Không có quyền truy cập');
+      setLoading(false);
+    }
+  }, [userRole, fetchUsers]);
+
   const handleRoleChange = (e) => {
     setSelectedRole(e.target.value);
   };
 
-  // Handle search query change
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
 
-  // Filter users by role and search query
   const filteredUsers = users.filter(user => {
     const roleMatches = selectedRole
       ? (selectedRole === 'admin' ? user.role === 'Quản trị viên' :
@@ -120,9 +94,28 @@ const AccountManagementPage = () => {
     return roleMatches && searchMatches;
   });
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
-      setUsers(users.filter(user => user.id !== id));
+      try {
+        const response = await fetch(`http://localhost:5000/api/user/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Không thể xóa người dùng');
+        }
+
+        setUsers(users.filter(user => user.id !== id));
+        alert('Xóa người dùng thành công');
+      } catch (err) {
+        console.error('Error deleting user:', err);
+        alert(`Lỗi khi xóa người dùng: ${err.message}`);
+      }
     }
   };
 
@@ -139,7 +132,6 @@ const AccountManagementPage = () => {
   };
 
   const handleAddUser = () => {
-    // Mở modal thêm tài khoản mới
     setIsAddModalOpen(true);
   };
 
@@ -157,8 +149,7 @@ const AccountManagementPage = () => {
     setIsAddModalOpen(false);
   };
 
-  const handleUpdateUser = (updatedUserData) => {
-    // Update existing user
+  const handleUpdateUser = async (updatedUserData) => {
     setUsers(users.map(user => 
       user.id === selectedUser.id 
         ? { ...user, ...updatedUserData } 
@@ -167,24 +158,34 @@ const AccountManagementPage = () => {
     
     setIsUpdateModalOpen(false);
     setSelectedUser(null);
+    
+    await fetchUsers();
   };
 
-  const handleCreateUser = (newUserData) => {
-    // Add new user
+  const handleCreateUser = async (newUserData) => {
     const newUser = {
       id: users.length > 0 ? Math.max(...users.map(user => user.id)) + 1 : 1,
       ...newUserData
     };
     setUsers([...users, newUser]);
     setIsAddModalOpen(false);
+    
+    await fetchUsers();
   };
+
+  if (loading) {
+    return <div className="loading-container">Đang tải dữ liệu...</div>;
+  }
+
+  if (error) {
+    return <div className="error-container">{error}</div>;
+  }
 
   return (
     <div className="user-table-container">
       <h1 className="account-management-title">Quản lý tài khoản</h1>
       
       <div className="table-actions">
-        {/* Search input field - căn trái */}
         <div className="search-container">
           <input
             type="text"
@@ -196,7 +197,6 @@ const AccountManagementPage = () => {
           <span className="search-icon">🔍</span>
         </div>
 
-        {/* Container cho các thành phần bên phải */}
         <div className="right-actions">
           <div className="role-dropdown-acc">
             <select value={selectedRole} onChange={handleRoleChange}>
@@ -215,7 +215,6 @@ const AccountManagementPage = () => {
         </div>
       </div>
 
-      {/* User Table with filtered data */}
       <table className="user-table">
         <thead>
           <tr>
@@ -262,7 +261,6 @@ const AccountManagementPage = () => {
         </tbody>
       </table>
       
-      {/* Thêm tài khoản mới Modal */}
       {isAddModalOpen && (
         <AddAccountPage 
           onClose={handleCloseAddModal}
@@ -270,7 +268,6 @@ const AccountManagementPage = () => {
         />
       )}
       
-      {/* Cập nhật thông tin Modal */}
       {isUpdateModalOpen && (
         <UpdatePage 
           user={selectedUser}
@@ -279,7 +276,6 @@ const AccountManagementPage = () => {
         />
       )}
 
-      {/* Xem chi tiết Modal */}
       {isDetailModalOpen && (
         <SeeDetailPage 
           user={selectedUser}

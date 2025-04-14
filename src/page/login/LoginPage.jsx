@@ -19,12 +19,13 @@ const Login = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
+    const userRole = localStorage.getItem('userRole');
     
     if (token && userData) {
       try {
         const user = JSON.parse(userData);
         // Chỉ chuyển hướng đến dashboard nếu là Admin
-        if (user.role === 'Admin') {
+        if (user.role === 'Admin' || userRole === 'Admin') {
           navigate('/dashboard');
         }
       } catch (e) {
@@ -32,6 +33,7 @@ const Login = () => {
         // Xóa dữ liệu không hợp lệ
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        localStorage.removeItem('userRole');
       }
     }
   }, [navigate]);
@@ -45,6 +47,11 @@ const Login = () => {
     // Lưu thông tin người dùng nếu có
     if (data.user) {
       localStorage.setItem('user', JSON.stringify(data.user));
+      
+      // Lưu riêng role của người dùng vào localStorage
+      if (data.user.role) {
+        localStorage.setItem('userRole', data.user.role);
+      }
     }
     
     // Lưu thêm các thông tin khác nếu cần
@@ -107,6 +114,7 @@ const Login = () => {
         // Xóa token và thông tin người dùng nếu không phải Admin
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        localStorage.removeItem('userRole');
       }
     } catch (error) {
       console.error('Lỗi đăng nhập:', error);
