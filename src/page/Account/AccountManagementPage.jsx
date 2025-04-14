@@ -19,6 +19,10 @@ const AccountManagementPage = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   const userRole = localStorage.getItem('userRole');
   const token = localStorage.getItem('token');
@@ -71,6 +75,11 @@ const AccountManagementPage = () => {
     }
   }, [userRole, fetchUsers]);
 
+  // Reset to first page when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedRole, searchQuery]);
+
   const handleRoleChange = (e) => {
     setSelectedRole(e.target.value);
   };
@@ -94,6 +103,18 @@ const AccountManagementPage = () => {
     return roleMatches && searchMatches;
   });
 
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredUsers.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+
+  const paginate = (pageNumber) => {
+    if (pageNumber > 0 && pageNumber <= totalPages) {
+      setCurrentPage(pageNumber);
+    }
+  };
+
   const handleDelete = async (id) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
       try {
@@ -111,6 +132,29 @@ const AccountManagementPage = () => {
         }
 
         setUsers(users.filter(user => user.id !== id));
+        
+        // If after deletion, current page becomes empty and it's not the first page,
+        // go to previous page
+        const newFilteredUsers = users.filter(user => user.id !== id).filter(user => {
+          const roleMatches = selectedRole
+            ? (selectedRole === 'admin' ? user.role === 'Quản trị viên' :
+              selectedRole === 'owner' ? user.role === 'Chủ nhà' :
+              selectedRole === 'tenant' ? user.role === 'Người thuê' : true)
+            : true;
+          
+          const searchMatches = searchQuery === '' || 
+            user.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+            user.email.toLowerCase().includes(searchQuery.toLowerCase()) || 
+            user.address.toLowerCase().includes(searchQuery.toLowerCase());
+
+          return roleMatches && searchMatches;
+        });
+
+        const newTotalPages = Math.ceil(newFilteredUsers.length / itemsPerPage);
+        if (currentPage > newTotalPages && currentPage > 1) {
+          setCurrentPage(newTotalPages || 1);
+        }
+
         alert('Xóa người dùng thành công');
       } catch (err) {
         console.error('Error deleting user:', err);
@@ -173,6 +217,95 @@ const AccountManagementPage = () => {
     await fetchUsers();
   };
 
+  // Render pagination buttons
+  const renderPaginationButtons = () => {
+    const pageButtons = [];
+    
+    // Previous button
+    pageButtons.push(
+      <button 
+        key="prev" 
+        onClick={() => paginate(currentPage - 1)}
+        disabled={currentPage === 1}
+        className="pagination-button prev-button"
+      >
+        &laquo;
+      </button>
+    );
+    
+    // Page number buttons - show max 5 pages
+    // Always show first page
+    if (currentPage > 3) {
+      pageButtons.push(
+        <button 
+          key={1} 
+          onClick={() => paginate(1)}
+          className={`pagination-button ${currentPage === 1 ? 'active' : ''}`}
+        >
+          1
+        </button>
+      );
+      
+      // Show ellipsis if not showing the second page
+      if (currentPage > 4) {
+        pageButtons.push(
+          <span key="ellipsis1" className="pagination-ellipsis">...</span>
+        );
+      }
+    }
+    
+    // Calculate range of visible page numbers
+    const startPage = Math.max(1, currentPage - 1);
+    const endPage = Math.min(totalPages, currentPage + 1);
+    
+    // Create page number buttons
+    for (let i = startPage; i <= endPage; i++) {
+      pageButtons.push(
+        <button 
+          key={i} 
+          onClick={() => paginate(i)}
+          className={`pagination-button ${currentPage === i ? 'active' : ''}`}
+        >
+          {i}
+        </button>
+      );
+    }
+    
+    // Show ellipsis if not showing the second-to-last page
+    if (currentPage < totalPages - 3) {
+      pageButtons.push(
+        <span key="ellipsis2" className="pagination-ellipsis">...</span>
+      );
+    }
+    
+    // Always show last page if there's more than one page
+    if (totalPages > 1 && currentPage < totalPages - 2) {
+      pageButtons.push(
+        <button 
+          key={totalPages} 
+          onClick={() => paginate(totalPages)}
+          className={`pagination-button ${currentPage === totalPages ? 'active' : ''}`}
+        >
+          {totalPages}
+        </button>
+      );
+    }
+    
+    // Next button
+    pageButtons.push(
+      <button 
+        key="next" 
+        onClick={() => paginate(currentPage + 1)}
+        disabled={currentPage === totalPages}
+        className="pagination-button next-button"
+      >
+        &raquo;
+      </button>
+    );
+    
+    return pageButtons;
+  };
+
   if (loading) {
     return <div className="loading-container">Đang tải dữ liệu...</div>;
   }
@@ -226,8 +359,8 @@ const AccountManagementPage = () => {
           </tr>
         </thead>
         <tbody>
-          {filteredUsers.length > 0 ? (
-            filteredUsers.map(user => (
+          {currentItems.length > 0 ? (
+            currentItems.map(user => (
               <tr key={user.id}>
                 <td>{user.name}</td>
                 <td>{user.email}</td>
@@ -260,6 +393,19 @@ const AccountManagementPage = () => {
           )}
         </tbody>
       </table>
+      
+      {/* Pagination controls */}
+      {filteredUsers.length > 0 && (
+        <div className="pagination-container">
+          <div className="pagination-info">
+            Hiển thị {indexOfFirstItem + 1}-
+            {Math.min(indexOfLastItem, filteredUsers.length)} trên {filteredUsers.length} người dùng
+          </div>
+          <div className="pagination-controls">
+            {renderPaginationButtons()}
+          </div>
+        </div>
+      )}
       
       {isAddModalOpen && (
         <AddAccountPage 
