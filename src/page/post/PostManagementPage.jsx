@@ -18,7 +18,7 @@ const EstateManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // API base URL - extracted to make it easier to change
+
   const API_BASE_URL = 'http://localhost:5000/api';
 
   useEffect(() => {
@@ -143,18 +143,18 @@ const EstateManagement = () => {
     setShowEditForm(true);
   };
 
-  // Fixed function to handle saving estate updates
+  
   const handleSaveEstate = async (updatedEstate) => {
     try {
-      // Check if updatedEstate has a valid ID
+
       if (!updatedEstate.id) {
         throw new Error('Estate ID is missing');
       }
       
-      // Get token from localStorage
+
       const token = localStorage.getItem('token');
       
-      // Prepare the API data
+
       const apiData = {
         name: updatedEstate.name,
         listType: updatedEstate.listType,
@@ -164,7 +164,7 @@ const EstateManagement = () => {
         images: updatedEstate.images
       };
       
-      // Using the same endpoint format as in the EstateEditForm component
+     
       const response = await fetch(`${API_BASE_URL}/estate/${updatedEstate.id}`, {
         method: 'PATCH',
         headers: {
@@ -175,12 +175,12 @@ const EstateManagement = () => {
       });
       
       if (!response.ok) {
-        // Try to get more information from the error response
+
         const errorData = await response.json().catch(() => null);
         throw new Error(`HTTP error! Status: ${response.status}${errorData ? ` - ${errorData.message}` : ''}`);
       }
       
-      // Update the local state with the updated estate
+
       const updatedEstates = estates.map(estate => 
         estate.id === updatedEstate.id ? {...updatedEstate, updatedAt: new Date().toISOString()} : estate
       );
@@ -196,7 +196,7 @@ const EstateManagement = () => {
     try {
       const token = localStorage.getItem('token');
       
-      // FIXED: Updated to match the endpoint format
+
       const response = await fetch(`${API_BASE_URL}/estate/${estateId}`, {
         method: 'DELETE',
         headers: {
@@ -221,7 +221,7 @@ const EstateManagement = () => {
     try {
       const token = localStorage.getItem('token');
       
-      // FIXED: Updated to match the endpoint format
+
       const response = await fetch(`${API_BASE_URL}/estate/status/${estateId}`, {
         method: 'PATCH',
         headers: {
@@ -242,7 +242,7 @@ const EstateManagement = () => {
       );
       setEstates(updatedEstates);
       
-      // Close detail modal if it's showing the estate that was just approved
+
       if (showDetailModal && selectedEstate && selectedEstate.id === estateId) {
         setSelectedEstate({...selectedEstate, status: 'available'});
       }
@@ -284,7 +284,7 @@ const EstateManagement = () => {
       
       const createdEstate = await response.json();
       
-      // Transform API response to match your application's structure
+   
       const estateToAdd = {
         id: createdEstate._id || createdEstate.newEstate._id,
         name: createdEstate.name || createdEstate.newEstate.name,
@@ -315,7 +315,7 @@ const EstateManagement = () => {
     }
   };
 
-  // Function to safely get the last part of a user's name or a default value
+ 
   const getUserLastName = (estate) => {
     if (!estate || !estate.user || !estate.user.name) {
       return 'N/A';
@@ -327,7 +327,7 @@ const EstateManagement = () => {
     }
   };
   
-  // Show loading state
+
   if (loading) {
     return (
       <div className="loading-container">
@@ -337,7 +337,7 @@ const EstateManagement = () => {
     );
   }
   
-  // Show error state
+
   if (error) {
     return (
       <div className="error-container">

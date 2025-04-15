@@ -31,7 +31,7 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
       description: estateData.description || '',
       images: estateData.images || []
     } : {
-      id: '', // Ensure there's always an id field, even if empty
+      id: '', 
       name: '',
       listType: 'rental',
       address: {
@@ -68,7 +68,7 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
   const [submissionError, setSubmissionError] = useState('');
 
   useEffect(() => {
-    // Reset form when estate prop changes
+
     if (estate) {
       const newInitialState = getInitialState(estate);
       setFormData(newInitialState);
@@ -76,7 +76,7 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
     }
   }, [estate]);
 
-  // Handle input changes
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     
@@ -97,7 +97,7 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
     }
   };
 
-  // Handle number input changes
+
   const handleNumberChange = (e) => {
     const { name, value } = e.target;
     
@@ -118,7 +118,7 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
     }
   };
 
-  // Handle image upload
+
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
@@ -126,7 +126,7 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
     const newImageFiles = [...imageFiles, ...files];
     setImageFiles(newImageFiles);
 
-    // Create preview URLs
+
     const newPreviewImages = [...previewImages];
     files.forEach(file => {
       const reader = new FileReader();
@@ -138,7 +138,6 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
     });
   };
 
-  // Remove image
   const removeImage = (index) => {
     const newPreviewImages = [...previewImages];
     newPreviewImages.splice(index, 1);
@@ -151,7 +150,7 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
     }
   };
 
-  // Form validation
+
   const validateForm = () => {
     const newErrors = {};
 
@@ -159,7 +158,6 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
       newErrors.name = 'Tên bài đăng không được để trống';
     }
 
-    // Convert house_number to string before checking if it's empty
     const houseNumber = String(formData.address.house_number);
     if (!houseNumber || houseNumber.trim() === '') {
       newErrors['address.house_number'] = 'Số nhà không được để trống';
@@ -185,20 +183,20 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Prepare data for API with the exact format requested
+
   const prepareDataForAPI = () => {
-    // Format the address for the API with the exact structure required
+
     const apiAddress = {
       street: `${formData.address.house_number} ${formData.address.road}`,
       city: formData.address.city,
       state: formData.address.quarter,
-      zipCode: '10001', // Using default value since it's required in the format
+      zipCode: '10001',
       country: formData.address.country || 'USA',
-      lat: formData.address.lat || 40.7128, // Default if not provided
-      lng: formData.address.lng || -74.0060 // Default if not provided
+      lat: formData.address.lat || 40.7128, 
+      lng: formData.address.lng || -74.0060 
     };
 
-    // Format the property data for the API with the exact structure required
+
     const apiProperty = {
       type: formData.property.type || 'apartment',
       bedrooms: formData.property.bedroom,
@@ -208,7 +206,6 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
       description: formData.description || 'Beautiful modern apartment in downtown area'
     };
 
-    // Return the data in the exact format requested
     return {
       name: formData.name,
       images: previewImages.length > 0 ? previewImages : [
@@ -218,7 +215,6 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
       address: apiAddress,
       price: formData.price,
       property: apiProperty,
-      // Including these for internal use
       id: formData.id,
       listType: formData.listType || 'rental',
       status: formData.status
@@ -274,7 +270,7 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
             throw new Error('Bài đăng không có ID hợp lệ');
           }
           
-          // Fixed endpoint format to match the Postman screenshot
+          // FIXED: Updated endpoint to match the format in the screenshot
           const response = await fetch(`http://localhost:5000/api/estate/${apiData.id}`, {
             method: 'PATCH',
             headers: {
