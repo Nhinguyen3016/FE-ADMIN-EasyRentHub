@@ -7,37 +7,52 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
     return estateData ? {
       id: estateData.id || '',
       name: estateData.name || '',
+      listType: estateData.listType || 'rental',
       address: estateData.address || {
         house_number: '',
         road: '',
         quarter: '',
         city: '',
-        country: 'Việt Nam'
+        country: 'Việt Nam',
+        lat: '',
+        lng: ''
       },
       price: estateData.price || 0,
       status: estateData.status || 'pending',
       property: estateData.property || {
         bedroom: 1,
         bathroom: 1,
-        floors: 1
+        floors: 1,
+        type: 'apartment',
+        amenities: ['standard'],
+        area: 0,
+        description: ''
       },
       description: estateData.description || '',
       images: estateData.images || []
     } : {
+      id: '', // Ensure there's always an id field, even if empty
       name: '',
+      listType: 'rental',
       address: {
         house_number: '',
         road: '',
         quarter: '',
         city: '',
-        country: 'Việt Nam'
+        country: 'Việt Nam',
+        lat: '',
+        lng: ''
       },
       price: 0,
       status: 'pending',
       property: {
         bedroom: 1,
         bathroom: 1,
-        floors: 1
+        floors: 1,
+        type: 'apartment',
+        amenities: ['standard'],
+        area: 0,
+        description: ''
       },
       description: '',
       images: []
@@ -49,6 +64,8 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
   const [errors, setErrors] = useState({});
   const [imageFiles, setImageFiles] = useState([]);
   const [previewImages, setPreviewImages] = useState(initialState.images);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionError, setSubmissionError] = useState('');
 
   useEffect(() => {
     // Reset form when estate prop changes
@@ -168,19 +185,132 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
     return Object.keys(newErrors).length === 0;
   };
 
+  // Prepare data for API with the exact format requested
+  const prepareDataForAPI = () => {
+    // Format the address for the API with the exact structure required
+    const apiAddress = {
+      street: `${formData.address.house_number} ${formData.address.road}`,
+      city: formData.address.city,
+      state: formData.address.quarter,
+      zipCode: '10001', // Using default value since it's required in the format
+      country: formData.address.country || 'USA',
+      lat: formData.address.lat || 40.7128, // Default if not provided
+      lng: formData.address.lng || -74.0060 // Default if not provided
+    };
+
+    // Format the property data for the API with the exact structure required
+    const apiProperty = {
+      type: formData.property.type || 'apartment',
+      bedrooms: formData.property.bedroom,
+      bathrooms: formData.property.bathroom,
+      area: formData.property.area || 85,
+      amenities: formData.property.amenities || ['gym', 'pool', 'parking'],
+      description: formData.description || 'Beautiful modern apartment in downtown area'
+    };
+
+    // Return the data in the exact format requested
+    return {
+      name: formData.name,
+      images: previewImages.length > 0 ? previewImages : [
+        "https://example.com/images/apartment1.jpg",
+        "https://example.com/images/apartment2.jpg"
+      ],
+      address: apiAddress,
+      price: formData.price,
+      property: apiProperty,
+      // Including these for internal use
+      id: formData.id,
+      listType: formData.listType || 'rental',
+      status: formData.status
+    };
+  };
+
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (validateForm()) {
-      // Create submission data with file references
-      const submissionData = {
-        ...formData,
-        images: previewImages,
-        imageFiles: imageFiles // This will be handled by the API
-      };
+      setIsSubmitting(true);
+      setSubmissionError('');
       
-      onSave(submissionData);
+      try {
+        // Get token from localStorage
+        const token = localStorage.getItem('token');
+        
+        // Prepare the API data in the exact format requested
+        const apiData = prepareDataForAPI();
+        
+        let result;
+        
+        // Different handling for new vs. existing estates
+        if (isNew) {
+          // Create new estate
+          const response = await fetch('http://localhost:5000/api/estates', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(apiData)
+          });
+          
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.msg || 'Có lỗi xảy ra khi tạo bài đăng');
+          }
+          
+          result = await response.json();
+          
+          // For new estates, make sure the ID is set correctly from the response
+          if (result.newEstate && result.newEstate._id) {
+            apiData.id = result.newEstate._id;
+          } else if (result._id) {
+            apiData.id = result._id;
+          }
+        } else {
+          // Update existing estate
+          // Make sure we have a valid ID
+          if (!apiData.id) {
+            throw new Error('Bài đăng không có ID hợp lệ');
+          }
+          
+          // Fixed endpoint format to match the Postman screenshot
+          const response = await fetch(`http://localhost:5000/api/estate/${apiData.id}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              name: apiData.name,
+              listType: apiData.listType,
+              images: apiData.images,
+              address: apiData.address,
+              price: apiData.price,
+              property: apiData.property
+            })
+          });
+          
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.msg || 'Có lỗi xảy ra khi cập nhật bài đăng');
+          }
+          
+          result = await response.json();
+        }
+        
+        // Call onSave with the result
+        onSave(apiData);
+        
+        // Close the form after successful submission
+        onClose();
+        
+      } catch (error) {
+        console.error('Error submitting estate:', error);
+        setSubmissionError(error.message || 'Có lỗi xảy ra. Vui lòng thử lại sau.');
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -197,6 +327,10 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
         </div>
         
         <form onSubmit={handleSubmit} className="edit-form">
+          {submissionError && (
+            <div className="error-banner">{submissionError}</div>
+          )}
+          
           <div className="form-section">
             <h3 className="section-title">Thông tin cơ bản</h3>
             
@@ -225,6 +359,19 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
                   className={errors.price ? 'input-error' : ''}
                 />
                 {errors.price && <div className="error-message">{errors.price}</div>}
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="listType">Loại danh sách</label>
+                <select
+                  id="listType"
+                  name="listType"
+                  value={formData.listType}
+                  onChange={handleChange}
+                >
+                  <option value="rental">Cho thuê</option>
+                  <option value="sale">Bán</option>
+                </select>
               </div>
               
               <div className="form-group">
@@ -316,6 +463,10 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
                 onChange={handleChange}
               />
             </div>
+            
+            {/* Hidden fields for lat/lng */}
+            <input type="hidden" name="address.lat" value={formData.address.lat || 40.7128} />
+            <input type="hidden" name="address.lng" value={formData.address.lng || -74.0060} />
           </div>
 
           <div className="form-section">
@@ -354,6 +505,33 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
                   name="property.floors"
                   min="1"
                   value={formData.property.floors}
+                  onChange={handleNumberChange}
+                />
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="property.type">Loại nhà</label>
+                <select
+                  id="property.type"
+                  name="property.type"
+                  value={formData.property.type}
+                  onChange={handleChange}
+                >
+                  <option value="apartment">Căn hộ</option>
+                  <option value="house">Nhà phố</option>
+                  <option value="villa">Biệt thự</option>
+                  <option value="studio">Studio</option>
+                </select>
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="property.area">Diện tích (m²)</label>
+                <input
+                  type="number"
+                  id="property.area"
+                  name="property.area"
+                  min="1"
+                  value={formData.property.area}
                   onChange={handleNumberChange}
                 />
               </div>
@@ -420,12 +598,12 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
           </div>
 
           <div className="form-actions">
-            <button type="button" className="btn btn-cancel" onClick={onClose}>
+            <button type="button" className="btn btn-cancel" onClick={onClose} disabled={isSubmitting}>
               Hủy
             </button>
-            <button type="submit" className="btn btn-save">
+            <button type="submit" className="btn btn-save" disabled={isSubmitting}>
               <Save size={16} className="mr-2" />
-              {isNew ? 'Thêm bài đăng' : 'Lưu thay đổi'}
+              {isSubmitting ? 'Đang xử lý...' : isNew ? 'Thêm bài đăng' : 'Lưu thay đổi'}
             </button>
           </div>
         </form>
