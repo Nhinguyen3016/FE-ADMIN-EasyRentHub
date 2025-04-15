@@ -15,46 +15,29 @@ const Login = () => {
 
   const navigate = useNavigate();
 
-  // Kiểm tra nếu người dùng đã đăng nhập khi component mount
+  // Xóa bất kỳ dữ liệu xác thực cũ khi trang đăng nhập được tải
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    const userRole = localStorage.getItem('userRole');
-    
-    if (token && userData) {
-      try {
-        const user = JSON.parse(userData);
-        // Chỉ chuyển hướng đến dashboard nếu là Admin
-        if (user.role === 'Admin' || userRole === 'Admin') {
-          navigate('/dashboard');
-        }
-      } catch (e) {
-        console.error('Error parsing user data:', e);
-        // Xóa dữ liệu không hợp lệ
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('userRole');
-      }
-    }
-  }, [navigate]);
+    // Xóa toàn bộ dữ liệu xác thực khi trang đăng nhập được tải
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('tokenExpiration');
+    localStorage.removeItem('refreshToken');
+  }, []);
 
-  // Lưu dữ liệu người dùng vào storage
   const saveUserData = (data) => {
     if (data.access_token) {
       localStorage.setItem('token', data.access_token);
     }
     
-    // Lưu thông tin người dùng nếu có
     if (data.user) {
       localStorage.setItem('user', JSON.stringify(data.user));
       
-      // Lưu riêng role của người dùng vào localStorage
       if (data.user.role) {
         localStorage.setItem('userRole', data.user.role);
       }
     }
     
-    // Lưu thêm các thông tin khác nếu cần
     if (data.expiresIn) {
       const expirationTime = new Date().getTime() + data.expiresIn * 1000;
       localStorage.setItem('tokenExpiration', expirationTime);
@@ -99,22 +82,13 @@ const Login = () => {
 
       console.log('Đăng nhập thành công:', data);
       
-      // Lưu token và thông tin người dùng
-      saveUserData(data);
-      
-      // Kiểm tra role của người dùng
       if (data.user && data.user.role === 'Admin') {
-        // Nếu là Admin thì chuyển hướng đến dashboard
+        saveUserData(data);
         navigate('/dashboard');
       } else {
-        // Nếu không phải Admin thì hiển thị thông báo lỗi
         setErrors({
           submit: 'Bạn không có quyền truy cập vào hệ thống quản trị. Chỉ tài khoản Admin mới có thể đăng nhập.'
         });
-        // Xóa token và thông tin người dùng nếu không phải Admin
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('userRole');
       }
     } catch (error) {
       console.error('Lỗi đăng nhập:', error);

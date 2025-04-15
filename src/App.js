@@ -9,21 +9,21 @@ import RegisterPage from './page/register/RegisterPage';
 import MessageManagement from './page/notification/messageManagement/MessageManagement';
 import ProtectedRoute from './components/ProtectedRoute';
 import EditForm from './page/post/components/EstateEditForm';
+
 function App() {
   return (
     <Router>
       <Routes>
-
         <Route path="/" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/editform" element={<EditForm />} />
-  
+
         <Route element={<ProtectedRoute allowedRoles={['Admin']} />}>
           <Route element={<MainLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/account" element={<UserManagement />} />
             <Route path="/post" element={<PostManagementPage />} />
             <Route path="/messageManagement" element={<MessageManagement />} />
+            <Route path="/editform" element={<EditForm />} />
           </Route>
         </Route>
 
