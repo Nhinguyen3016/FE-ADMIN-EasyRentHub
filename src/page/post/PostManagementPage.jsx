@@ -1,8 +1,10 @@
 import '../../styles/post/PostManagement.css';
+
 import React, { useState, useEffect } from 'react';
-import { Search, PlusCircle, Filter, CheckCircle, AlertCircle, Clock, Home, Eye, Flag, MapPin, Star, Bed, Bath } from 'lucide-react';
+import { Search, PlusCircle, Filter, CheckCircle, AlertCircle, Clock, Flag} from 'lucide-react';
 import EstateDetailModal from './components/EstateDetailModal'; 
 import EstateEditForm from './components/EstateEditForm';
+import EstateCard from './components/EstateCard'; 
 import { FileText } from "lucide-react";
 import bd1 from '../../images/bd1.jpg';
 
@@ -25,7 +27,7 @@ const EstateManagement = () => {
     const fetchEstates = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${API_BASE_URL}/estates`);
+        const response = await fetch(`${API_BASE_URL}/estates?limit=1000`);
         
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
@@ -314,18 +316,6 @@ const EstateManagement = () => {
       alert(`Failed to create estate: ${err.message}`);
     }
   };
-
- 
-  const getUserLastName = (estate) => {
-    if (!estate || !estate.user || !estate.user.name) {
-      return 'N/A';
-    }
-    try {
-      return estate.user.name.split(' ').pop();
-    } catch (error) {
-      return 'N/A';
-    }
-  };
   
 
   if (loading) {
@@ -355,7 +345,7 @@ const EstateManagement = () => {
       {/* Header */}
       <header className="app-header">
         <div className="header-content">
-          <h1 className="header-title">Quản lý bài đăng bất động sản</h1>
+          <h1 className="header-title">Quản lý bài đăng </h1>
           <div className="header-actions">
             <div className="search-container">
               <input
@@ -486,77 +476,18 @@ const EstateManagement = () => {
         <div className="estates-grid">
           {getCurrentItems().length === 0 ? (
             <div className="no-estates-message">
-              <p>Không có bài đăng bất động sản nào {activeTab !== 'all' ? `ở trạng thái "${activeTab}"` : ''}</p>
+              <p>Không có bài đăng nào {activeTab !== 'all' ? `ở trạng thái "${activeTab}"` : ''}</p>
             </div>
           ) : (
             getCurrentItems().map((estate) => (
-              <div key={estate.id} className="estate-card">
-                <div className="estate-card-image-container">
-                  <img 
-                    src={estate.images[0]} 
-                    alt={estate.name}
-                    className="estate-card-image"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = bd1;
-                    }}
-                  />
-                  <div className="estate-card-status">
-                    {renderStatus(estate.status)}
-                  </div>
-                </div>
-                <div className="estate-card-content">
-                  <h3 className="estate-card-title">{estate.name}</h3>
-                  <div className="estate-card-address">
-                    <MapPin size={16} className="icon-small" />
-                    <p>
-                      {estate.address.road ? estate.address.road + ', ' : ''}
-                      {estate.address.quarter ? estate.address.quarter + ', ' : ''}
-                      {estate.address.city || 'N/A'}
-                    </p>
-                  </div>
-                  
-                  <div className="estate-card-stats">
-                    <div className="estate-card-rating">
-                      <Star size={16} className="mr-1" />
-                      <span>{estate.rating_star || 0}</span>
-                    </div>
-                    <div className="estate-card-price">{formatCurrency(estate.price || 0)}</div>
-                  </div>
-                  
-                  <div className="estate-card-features">
-                    <div className="estate-card-feature">
-                      <Bed size={16} className="mr-1" />
-                      <span>{estate.property?.bedroom || 0}</span>
-                    </div>
-                    <div className="estate-card-feature">
-                      <Bath size={16} className="mr-1" />
-                      <span>{estate.property?.bathroom || 0}</span>
-                    </div>
-                    <div className="estate-card-feature">
-                      <Home size={16} className="mr-1" />
-                      <span>{getUserLastName(estate)}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="estate-card-actions">
-                    <button 
-                      onClick={() => openEstateDetail(estate)}
-                      className="btn btn-view"
-                    >
-                      <Eye size={14} className="mr-1" /> Xem chi tiết
-                    </button>
-                    {estate.status === 'pending' && (
-                      <button 
-                        className="btn btn-approve" 
-                        onClick={() => handleApproveEstate(estate.id)}
-                      >
-                        <CheckCircle size={14} className="mr-1" /> Duyệt
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
+              <EstateCard
+                key={estate.id}
+                estate={estate}
+                onView={openEstateDetail}
+                onApprove={handleApproveEstate}
+                formatCurrency={formatCurrency}
+                renderStatus={renderStatus}
+              />
             ))
           )}
         </div>

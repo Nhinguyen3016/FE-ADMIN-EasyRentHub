@@ -63,8 +63,8 @@ const MainLayout = () => {
       <div className="sidebar-mlo">
         <div className="logo-container-mlo">
           <img src={logoImg} alt="EasyRentHub Logo" className="logo-mlo" />
-          <p className="logo-text-mlo">An easy and convenient<br />rental connection platform</p>
-        </div>
+          <p className="logo-text-mlo">Nền tảng kết nối cho thuê<br />dễ dàng và tiện lợi</p>
+          </div>
         <div className="menu-mlo">
           <Link to="/dashboard" className="menu-link-mlo">
             <div className={`menu-item-mlo ${activePage === 'dashboard' ? 'active' : ''}`}>
