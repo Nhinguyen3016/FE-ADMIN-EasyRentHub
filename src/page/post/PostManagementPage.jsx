@@ -38,7 +38,7 @@ const EstateManagement = () => {
         if (data.msg === "Success!" && Array.isArray(data.estates)) {
           const transformedEstates = data.estates.map(estate => ({
             id: estate._id,
-            _id: estate._id, // Add _id as a backup
+            _id: estate._id, 
             name: estate.name,
             address: estate.address,
             images: estate.images && estate.images.length > 0 ? estate.images : [bd1], 
@@ -145,10 +145,9 @@ const EstateManagement = () => {
     setShowEditForm(true);
   };
 
-  // Fixed function to handle estate ID properly
+ 
   const handleSaveEstate = async (updatedEstate) => {
     try {
-      // Enhanced ID extraction with more detailed logging
       const estateId = updatedEstate.id || updatedEstate._id;
       
       console.log('Estate update object:', updatedEstate);
@@ -185,7 +184,6 @@ const EstateManagement = () => {
         throw new Error(`HTTP error! Status: ${response.status}${errorData ? ` - ${errorData.message}` : ''}`);
       }
       
-      // Update both id and _id properties in the estates array
       const updatedEstates = estates.map(estate => 
         (estate.id === estateId || estate._id === estateId) 
           ? {...updatedEstate, id: estateId, _id: estateId, updatedAt: new Date().toISOString()} 
