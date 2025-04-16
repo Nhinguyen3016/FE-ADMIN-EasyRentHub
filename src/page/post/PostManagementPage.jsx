@@ -1,7 +1,7 @@
 import '../../styles/post/PostManagement.css';
 
 import React, { useState, useEffect } from 'react';
-import { Search, PlusCircle, Filter, CheckCircle, AlertCircle, Clock, Flag} from 'lucide-react';
+import { Search, Filter, CheckCircle, AlertCircle, Clock, Flag} from 'lucide-react';
 import EstateDetailModal from './components/EstateDetailModal'; 
 import EstateEditForm from './components/EstateEditForm';
 import EstateCard from './components/EstateCard'; 
@@ -38,6 +38,7 @@ const EstateManagement = () => {
         if (data.msg === "Success!" && Array.isArray(data.estates)) {
           const transformedEstates = data.estates.map(estate => ({
             id: estate._id,
+            _id: estate._id, // Add _id as a backup
             name: estate.name,
             address: estate.address,
             images: estate.images && estate.images.length > 0 ? estate.images : [bd1], 
@@ -73,7 +74,6 @@ const EstateManagement = () => {
     if (activeTab === 'all') return estates;
     return estates.filter(estate => {
       if (activeTab === 'available') return estate.status === 'available';
-      if (activeTab === 'pending') return estate.status === 'pending';
       if (activeTab === 'booked') return estate.status === 'booked';
       return true;
     });
@@ -145,18 +145,21 @@ const EstateManagement = () => {
     setShowEditForm(true);
   };
 
-  
+  // Fixed function to handle estate ID properly
   const handleSaveEstate = async (updatedEstate) => {
     try {
-
-      if (!updatedEstate.id) {
+      // Enhanced ID extraction with more detailed logging
+      const estateId = updatedEstate.id || updatedEstate._id;
+      
+      console.log('Estate update object:', updatedEstate);
+      console.log('Estate ID found:', estateId);
+      
+      if (!estateId) {
         throw new Error('Estate ID is missing');
       }
       
-
       const token = localStorage.getItem('token');
       
-
       const apiData = {
         name: updatedEstate.name,
         listType: updatedEstate.listType,
@@ -166,8 +169,9 @@ const EstateManagement = () => {
         images: updatedEstate.images
       };
       
-     
-      const response = await fetch(`${API_BASE_URL}/estate/${updatedEstate.id}`, {
+      console.log(`Sending PATCH request to: ${API_BASE_URL}/estate/${estateId}`);
+      
+      const response = await fetch(`${API_BASE_URL}/estate/${estateId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -177,17 +181,21 @@ const EstateManagement = () => {
       });
       
       if (!response.ok) {
-
         const errorData = await response.json().catch(() => null);
         throw new Error(`HTTP error! Status: ${response.status}${errorData ? ` - ${errorData.message}` : ''}`);
       }
       
-
+      // Update both id and _id properties in the estates array
       const updatedEstates = estates.map(estate => 
-        estate.id === updatedEstate.id ? {...updatedEstate, updatedAt: new Date().toISOString()} : estate
+        (estate.id === estateId || estate._id === estateId) 
+          ? {...updatedEstate, id: estateId, _id: estateId, updatedAt: new Date().toISOString()} 
+          : estate
       );
+      
       setEstates(updatedEstates);
       setShowEditForm(false);
+      
+      console.log('Estate updated successfully:', estateId);
     } catch (err) {
       console.error('Error updating estate:', err);
       alert(`Failed to update estate: ${err.message}`);
@@ -198,7 +206,6 @@ const EstateManagement = () => {
     try {
       const token = localStorage.getItem('token');
       
-
       const response = await fetch(`${API_BASE_URL}/estate/${estateId}`, {
         method: 'DELETE',
         headers: {
@@ -210,7 +217,7 @@ const EstateManagement = () => {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
       
-      const updatedEstates = estates.filter(estate => estate.id !== estateId);
+      const updatedEstates = estates.filter(estate => estate.id !== estateId && estate._id !== estateId);
       setEstates(updatedEstates);
       setShowDetailModal(false);
     } catch (err) {
@@ -223,7 +230,6 @@ const EstateManagement = () => {
     try {
       const token = localStorage.getItem('token');
       
-
       const response = await fetch(`${API_BASE_URL}/estate/status/${estateId}`, {
         method: 'PATCH',
         headers: {
@@ -240,12 +246,14 @@ const EstateManagement = () => {
       }
       
       const updatedEstates = estates.map(estate => 
-        estate.id === estateId ? {...estate, status: 'available', updatedAt: new Date().toISOString()} : estate
+        (estate.id === estateId || estate._id === estateId) 
+          ? {...estate, status: 'available', updatedAt: new Date().toISOString()} 
+          : estate
       );
+      
       setEstates(updatedEstates);
       
-
-      if (showDetailModal && selectedEstate && selectedEstate.id === estateId) {
+      if (showDetailModal && selectedEstate && (selectedEstate.id === estateId || selectedEstate._id === estateId)) {
         setSelectedEstate({...selectedEstate, status: 'available'});
       }
     } catch (err) {
@@ -253,70 +261,6 @@ const EstateManagement = () => {
       alert(`Failed to approve estate: ${err.message}`);
     }
   };
-
-  const handleCreateEstate = () => {
-    setSelectedEstate(null); 
-    setShowEditForm(true);
-  };
-
-  const handleSaveNewEstate = async (newEstate) => {
-    try {
-      const token = localStorage.getItem('token');
-      
-      const response = await fetch(`${API_BASE_URL}/estates`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          name: newEstate.name,
-          price: newEstate.price,
-          address: newEstate.address,
-          property: newEstate.property,
-          images: newEstate.images,
-          status: 'pending',
-          listType: newEstate.listType || 'rental'
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      
-      const createdEstate = await response.json();
-      
-   
-      const estateToAdd = {
-        id: createdEstate._id || createdEstate.newEstate._id,
-        name: createdEstate.name || createdEstate.newEstate.name,
-        address: createdEstate.address || createdEstate.newEstate.address,
-        images: (createdEstate.images || createdEstate.newEstate.images || []).length > 0 
-          ? (createdEstate.images || createdEstate.newEstate.images) 
-          : [bd1],
-        rating_star: 0,
-        price: (createdEstate.price || createdEstate.newEstate.price) || 0,
-        rental: true,
-        property: createdEstate.property || createdEstate.newEstate.property,
-        status: createdEstate.status || createdEstate.newEstate.status,
-        likes: [],
-        reviews: [],
-        user: typeof (createdEstate.user || createdEstate.newEstate.user) === 'object' 
-          ? (createdEstate.user || createdEstate.newEstate.user) 
-          : { _id: (createdEstate.user || createdEstate.newEstate.user), name: 'Current User' },
-        distance: 1.0,
-        createdAt: createdEstate.createdAt || createdEstate.newEstate.createdAt || new Date().toISOString(),
-        updatedAt: createdEstate.updatedAt || createdEstate.newEstate.updatedAt || new Date().toISOString(),
-      };
-      
-      setEstates([...estates, estateToAdd]);
-      setShowEditForm(false);
-    } catch (err) {
-      console.error('Error creating estate:', err);
-      alert(`Failed to create estate: ${err.message}`);
-    }
-  };
-  
 
   if (loading) {
     return (
@@ -327,7 +271,6 @@ const EstateManagement = () => {
     );
   }
   
-
   if (error) {
     return (
       <div className="error-container">
@@ -355,9 +298,6 @@ const EstateManagement = () => {
               />
               <Search className="search-icon" size={18} />
             </div>
-            <button className="btn btn-create" onClick={handleCreateEstate}>
-              <PlusCircle className="mr-2" size={18} /> Tạo mới
-            </button>
           </div>
         </div>
       </header>
@@ -384,7 +324,7 @@ const EstateManagement = () => {
           <div className="stats-card">
             <div className="stats-card-content">
               <div>
-                <p className="stats-label">Đã duyệt</p>
+                <p className="stats-label">Có sẵn</p>
                 <h3 className="stats-value">{estates.filter(e => e.status === 'available').length}</h3>
               </div>
               <div className="stats-icon-container green">
@@ -402,27 +342,12 @@ const EstateManagement = () => {
                 <p className="stats-label">Đã đặt</p>
                 <h3 className="stats-value">{estates.filter(e => e.status === 'booked').length}</h3>
               </div>
-              <div className="stats-icon-container blue">
+              <div className="stats-icon-container yellow">
                 <Flag className="stats-icon" />
               </div>
             </div>
             <div className="stats-trend positive">
               +15.3% so với tháng trước
-            </div>
-          </div>
-          
-          <div className="stats-card">
-            <div className="stats-card-content">
-              <div>
-                <p className="stats-label">Chờ duyệt</p>
-                <h3 className="stats-value">{estates.filter(e => e.status === 'pending').length}</h3>
-              </div>
-              <div className="stats-icon-container yellow">
-                <Clock className="stats-icon" />
-              </div>
-            </div>
-            <div className="stats-trend negative">
-              +7.8% so với tháng trước
             </div>
           </div>
         </div>
@@ -450,19 +375,10 @@ const EstateManagement = () => {
             </button>
             <button
               onClick={() => {
-                setActiveTab('pending');
-                setCurrentPage(1);
-              }}
-              className={`filter-tab ${activeTab === 'pending' ? 'filter-tab-active filter-tab-yellow' : ''}`}
-            >
-              Chờ duyệt
-            </button>
-            <button
-              onClick={() => {
                 setActiveTab('booked');
                 setCurrentPage(1);
               }}
-              className={`filter-tab ${activeTab === 'booked' ? 'filter-tab-active filter-tab-blue' : ''}`}
+              className={`filter-tab ${activeTab === 'booked' ? 'filter-tab-active filter-tab-yellow' : ''}`}
             >
               Đã đặt
             </button>
@@ -544,13 +460,13 @@ const EstateManagement = () => {
         />
       }
 
-      {/* Estate Edit Form */}
-      {showEditForm && 
+      {/* Estate Edit Form - Only for editing existing estates, not for creating new ones */}
+      {showEditForm && selectedEstate && 
         <EstateEditForm 
           estate={selectedEstate}
-          isNew={!selectedEstate}
+          isNew={false}
           onClose={() => setShowEditForm(false)}
-          onSave={selectedEstate ? handleSaveEstate : handleSaveNewEstate}
+          onSave={handleSaveEstate}
         />
       }
     </div>
