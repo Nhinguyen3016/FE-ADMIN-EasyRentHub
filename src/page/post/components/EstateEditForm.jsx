@@ -168,15 +168,15 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
   };
 
   const prepareDataForAPI = () => {
-    // Chuẩn bị dữ liệu theo định dạng yêu cầu của API
+
     const apiData = {
-      id: formData.id,  // Make sure to include the ID
-      _id: formData.id, // Include _id for backup
+      id: formData.id,  
+      _id: formData.id, 
       full_name: formData.name,
-      email: "user@example.com", // Giá trị mặc định hoặc lấy từ nguồn khác nếu cần
-      password: "UltraSecure789", // Giá trị mặc định hoặc lấy từ nguồn khác nếu cần
-      mobile: "0909123456", // Giá trị mặc định hoặc lấy từ nguồn khác nếu cần
-      role: "Tenant", // Giá trị mặc định hoặc lấy từ nguồn khác nếu cần
+      email: "user@example.com", 
+      password: "UltraSecure789", 
+      mobile: "0909123456", 
+      role: "Tenant", 
       avatar: previewImages.length > 0 ? previewImages[0] : "https://example.com/avatar3.jpg",
       property: {
         bedroom: formData.property.bedroom,
@@ -209,17 +209,16 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
       setSubmissionError('');
       
       try {
-        // Get token from localStorage
+    
         const token = localStorage.getItem('token');
         
-        // Prepare the API data in the exact format requested
         const apiData = prepareDataForAPI();
         
         let result;
         
-        // Different handling for new vs. existing estates
+       
         if (isNew) {
-          // Create new estate
+      
           const response = await fetch('http://localhost:5000/api/estates', {
             method: 'POST',
             headers: {
@@ -236,7 +235,7 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
           
           result = await response.json();
           
-          // For new estates, make sure the ID is set correctly from the response
+       
           if (result.newEstate && result.newEstate._id) {
             apiData.id = result.newEstate._id;
             apiData._id = result.newEstate._id;
@@ -245,18 +244,17 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
             apiData._id = result._id;
           }
         } else {
-          // Update existing estate
-          // Make sure we have a valid ID
+      
           if (!formData.id) {
             throw new Error('Bài đăng không có ID hợp lệ');
           }
           
-          // Chỉ gửi các trường mà ta muốn cập nhật
+  
           const updateData = {
             property: apiData.property
           };
           
-          // Có thể thêm các trường khác nếu cũng cần cập nhật
+      
           if (formData.name) updateData.full_name = apiData.full_name;
           if (formData.address) updateData.address = apiData.address;
           
@@ -277,10 +275,9 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
           result = await response.json();
         }
         
-        // Call onSave with the result
+
         onSave(apiData);
-        
-        // Close the form after successful submission
+ 
         onClose();
         
       } catch (error) {
