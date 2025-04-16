@@ -27,14 +27,14 @@ const UserRoleChart = () => {
     chartInstance.current = new Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels: ['Tenant', 'Landlord', 'Admin'],
+        labels: ['Người thuê', 'Chủ nhà ', ' Quản trị viên '],
         datasets: [
           {
             data: dataValues,
             backgroundColor: ['#4A68D9', '#E67E22', '#2ECC71'],
             borderWidth: 0,
             hoverOffset: 10,
-            cutout: '80%' // Thu nhỏ phần trống giữa biểu đồ
+            cutout: '80%' 
           }
         ]
       },
@@ -93,7 +93,7 @@ const UserRoleChart = () => {
             backgroundColor: '#4A68D9',
             marginRight: '5px'
           }}></span>
-          <span>Tenant</span>
+          <span>Người thuê</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <span style={{
@@ -103,7 +103,7 @@ const UserRoleChart = () => {
             backgroundColor: '#E67E22',
             marginRight: '5px'
           }}></span>
-          <span>Landlord</span>
+          <span>Chủ nhà</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <span style={{
@@ -113,7 +113,7 @@ const UserRoleChart = () => {
             backgroundColor: '#2ECC71',
             marginRight: '5px'
           }}></span>
-          <span>Admin</span>
+          <span>Quản trị viên</span>
         </div>
       </div>
     </div>

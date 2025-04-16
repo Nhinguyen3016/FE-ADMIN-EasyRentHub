@@ -1,0 +1,197 @@
+
+.estate-card {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: box-shadow 0.3s;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    position: relative;
+  }
+  
+  .estate-card:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .estate-card-image-container {
+    position: relative;
+    width: 100%;
+    height: 12rem;
+    overflow: hidden;
+  }
+  
+  .estate-card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .estate-card-status {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 10;
+  }
+
+  .estate-card-content {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 0.5rem;
+  }
+
+  .estate-card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.5rem;
+    line-height: 1.25;
+  }
+  
+  /* Address - Modified for strict one-line truncation */
+  .estate-card-address {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    color: #6b7280;
+    font-size: 0.875rem;
+    width: 100%;
+    height: 1.5rem;
+    overflow: hidden;
+  }
+  
+  .estate-card-address .icon-fixed {
+    flex-shrink: 0;
+  }
+  
+  .truncate-address {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0;
+    width: calc(100% - 20px); 
+  }
+  
+
+  .estate-card-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  
+  .estate-card-rating {
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+    color: #f59e0b;
+    gap: 0.25rem;
+  }
+  
+  .estate-card-price {
+    font-weight: 600;
+    color: #2563eb;
+    font-size: 0.875rem;
+  }
+
+  .estate-card-features {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.5rem 0;
+  }
+  
+  .estate-card-feature {
+    display: flex;
+    align-items: center;
+    color: #6b7280;
+    font-size: 0.875rem;
+    gap: 0.25rem;
+  }
+
+  .icon-fixed {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+  }
+  
+
+  .estate-card-actions {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin-top: auto;
+    gap: 0.5rem;
+  }
+  
+  .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s;
+    gap: 0.375rem;
+    width: 100%;
+  }
+  
+  .btn-view {
+    background-color: #2563eb;
+    color: #ffffff;
+  }
+  
+  .btn-view:hover {
+    background-color: #1d4ed8;
+  }
+  
+  .btn-approve {
+    background-color: #10b981;
+    color: #ffffff;
+  }
+  
+  .btn-approve:hover {
+    background-color: #059669;
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+  
+  .status-available {
+    background-color: #d1fae5;
+    color: #065f46;
+  }
+  
+  .status-pending {
+    background-color: #fef3c7;
+    color: #92400e;
+  }
+  
+  .status-booked {
+    background-color: #dbeafe;
+    color: #1e40af;
+  }
