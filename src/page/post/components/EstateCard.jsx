@@ -9,6 +9,7 @@ const EstateCard = ({
   formatCurrency,
   renderStatus
 }) => {
+  // Get user's last name
   const getUserLastName = () => {
     if (!estate || !estate.user || !estate.user.name) {
       return 'N/A';
