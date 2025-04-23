@@ -177,13 +177,21 @@ const AccountManagementPage = () => {
           selectedRole === 'tenant' ? user.role === 'Người thuê' : true)
       : true;
 
-    // Logic tìm kiếm: tìm kiếm không phân biệt chữ hoa/thường, tìm cả từ khóa đầy đủ và từ khóa một phần
-    if (!searchQuery.trim()) {
-      // Nếu không có từ khóa tìm kiếm, trả về kết quả dựa vào lọc theo vai trò
+    // Nếu searchQuery chỉ chứa khoảng trắng hoặc không trống, sẽ coi như có tìm kiếm
+    const searchQueryTrimmed = searchQuery.trim();
+    const isSearching = searchQuery !== '' && searchQueryTrimmed === '';
+    
+    // Nếu người dùng đã nhập chỉ khoảng trắng, trả về mảng rỗng
+    if (isSearching) {
+      return false;
+    }
+    
+    // Nếu không có từ khóa tìm kiếm, trả về kết quả dựa vào lọc theo vai trò
+    if (!searchQueryTrimmed) {
       return roleMatches;
     }
 
-    const searchTerm = searchQuery.toLowerCase().trim();
+    const searchTerm = searchQueryTrimmed.toLowerCase();
     const userName = user.name ? user.name.toLowerCase() : '';
     const userEmail = user.email ? user.email.toLowerCase() : '';
     const userAddress = user.address ? user.address.toLowerCase() : '';

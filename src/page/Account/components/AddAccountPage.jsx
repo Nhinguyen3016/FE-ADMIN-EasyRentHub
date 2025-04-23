@@ -11,7 +11,7 @@ const AddAccountPage = ({ onClose, onAdd }) => {
     password: '',
     confirmPassword: '',
     avatar: null,
-    mobile: '' // Thêm trường mobile
+    mobile: ''
   });
   
   const [previewImage, setPreviewImage] = useState(null);
@@ -20,54 +20,165 @@ const AddAccountPage = ({ onClose, onAdd }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState({ type: '', text: '' });
 
+  const containsInjection = (value) => {
+    if (typeof value !== 'string') return false;
+    
+    const xssPatterns = [
+      /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/i,
+      /javascript:/i,
+      /on\w+\s*=/i,
+      /alert\s*\(/i,
+      /document\./i,
+      /eval\s*\(/i
+    ];
+    
+    const noSqlPatterns = [
+      /\$gt:/i, 
+      /\$lt:/i, 
+      /\$ne:/i, 
+      /\$eq:/i,
+      /\$regex:/i,
+      /\{\s*\$\w+:/i,
+      /\[\s*\{\s*\$/i
+    ];
+    
+    for (let pattern of [...xssPatterns, ...noSqlPatterns]) {
+      if (pattern.test(value)) {
+        return true;
+      }
+    }
+    
+    if (value.includes('$') && (value.includes('{') || value.includes('['))) {
+      return true;
+    }
+    
+    return false;
+  };
+
+  const validateEmail = (email) => {
+    const basicEmailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    
+    if (!basicEmailRegex.test(email)) {
+      return { valid: false, error: 'Email không đúng định dạng' };
+    }
+
+    if (email.toLowerCase().endsWith('@gmail.com')) {
+      const username = email.split('@')[0];
+
+      if (username.includes('..')) {
+        return { valid: false, error: 'Email Gmail không được chứa dấu chấm liên tiếp' };
+      }
+
+      const validGmailChars = /^[a-zA-Z0-9]([a-zA-Z0-9._-]{0,28}[a-zA-Z0-9])?$/;
+      if (!validGmailChars.test(username)) {
+        return { valid: false, error: 'Email Gmail chỉ được chứa chữ cái, số, dấu chấm, dấu gạch dưới và dấu gạch ngang' };
+      }
+      
+      const invalidSpecialChars = /[@#$%^&*()+={}\[\]|\\:;"'<>,?/]/;
+      if (invalidSpecialChars.test(username)) {
+        return { valid: false, error: 'Email Gmail không được chứa các ký tự đặc biệt' };
+      }
+      
+      if (username.length < 6 || username.length > 30) {
+        return { valid: false, error: 'Tên người dùng Gmail phải có độ dài từ 6 đến 30 ký tự' };
+      }
+    }
+    
+    return { valid: true, error: '' };
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setUserData(prev => ({
-      ...prev,
-      [name]: value
-    }));
     
-    // Clear error when field is edited
-    if (errors[name]) {
+    if (containsInjection(value)) {
       setErrors(prev => ({
         ...prev,
-        [name]: null
+        [name]: "Nội dung không hợp lệ hoặc có thể gây nguy hiểm cho hệ thống"
       }));
+    } else {
+      setUserData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+      
+      if (errors[name]) {
+        setErrors(prev => ({
+          ...prev,
+          [name]: null
+        }));
+      }
+    }
+  };
+
+  const handleEmailBlur = () => {
+    if (userData.email.trim()) {
+      const emailValidation = validateEmail(userData.email);
+      if (!emailValidation.valid) {
+        setErrors(prev => ({ ...prev, email: emailValidation.error }));
+      } else {
+        setErrors(prev => ({ ...prev, email: null }));
+      }
     }
   };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (!file.type.match('image.*')) {
+        setErrors(prev => ({
+          ...prev,
+          avatar: "Chỉ chấp nhận file hình ảnh"
+        }));
+        return;
+      }
+      
       setUserData(prev => ({
         ...prev,
         avatar: file
       }));
       
-      // Create preview URL
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviewImage(reader.result);
       };
       reader.readAsDataURL(file);
+      
+      if (errors.avatar) {
+        setErrors(prev => ({
+          ...prev,
+          avatar: null
+        }));
+      }
     }
   };
 
   const validateForm = () => {
     const newErrors = {};
     
+    for (const [key, value] of Object.entries(userData)) {
+      if (typeof value === 'string' && containsInjection(value)) {
+        newErrors[key] = "Nội dung không hợp lệ hoặc có thể gây nguy hiểm cho hệ thống";
+      }
+    }
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return false;
+    }
+    
     if (!userData.name.trim()) newErrors.name = "Họ và tên không được để trống";
     
-    // Email validation
     if (!userData.email.trim()) {
       newErrors.email = "Email không được để trống";
-    } else if (!/\S+@\S+\.\S+/.test(userData.email)) {
-      newErrors.email = "Email không hợp lệ";
+    } else {
+      const emailValidation = validateEmail(userData.email);
+      if (!emailValidation.valid) {
+        newErrors.email = emailValidation.error;
+      }
     }
     
     if (!userData.address.trim()) newErrors.address = "Địa chỉ không được để trống";
     
-    // Password validation
     if (!userData.password) {
       newErrors.password = "Mật khẩu không được để trống";
     } else if (userData.password.length < 6) {
@@ -78,11 +189,14 @@ const AddAccountPage = ({ onClose, onAdd }) => {
       newErrors.confirmPassword = "Mật khẩu không khớp";
     }
     
+    if (userData.mobile && !/^[0-9]{10,11}$/.test(userData.mobile.replace(/\s/g, ''))) {
+      newErrors.mobile = "Số điện thoại không hợp lệ";
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // Map role từ tiếng Việt sang tiếng Anh để phù hợp với API
   const mapRole = (vietnameseRole) => {
     const roleMapping = {
       'Quản trị viên': 'Admin',
@@ -92,9 +206,7 @@ const AddAccountPage = ({ onClose, onAdd }) => {
     return roleMapping[vietnameseRole] || 'Tenant';
   };
 
-  // Chuyển đổi dữ liệu form để phù hợp với API
   const prepareDataForApi = () => {
-    // Giả sử địa chỉ được nhập theo định dạng "đường, phường, thành phố, quốc gia"
     const addressParts = userData.address.split(',').map(part => part.trim());
     
     return {
@@ -103,8 +215,6 @@ const AddAccountPage = ({ onClose, onAdd }) => {
       password: userData.password,
       mobile: userData.mobile || '',
       role: mapRole(userData.role),
-      // Xử lý avatar: trong thực tế bạn sẽ cần upload file lên server riêng và lấy URL
-      // Ở đây chỉ mô phỏng với URL mặc định
       avatar: previewImage || "https://res.cloudinary.com/dw1sniewf/image/upload/v1669720008/noko-social/audefto1as6m8gg17nu1.jpg",
       address: {
         name: addressParts[0] || '',
@@ -121,6 +231,30 @@ const AddAccountPage = ({ onClose, onAdd }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    const hasInjection = Object.values(userData).some(value => 
+      typeof value === 'string' && containsInjection(value)
+    );
+    
+    if (hasInjection) {
+      setSubmitMessage({
+        type: 'error',
+        text: 'Tạo tài khoản thất bại. Dữ liệu nhập vào không hợp lệ hoặc có thể gây nguy hiểm cho hệ thống.'
+      });
+      return;
+    }
+    
+    if (userData.email.trim()) {
+      const emailValidation = validateEmail(userData.email);
+      if (!emailValidation.valid) {
+        setErrors(prev => ({ ...prev, email: emailValidation.error }));
+        setSubmitMessage({
+          type: 'error',
+          text: 'Tạo tài khoản thất bại. Email không hợp lệ: ' + emailValidation.error
+        });
+        return;
+      }
+    }
+    
     if (validateForm()) {
       setIsSubmitting(true);
       setSubmitMessage({ type: '', text: '' });
@@ -128,14 +262,13 @@ const AddAccountPage = ({ onClose, onAdd }) => {
       try {
         const apiData = prepareDataForApi();
         
-        // Lấy token từ localStorage hoặc context state
         const token = localStorage.getItem('token');
         
         const response = await fetch('http://localhost:5000/api/user', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}` // Cần token để xác thực quyền Admin
+            'Authorization': `Bearer ${token}` 
           },
           body: JSON.stringify(apiData)
         });
@@ -151,12 +284,10 @@ const AddAccountPage = ({ onClose, onAdd }) => {
           text: 'Tài khoản đã được tạo thành công!'
         });
         
-        // Gọi callback onAdd nếu có
         if (onAdd) {
           onAdd(data.user);
         }
         
-        // Reset form sau khi submit thành công
         setTimeout(() => {
           setUserData({
             name: '',
@@ -175,10 +306,22 @@ const AddAccountPage = ({ onClose, onAdd }) => {
         console.error('Error creating account:', error);
         setSubmitMessage({
           type: 'error',
-          text: error.message || 'Có lỗi xảy ra khi tạo tài khoản'
+          text: 'Tạo tài khoản thất bại. ' + (error.message || 'Có lỗi xảy ra khi tạo tài khoản')
         });
       } finally {
         setIsSubmitting(false);
+      }
+    } else {
+      if (errors.email) {
+        setSubmitMessage({
+          type: 'error',
+          text: 'Tạo tài khoản thất bại. Email không hợp lệ: ' + errors.email
+        });
+      } else {
+        setSubmitMessage({
+          type: 'error',
+          text: 'Vui lòng kiểm tra lại thông tin nhập vào.'
+        });
       }
     }
   };
@@ -187,7 +330,13 @@ const AddAccountPage = ({ onClose, onAdd }) => {
     setFocusedField(fieldName);
   };
 
-  const handleBlur = () => {
+  const handleBlur = (e) => {
+    const { name } = e.target;
+    
+    if (name === 'email') {
+      handleEmailBlur();
+    }
+    
     setFocusedField(null);
   };
 
@@ -222,6 +371,7 @@ const AddAccountPage = ({ onClose, onAdd }) => {
                 />
               </label>
               <span className="avatar-label">Ảnh đại diện</span>
+              {errors.avatar && <span className="error-message">{errors.avatar}</span>}
             </div>
           </div>
           
@@ -256,6 +406,9 @@ const AddAccountPage = ({ onClose, onAdd }) => {
               />
               <label className="form-label">Email</label>
               {errors.email && <span className="error-message">{errors.email}</span>}
+              {!errors.email && userData.email && (
+                <span className="input-hint">Vui lòng nhập email hợp lệ (ví dụ: username@gmail.com)</span>
+              )}
             </div>
             
             <div className="form-group">
@@ -266,11 +419,12 @@ const AddAccountPage = ({ onClose, onAdd }) => {
                 value={userData.mobile}
                 onChange={handleChange}
                 placeholder="Số điện thoại"
-                className={`form-input ${focusedField === 'mobile' ? 'focused' : ''}`}
+                className={`form-input ${focusedField === 'mobile' ? 'focused' : ''} ${errors.mobile ? 'error' : ''}`}
                 onFocus={() => handleFocus('mobile')}
                 onBlur={handleBlur}
               />
               <label className="form-label">Số điện thoại</label>
+              {errors.mobile && <span className="error-message">{errors.mobile}</span>}
             </div>
             
             <div className="form-group">
