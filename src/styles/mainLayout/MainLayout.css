@@ -6,7 +6,7 @@
 
 /* Sidebar styles */
 .sidebar-mlo {
-  width: 400px;
+  width: 350px;
   background-color: white;
   border-right: 1px solid #e0e0e0;
   padding: 20px 0;
@@ -17,11 +17,13 @@
 .logo-container-mlo {
   padding: 0 20px 20px;
   border-bottom: 1px solid #e0e0e0;
+  text-align: center;
 }
 
 .logo-mlo {
   width: 250px;
   height: auto;
+  display: inline-block;
 }
 
 .logo-text-mlo {
@@ -108,8 +110,23 @@
 }
 
 .header-title-mlo {
-  font-size: 36px;
+  font-size: 40px;
   font-weight: bold;
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+  position: relative;
+  display: inline-block;
+}
+.header-title-mlo::after {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 4px;
+  bottom: -8px;
+  left: 0;
+  background: linear-gradient(90deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
+  border-radius: 2px;
 }
 
 .logout-button-mlo {
