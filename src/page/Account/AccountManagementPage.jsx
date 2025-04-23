@@ -9,6 +9,77 @@ import SeeDetailPage from './components/SeeDetailPage';
 import AddAccountPage from './components/AddAccountPage';
 import '../../styles/Account/UserManagement.css';
 
+// Toast notification component
+const Toast = ({ message, type, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
+    
+    return () => clearTimeout(timer);
+  }, [onClose]);
+  
+  return (
+    <div className={`toast-notification ${type}`}>
+      <div className="toast-content">
+        <span className="toast-message">{message}</span>
+      </div>
+      <button className="toast-close" onClick={onClose}>×</button>
+    </div>
+  );
+};
+
+// Toast container component
+const ToastContainer = ({ toasts, removeToast }) => {
+  return (
+    <div className="toast-container">
+      {toasts.map((toast) => (
+        <Toast 
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => removeToast(toast.id)}
+        />
+      ))}
+    </div>
+  );
+};
+
+const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, userName }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay">
+      <div className="delete-confirm-modal">
+        <div className="delete-modal-content">
+          <div className="delete-icon-container">
+            <div className="delete-icon">
+              <span className="exclamation-mark">!</span>
+            </div>
+          </div>
+
+          <h3 className="delete-modal-title">Xóa tài khoản</h3>
+
+          <p className="delete-modal-text">
+            Bạn có chắc chắn muốn xóa tài khoản này không?
+            <br />
+            Hành động này không thể hoàn tác.
+          </p>
+
+          <div className="delete-modal-buttons">
+            <button className="cancel-button" onClick={onClose}>
+              Đóng
+            </button>
+            <button className="confirm-delete-button" onClick={onConfirm}>
+              Xóa
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const AccountManagementPage = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,13 +90,23 @@ const AccountManagementPage = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  
-  // Pagination states
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [toasts, setToasts] = useState([]);
 
   const userRole = localStorage.getItem('userRole');
   const token = localStorage.getItem('token');
+  
+  const addToast = (message, type = 'success') => {
+    const id = Date.now();
+    setToasts(prevToasts => [...prevToasts, { id, message, type }]);
+  };
+  
+  const removeToast = (id) => {
+    setToasts(prevToasts => prevToasts.filter(toast => toast.id !== id));
+  };
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -35,34 +116,35 @@ const AccountManagementPage = () => {
           'Authorization': `Bearer ${token}`,
         }
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch users');
       }
-      
+
       const data = await response.json();
-      
+
       const formattedUsers = data.users.map(user => {
         return {
           id: user._id,
           name: user.full_name,
           email: user.email,
-          address: user.address.name || 
-                  [user.address.road, user.address.quarter, user.address.city, user.address.country]
-                  .filter(Boolean).join(', '),
-          role: user.role === 'Admin' ? 'Quản trị viên' : 
-               user.role === 'Landlord' ? 'Chủ nhà' : 'Người thuê',
+          address: user.address.name ||
+            [user.address.road, user.address.quarter, user.address.city, user.address.country]
+              .filter(Boolean).join(', '),
+          role: user.role === 'Admin' ? 'Quản trị viên' :
+            user.role === 'Landlord' ? 'Chủ nhà' : 'Người thuê',
           avatar: user.avatar,
           originalData: user
         };
       });
-      
+
       setUsers(formattedUsers);
       setLoading(false);
     } catch (err) {
       setError(err.message);
       setLoading(false);
       console.error('Error fetching users:', err);
+      addToast(`Lỗi khi tải dữ liệu: ${err.message}`, 'error');
     }
   }, [token]);
 
@@ -75,7 +157,6 @@ const AccountManagementPage = () => {
     }
   }, [userRole, fetchUsers]);
 
-  // Reset to first page when filter changes
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedRole, searchQuery]);
@@ -89,21 +170,33 @@ const AccountManagementPage = () => {
   };
 
   const filteredUsers = users.filter(user => {
+    // Lọc theo vai trò đã chọn
     const roleMatches = selectedRole
       ? (selectedRole === 'admin' ? user.role === 'Quản trị viên' :
-         selectedRole === 'owner' ? user.role === 'Chủ nhà' :
-         selectedRole === 'tenant' ? user.role === 'Người thuê' : true)
+        selectedRole === 'owner' ? user.role === 'Chủ nhà' :
+          selectedRole === 'tenant' ? user.role === 'Người thuê' : true)
       : true;
-    
-    const searchMatches = searchQuery === '' || 
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      user.address.toLowerCase().includes(searchQuery.toLowerCase());
 
-    return roleMatches && searchMatches;
+    // Logic tìm kiếm: tìm kiếm không phân biệt chữ hoa/thường, tìm cả từ khóa đầy đủ và từ khóa một phần
+    if (!searchQuery.trim()) {
+      // Nếu không có từ khóa tìm kiếm, trả về kết quả dựa vào lọc theo vai trò
+      return roleMatches;
+    }
+
+    const searchTerm = searchQuery.toLowerCase().trim();
+    const userName = user.name ? user.name.toLowerCase() : '';
+    const userEmail = user.email ? user.email.toLowerCase() : '';
+    const userAddress = user.address ? user.address.toLowerCase() : '';
+
+    // Kiểm tra xem từ khóa có nằm trong bất kỳ trường nào không
+    const nameMatch = userName.includes(searchTerm);
+    const emailMatch = userEmail.includes(searchTerm);
+    const addressMatch = userAddress.includes(searchTerm);
+
+    // Kết hợp kết quả tìm kiếm với lọc theo vai trò
+    return roleMatches && (nameMatch || emailMatch || addressMatch);
   });
 
-  // Pagination logic
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredUsers.slice(indexOfFirstItem, indexOfLastItem);
@@ -115,51 +208,65 @@ const AccountManagementPage = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
-      try {
-        const response = await fetch(`http://localhost:5000/api/user/${id}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
+  const openDeleteModal = (id) => {
+    const userToDelete = users.find(user => user.id === id);
+    setUserToDelete(userToDelete);
+    setIsDeleteModalOpen(true);
+  };
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Không thể xóa người dùng');
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setUserToDelete(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!userToDelete) return;
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/user/${userToDelete.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
+      });
 
-        setUsers(users.filter(user => user.id !== id));
-        
-        // If after deletion, current page becomes empty and it's not the first page,
-        // go to previous page
-        const newFilteredUsers = users.filter(user => user.id !== id).filter(user => {
-          const roleMatches = selectedRole
-            ? (selectedRole === 'admin' ? user.role === 'Quản trị viên' :
-              selectedRole === 'owner' ? user.role === 'Chủ nhà' :
-              selectedRole === 'tenant' ? user.role === 'Người thuê' : true)
-            : true;
-          
-          const searchMatches = searchQuery === '' || 
-            user.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-            user.email.toLowerCase().includes(searchQuery.toLowerCase()) || 
-            user.address.toLowerCase().includes(searchQuery.toLowerCase());
-
-          return roleMatches && searchMatches;
-        });
-
-        const newTotalPages = Math.ceil(newFilteredUsers.length / itemsPerPage);
-        if (currentPage > newTotalPages && currentPage > 1) {
-          setCurrentPage(newTotalPages || 1);
-        }
-
-        alert('Xóa người dùng thành công');
-      } catch (err) {
-        console.error('Error deleting user:', err);
-        alert(`Lỗi khi xóa người dùng: ${err.message}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Không thể xóa người dùng');
       }
+
+      setUsers(users.filter(user => user.id !== userToDelete.id));
+
+      const newFilteredUsers = users.filter(user => user.id !== userToDelete.id).filter(user => {
+        const roleMatches = selectedRole
+          ? (selectedRole === 'admin' ? user.role === 'Quản trị viên' :
+            selectedRole === 'owner' ? user.role === 'Chủ nhà' :
+              selectedRole === 'tenant' ? user.role === 'Người thuê' : true)
+          : true;
+
+        const searchTerm = searchQuery.toLowerCase().trim();
+        if (!searchTerm) return roleMatches;
+        
+        const userName = user.name ? user.name.toLowerCase() : '';
+        const userEmail = user.email ? user.email.toLowerCase() : '';
+        const userAddress = user.address ? user.address.toLowerCase() : '';
+        
+        return roleMatches && (userName.includes(searchTerm) || userEmail.includes(searchTerm) || userAddress.includes(searchTerm));
+      });
+
+      const newTotalPages = Math.ceil(newFilteredUsers.length / itemsPerPage);
+      if (currentPage > newTotalPages && currentPage > 1) {
+        setCurrentPage(newTotalPages || 1);
+      }
+ 
+      addToast('Xóa người dùng thành công');
+      
+      closeDeleteModal();
+    } catch (err) {
+      console.error('Error deleting user:', err);
+      addToast(`Lỗi khi xóa người dùng: ${err.message}`, 'error');
+      closeDeleteModal();
     }
   };
 
@@ -194,16 +301,17 @@ const AccountManagementPage = () => {
   };
 
   const handleUpdateUser = async (updatedUserData) => {
-    setUsers(users.map(user => 
-      user.id === selectedUser.id 
-        ? { ...user, ...updatedUserData } 
+    setUsers(users.map(user =>
+      user.id === selectedUser.id
+        ? { ...user, ...updatedUserData }
         : user
     ));
-    
+
     setIsUpdateModalOpen(false);
     setSelectedUser(null);
     
     await fetchUsers();
+    addToast('Cập nhật người dùng thành công');
   };
 
   const handleCreateUser = async (newUserData) => {
@@ -213,18 +321,17 @@ const AccountManagementPage = () => {
     };
     setUsers([...users, newUser]);
     setIsAddModalOpen(false);
-    
+
     await fetchUsers();
+    addToast('Tạo người dùng mới thành công');
   };
 
-  // Render pagination buttons
   const renderPaginationButtons = () => {
     const pageButtons = [];
-    
-    // Previous button
+
     pageButtons.push(
-      <button 
-        key="prev" 
+      <button
+        key="prev"
         onClick={() => paginate(currentPage - 1)}
         disabled={currentPage === 1}
         className="pagination-button prev-button"
@@ -232,37 +339,32 @@ const AccountManagementPage = () => {
         &laquo;
       </button>
     );
-    
-    // Page number buttons - show max 5 pages
-    // Always show first page
+
     if (currentPage > 3) {
       pageButtons.push(
-        <button 
-          key={1} 
+        <button
+          key={1}
           onClick={() => paginate(1)}
           className={`pagination-button ${currentPage === 1 ? 'active' : ''}`}
         >
           1
         </button>
       );
-      
-      // Show ellipsis if not showing the second page
+
       if (currentPage > 4) {
         pageButtons.push(
           <span key="ellipsis1" className="pagination-ellipsis">...</span>
         );
       }
     }
-    
-    // Calculate range of visible page numbers
+
     const startPage = Math.max(1, currentPage - 1);
     const endPage = Math.min(totalPages, currentPage + 1);
-    
-    // Create page number buttons
+
     for (let i = startPage; i <= endPage; i++) {
       pageButtons.push(
-        <button 
-          key={i} 
+        <button
+          key={i}
           onClick={() => paginate(i)}
           className={`pagination-button ${currentPage === i ? 'active' : ''}`}
         >
@@ -270,19 +372,16 @@ const AccountManagementPage = () => {
         </button>
       );
     }
-    
-    // Show ellipsis if not showing the second-to-last page
+
     if (currentPage < totalPages - 3) {
       pageButtons.push(
         <span key="ellipsis2" className="pagination-ellipsis">...</span>
       );
     }
-    
-    // Always show last page if there's more than one page
     if (totalPages > 1 && currentPage < totalPages - 2) {
       pageButtons.push(
-        <button 
-          key={totalPages} 
+        <button
+          key={totalPages}
           onClick={() => paginate(totalPages)}
           className={`pagination-button ${currentPage === totalPages ? 'active' : ''}`}
         >
@@ -290,11 +389,10 @@ const AccountManagementPage = () => {
         </button>
       );
     }
-    
-    // Next button
+
     pageButtons.push(
-      <button 
-        key="next" 
+      <button
+        key="next"
         onClick={() => paginate(currentPage + 1)}
         disabled={currentPage === totalPages}
         className="pagination-button next-button"
@@ -302,7 +400,7 @@ const AccountManagementPage = () => {
         &raquo;
       </button>
     );
-    
+
     return pageButtons;
   };
 
@@ -316,8 +414,11 @@ const AccountManagementPage = () => {
 
   return (
     <div className="user-table-container">
-      <h1 className="account-management-title">Quản lý tài khoản</h1>
+      {/* Toast notifications container */}
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
       
+      <h1 className="account-management-title">Quản lý tài khoản</h1>
+
       <div className="table-actions">
         <div className="search-container">
           <input
@@ -348,52 +449,56 @@ const AccountManagementPage = () => {
         </div>
       </div>
 
-      <table className="user-table">
-        <thead>
-          <tr>
-            <th>Tên</th>
-            <th>Email</th>
-            <th>Địa chỉ</th>
-            <th>Vai trò</th>
-            <th>Thao tác</th>
-          </tr>
-        </thead>
-        <tbody>
-          {currentItems.length > 0 ? (
-            currentItems.map(user => (
-              <tr key={user.id}>
-                <td>{user.name}</td>
-                <td>{user.email}</td>
-                <td>{user.address}</td>
-                <td>
-                  <span className={`role-badge ${
-                    user.role === 'Quản trị viên' ? 'admin-role' :
-                    user.role === 'Chủ nhà' ? 'owner-role' : 'tenant-role'
-                  }`}>
-                    {user.role}
-                  </span>
-                </td>
-                <td className="action-buttons">
-                  <button className="see-button" onClick={() => handleViewUser(user.id)}>
-                    <img src={seeImg} alt="Xem" className="see-icon" />
-                  </button>
-                  <button className="edit-button" onClick={() => handleEdit(user.id)}>
-                    <img src={writeImg} alt="Edit" className="edit-icon" />
-                  </button>
-                  <button className="delete-button" onClick={() => handleDelete(user.id)}>
-                    <img src={deleteImg} alt="Delete" className="delete-icon" />
-                  </button>
-                </td>
-              </tr>
-            ))
-          ) : (
+      {/* Table container with horizontal scroll */}
+      <div className="table-wrapper">
+        <table className="user-table">
+          <thead>
             <tr>
-              <td colSpan="5" className="no-users-message">Không tìm thấy người dùng phù hợp</td>
+              <th>Tên</th>
+              <th>Email</th>
+              <th>Địa chỉ</th>
+              <th>Vai trò</th>
+              <th>Thao tác</th>
             </tr>
-          )}
-        </tbody>
-      </table>
-      
+          </thead>
+          <tbody>
+            {currentItems.length > 0 ? (
+              currentItems.map(user => (
+                <tr key={user.id}>
+                  <td title={user.name}>{user.name}</td>
+                  <td title={user.email}>{user.email}</td>
+                  <td title={user.address}>{user.address}</td>
+                  <td>
+                    <span className={`role-badge ${user.role === 'Quản trị viên' ? 'admin-role' :
+                      user.role === 'Chủ nhà' ? 'owner-role' : 'tenant-role'
+                      }`}>
+                      {user.role}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="action-buttons">
+                      <button className="see-button" onClick={() => handleViewUser(user.id)}>
+                        <img src={seeImg} alt="Xem" className="see-icon" />
+                      </button>
+                      <button className="edit-button" onClick={() => handleEdit(user.id)}>
+                        <img src={writeImg} alt="Edit" className="edit-icon" />
+                      </button>
+                      <button className="delete-button" onClick={() => openDeleteModal(user.id)}>
+                        <img src={deleteImg} alt="Delete" className="delete-icon" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5" className="no-users-message">Không tìm thấy người dùng phù hợp</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
       {/* Pagination controls */}
       {filteredUsers.length > 0 && (
         <div className="pagination-container">
@@ -406,16 +511,16 @@ const AccountManagementPage = () => {
           </div>
         </div>
       )}
-      
+
       {isAddModalOpen && (
-        <AddAccountPage 
+        <AddAccountPage
           onClose={handleCloseAddModal}
           onAdd={handleCreateUser}
         />
       )}
-      
+
       {isUpdateModalOpen && (
-        <UpdatePage 
+        <UpdatePage
           user={selectedUser}
           onClose={handleCloseUpdateModal}
           onUpdate={handleUpdateUser}
@@ -423,11 +528,19 @@ const AccountManagementPage = () => {
       )}
 
       {isDetailModalOpen && (
-        <SeeDetailPage 
+        <SeeDetailPage
           user={selectedUser}
           onClose={handleCloseDetailModal}
         />
       )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={closeDeleteModal}
+        onConfirm={confirmDelete}
+        userName={userToDelete?.name}
+      />
     </div>
   );
 };
