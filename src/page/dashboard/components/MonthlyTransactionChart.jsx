@@ -18,25 +18,24 @@ const MonthlyTransactionChart = () => {
             'Authorization': `Bearer ${localStorage.getItem('token') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'}`
           }
         });
-        
+
         if (!response.ok) {
           throw new Error('Failed to fetch revenue data');
         }
-        
+
         const data = await response.json();
         setRevenueData(data.yearlyData);
         setAvailableYears(data.availableYears);
-        
+
         if (data.availableYears?.length > 0 && !data.yearlyData[selectedYear]) {
           setSelectedYear(data.availableYears[0]);
         }
       } catch (error) {
         console.error('Error fetching revenue data:', error);
-        // Provide fallback data for development/testing
         const currentYear = new Date().getFullYear();
         const fallbackData = {
           [currentYear]: {
-            monthlyRevenue: Array(12).fill().map((_, i) => ({ revenue: Math.floor(Math.random() * 100) + 20 })),
+            monthlyRevenue: Array(12).fill().map(() => ({ revenue: Math.floor(Math.random() * 100) + 20 })),
             totalAnnualRevenue: 1000
           }
         };
@@ -46,7 +45,7 @@ const MonthlyTransactionChart = () => {
     };
 
     fetchRevenueData();
-  }, []);
+  }, [selectedYear]); // ✅ thêm selectedYear để loại bỏ cảnh báo eslint
 
   useEffect(() => {
     if (!revenueData || !revenueData[selectedYear] || !chartRef.current) return;
@@ -63,7 +62,6 @@ const MonthlyTransactionChart = () => {
 
     const dataValues = revenueData[selectedYear].monthlyRevenue.map(item => item.revenue);
     const maxValue = Math.max(...dataValues, 1);
-    // Set y-axis max value to max revenue + 50
     const yMax = maxValue + 50;
 
     chartInstance.current = new Chart(ctx, {
@@ -78,8 +76,8 @@ const MonthlyTransactionChart = () => {
             backgroundColor: gradient,
             tension: 0.4,
             fill: true,
-            pointRadius: 4,
-            pointHoverRadius: 6,
+            pointRadius: 0, // 👈 Mặc định không hiển thị chấm
+            pointHoverRadius: 6, // 👈 Chỉ hiển thị khi hover
             pointBackgroundColor: '#4169E1',
             pointHoverBorderColor: '#4169E1',
             hoverBorderWidth: 2,
@@ -116,9 +114,6 @@ const MonthlyTransactionChart = () => {
             max: yMax,
             ticks: {
               stepSize: Math.ceil(yMax / 4),
-              callback: function(value) {
-                return value;
-              },
               font: {
                 size: 11
               }
@@ -173,8 +168,8 @@ const MonthlyTransactionChart = () => {
       <div className="chart-header-mtc">
         <h3 className="chart-title-mtc">Doanh thu</h3>
         {availableYears.length > 0 && (
-          <select 
-            value={selectedYear} 
+          <select
+            value={selectedYear}
             onChange={handleYearChange}
             className="year-selector-mtc"
           >
@@ -186,11 +181,11 @@ const MonthlyTransactionChart = () => {
           </select>
         )}
       </div>
-      
+
       <div className="chart-wrapper-mtc">
         <canvas ref={chartRef}></canvas>
       </div>
-      
+
       {revenueData && revenueData[selectedYear] && (
         <div className="chart-footer-mtc">
           <span className="total-revenue-mtc">
