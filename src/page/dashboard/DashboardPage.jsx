@@ -6,19 +6,22 @@ import '../../styles/dashboard/DashboardPage.css';
 
 const DashboardPage = () => {
   return (
-    <div className="charts-wrapper">
-      <div className="row">
-        <div className="column">
-          <UserRoleChart />
+    <div className="dashboard-container">
+      <div className="charts-wrapper">
+        <div className="row">
+          <div className="column">
+            <UserRoleChart />
+          </div>
+          <div className="column">
+            <AdminLandlordChart />
+          </div>
         </div>
-        <div className="column">
-          <AdminLandlordChart />
+        
+        <div className="row revenue-chart-row">
+          <div className="column">
+            <MonthlyTransactionChart />
+          </div>
         </div>
-      </div>
-      
-      <div className="chart-container" style={{ height: '50%' }}>
-        <h2>Doanh thu</h2>
-        <MonthlyTransactionChart />
       </div>
     </div>
   );

@@ -7,6 +7,8 @@ const AdminLandlordChart = () => {
   const chartInstance = useRef(null);
 
   useEffect(() => {
+    if (!chartRef.current) return;
+    
     if (chartInstance.current) {
       chartInstance.current.destroy();
     }
@@ -63,8 +65,10 @@ const AdminLandlordChart = () => {
 
   return (
     <div className="chart-container">
-      <h2>Tổng số lượng giao dịch </h2>
-      <canvas ref={chartRef} className="chart-canvas"></canvas>
+      <h2 className="chart-title">Tổng số lượng giao dịch</h2>
+      <div className="chart-wrapper">
+        <canvas ref={chartRef} className="chart-canvas"></canvas>
+      </div>
     </div>
   );
 };
