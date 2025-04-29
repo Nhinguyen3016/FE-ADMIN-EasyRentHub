@@ -118,6 +118,7 @@
 /* Main content styles */
 .main-content {
   padding: 1.5rem;
+  min-height: 390px;
 }
 
 /* Stats card styles */
@@ -514,4 +515,101 @@
   text-align: center;
   padding: 2rem;
   color: #6b7280;
+}
+
+/* Filter controls wrapper */
+.filter-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+/* Filter dropdown container */
+.filter-dropdown-container {
+  position: relative;
+  display: inline-block;
+}
+
+/* Author dropdown styles */
+.author-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 280px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin-top: 5px;
+  z-index: 10;
+  overflow: hidden;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.author-dropdown-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.author-dropdown-header h4 {
+  margin: 0;
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+.author-dropdown-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.author-dropdown-item {
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-size: 14px;
+}
+
+.author-dropdown-item:hover {
+  background-color: #f5f8ff;
+}
+
+.author-dropdown-item.selected {
+  background-color: #f0f4ff;
+  color: #3b82f6;
+  font-weight: 500;
+}
+
+/* Selected filter display */
+.selected-filter {
+  display: inline-flex;
+  align-items: center;
+  background-color: #f0f4ff;
+  border: 1px solid #d0dbff;
+  color: #3b82f6;
+  border-radius: 6px;
+  padding: 4px 10px;
+  margin-right: 10px;
+  font-size: 13px;
+  order: -1; /* Ensures it comes before the filter button */
+}
+
+.clear-filter {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  font-size: 16px;
+  cursor: pointer;
+  margin-left: 6px;
+  padding: 0 2px;
+  line-height: 1;
+}
+
+.clear-filter:hover {
+  color: #1c64f2;
 }

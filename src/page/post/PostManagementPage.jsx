@@ -1,6 +1,6 @@
 import '../../styles/post/PostManagement.css';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search, Filter, CheckCircle, AlertCircle, Clock, Flag} from 'lucide-react';
 import EstateDetailModal from './components/EstateDetailModal'; 
 import EstateEditForm from './components/EstateEditForm';
@@ -19,7 +19,12 @@ const EstateManagement = () => {
   const [estates, setEstates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [authors, setAuthors] = useState([]);
+  const [selectedAuthor, setSelectedAuthor] = useState('');
+  const [showAuthorDropdown, setShowAuthorDropdown] = useState(false);
   
+  const dropdownRef = useRef(null);
 
   const API_BASE_URL = 'http://localhost:5000/api';
 
@@ -67,16 +72,169 @@ const EstateManagement = () => {
       }
     };
     
+    const fetchAuthors = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/authors`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.msg === "Success!" && Array.isArray(data.authors)) {
+          setAuthors(data.authors);
+        } else {
+          throw new Error('Invalid data format received from API');
+        }
+      } catch (err) {
+        console.error('Error fetching authors:', err);
+      }
+    };
+    
     fetchEstates();
+    fetchAuthors();
+    
+    // Add event listener to close dropdown when clicking outside
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowAuthorDropdown(false);
+      }
+    };
+    
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
+  // Function to fetch estates by author ID
+  const fetchEstatesByAuthor = async (authorId) => {
+    try {
+      setLoading(true);
+      
+      const response = await fetch(`${API_BASE_URL}/estates/author/${authorId}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.msg === "Success!" && Array.isArray(data.estates)) {
+        const transformedEstates = data.estates.map(estate => ({
+          id: estate._id,
+          _id: estate._id, 
+          name: estate.name,
+          address: estate.address,
+          images: estate.images && estate.images.length > 0 ? estate.images : [bd1], 
+          rating_star: 4.5, 
+          price: estate.price || 0,
+          rental: true, 
+          property: estate.property,
+          status: estate.status,
+          likes: estate.likes || [],
+          reviews: estate.reviews || [],
+          user: typeof estate.user === 'object' ? estate.user : { _id: estate.user, name: 'Unknown User' },
+          distance: 1.0, 
+          createdAt: estate.createdAt,
+          updatedAt: estate.updatedAt,
+        }));
+        
+        setEstates(transformedEstates);
+      } else {
+        throw new Error('Invalid data format received from API');
+      }
+    } catch (err) {
+      console.error('Error fetching estates by author:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Reset estates to show all estates
+  const resetEstates = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/estates?limit=1000`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.msg === "Success!" && Array.isArray(data.estates)) {
+        const transformedEstates = data.estates.map(estate => ({
+          id: estate._id,
+          _id: estate._id, 
+          name: estate.name,
+          address: estate.address,
+          images: estate.images && estate.images.length > 0 ? estate.images : [bd1], 
+          rating_star: 4.5, 
+          price: estate.price || 0,
+          rental: true, 
+          property: estate.property,
+          status: estate.status,
+          likes: estate.likes || [],
+          reviews: estate.reviews || [],
+          user: typeof estate.user === 'object' ? estate.user : { _id: estate.user, name: 'Unknown User' },
+          distance: 1.0, 
+          createdAt: estate.createdAt,
+          updatedAt: estate.updatedAt,
+        }));
+        
+        setEstates(transformedEstates);
+      } else {
+        throw new Error('Invalid data format received from API');
+      }
+    } catch (err) {
+      console.error('Error resetting estates:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+      setSelectedAuthor('');
+    }
+  };
+
+  // Handle author change
+  const handleAuthorChange = (authorId) => {
+    setSelectedAuthor(authorId);
+    setShowAuthorDropdown(false);
+    
+    if (authorId) {
+      fetchEstatesByAuthor(authorId);
+    } else {
+      resetEstates();
+    }
+    
+    setCurrentPage(1);
+  };
+
   const getFilteredEstates = () => {
-    if (activeTab === 'all') return estates;
-    return estates.filter(estate => {
-      if (activeTab === 'available') return estate.status === 'available';
-      if (activeTab === 'booked') return estate.status === 'booked';
-      return true;
-    });
+    let filtered = estates;
+    
+    // First filter by status tab
+    if (activeTab !== 'all') {
+      filtered = filtered.filter(estate => {
+        if (activeTab === 'available') return estate.status === 'available';
+        if (activeTab === 'booked') return estate.status === 'booked';
+        return true;
+      });
+    }
+    
+    // Then filter by search term if provided
+    if (searchTerm.trim() !== '') {
+      const search = searchTerm.toLowerCase();
+      filtered = filtered.filter(estate => 
+        estate.name.toLowerCase().includes(search) || 
+        (estate.address && estate.address.city && estate.address.city.toLowerCase().includes(search)) ||
+        (estate.user && estate.user.name && estate.user.name.toLowerCase().includes(search))
+      );
+    }
+    
+    return filtered;
   };
 
   const getCurrentItems = () => {
@@ -145,7 +303,11 @@ const EstateManagement = () => {
     setShowEditForm(true);
   };
 
- 
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
+
   const handleSaveEstate = async (updatedEstate) => {
     try {
       const estateId = updatedEstate.id || updatedEstate._id;
@@ -260,6 +422,18 @@ const EstateManagement = () => {
     }
   };
 
+  // Toggle the author dropdown
+  const toggleAuthorDropdown = () => {
+    setShowAuthorDropdown(!showAuthorDropdown);
+  };
+
+  // Get the name of the selected author for display
+  const getSelectedAuthorName = () => {
+    if (!selectedAuthor) return "Tất cả tác giả";
+    const author = authors.find(a => a._id === selectedAuthor);
+    return author ? author.full_name : "Tất cả tác giả";
+  };
+
   if (loading) {
     return (
       <div className="loading-container">
@@ -293,6 +467,8 @@ const EstateManagement = () => {
                 type="text"
                 placeholder="Tìm kiếm bài đăng..."
                 className="search-input"
+                value={searchTerm}
+                onChange={handleSearchChange}
               />
               <Search className="search-icon" size={18} />
             </div>
@@ -350,7 +526,7 @@ const EstateManagement = () => {
           </div>
         </div>
         
-        {/* Filter tabs */}
+        {/* Filter tabs and author filter */}
         <div className="filter-container">
           <div className="filter-tabs">
             <button
@@ -381,16 +557,59 @@ const EstateManagement = () => {
               Đã đặt
             </button>
           </div>
-          <button className="btn btn-filter">
-            <Filter size={16} className="mr-2" /> Lọc nâng cao
-          </button>
+          <div className="filter-advanced" ref={dropdownRef}>
+            <div className="filter-controls">
+              {selectedAuthor && (
+                <div className="selected-filter">
+                  <span>Tác giả: {getSelectedAuthorName()}</span>
+                  <button 
+                    className="clear-filter"
+                    onClick={() => handleAuthorChange('')}
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+              
+              <div className="filter-dropdown-container">
+                <button className="btn btn-filter" onClick={toggleAuthorDropdown}>
+                  <Filter size={16} className="mr-2" /> Lọc nâng cao
+                </button>
+                
+                {showAuthorDropdown && (
+                  <div className="author-dropdown">
+                    <div className="author-dropdown-header">
+                      <h4>Lọc theo tác giả</h4>
+                    </div>
+                    <div className="author-dropdown-list">
+                      <div 
+                        className={`author-dropdown-item ${selectedAuthor === '' ? 'selected' : ''}`}
+                        onClick={() => handleAuthorChange('')}
+                      >
+                        Tất cả tác giả
+                      </div>
+                      {authors.map(author => (
+                        <div 
+                          key={author._id} 
+                          className={`author-dropdown-item ${selectedAuthor === author._id ? 'selected' : ''}`}
+                          onClick={() => handleAuthorChange(author._id)}
+                        >
+                          {author.full_name}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Estates Grid */}
         <div className="estates-grid">
           {getCurrentItems().length === 0 ? (
             <div className="no-estates-message">
-              <p>Không có bài đăng nào {activeTab !== 'all' ? `ở trạng thái "${activeTab}"` : ''}</p>
+              <p>Không có bài đăng nào {activeTab !== 'all' ? `ở trạng thái "${activeTab}"` : ''} {selectedAuthor ? 'của tác giả này' : ''} {searchTerm ? `khớp với từ khóa "${searchTerm}"` : ''}</p>
             </div>
           ) : (
             getCurrentItems().map((estate) => (
