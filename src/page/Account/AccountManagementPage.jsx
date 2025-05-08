@@ -29,7 +29,6 @@ const Toast = ({ message, type, onClose }) => {
   );
 };
 
-// Toast container component
 const ToastContainer = ({ toasts, removeToast }) => {
   return (
     <div className="toast-container">
