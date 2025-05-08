@@ -490,9 +490,6 @@ const EstateManagement = () => {
                 <FileText className="stats-icon" />
               </div>
             </div>
-            <div className="stats-trend positive">
-              +8.2% so với tháng trước
-            </div>
           </div>
           
           <div className="stats-card">
@@ -505,9 +502,7 @@ const EstateManagement = () => {
                 <CheckCircle className="stats-icon" />
               </div>
             </div>
-            <div className="stats-trend positive">
-              +12.5% so với tháng trước
-            </div>
+
           </div>
           
           <div className="stats-card">
@@ -519,9 +514,6 @@ const EstateManagement = () => {
               <div className="stats-icon-container yellow">
                 <Flag className="stats-icon" />
               </div>
-            </div>
-            <div className="stats-trend positive">
-              +15.3% so với tháng trước
             </div>
           </div>
         </div>
