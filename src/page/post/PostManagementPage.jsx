@@ -573,13 +573,12 @@ const EstateManagement = () => {
               
               <div className="filter-dropdown-container">
                 <button className="btn btn-filter" onClick={toggleAuthorDropdown}>
-                  <Filter size={16} className="mr-2" /> Lọc nâng cao
+                  <Filter size={16} className="mr-2" /> Lọc tác giả
                 </button>
                 
                 {showAuthorDropdown && (
                   <div className="author-dropdown">
                     <div className="author-dropdown-header">
-                      <h4>Lọc theo tác giả</h4>
                     </div>
                     <div className="author-dropdown-list">
                       <div 

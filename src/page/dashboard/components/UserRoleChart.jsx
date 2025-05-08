@@ -6,10 +6,17 @@ const UserRoleChart = () => {
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
   const [userData, setUserData] = useState({
-    Tenant: 0,
-    Landlord: 0,
-    Admin: 0,
-    Total: 0
+    totalUsers: 0,
+    byRole: {
+      tenant: 0,
+      landlord: 0,
+      admin: 0
+    },
+    byStatus: {
+      active: 0,
+      inactive: 0
+    },
+    trends: []
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,7 +27,7 @@ const UserRoleChart = () => {
         setLoading(true);
         const token = localStorage.getItem('token');
         
-        const response = await fetch('http://localhost:5000/api/users/count-by-role', {
+        const response = await fetch('http://localhost:5000/api/user-stats', {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -33,7 +40,7 @@ const UserRoleChart = () => {
         }
         
         const data = await response.json();
-        setUserData(data.data);
+        setUserData(data);
         setLoading(false);
       } catch (err) {
         console.error('Error fetching user role data', err);
@@ -60,8 +67,9 @@ const UserRoleChart = () => {
       return;
     }
 
-    const dataValues = [userData.Tenant, userData.Landlord, userData.Admin];
-    const total = dataValues.reduce((acc, val) => acc + val, 0);
+    const { tenant, landlord, admin } = userData.byRole;
+    const dataValues = [tenant, landlord, admin];
+    const total = userData.totalUsers;
 
     chartInstance.current = new Chart(ctx, {
       type: 'doughnut',
@@ -73,13 +81,17 @@ const UserRoleChart = () => {
             backgroundColor: ['#4A68D9', '#E67E22', '#2ECC71'],
             borderWidth: 0,
             hoverOffset: 10,
-            cutout: '80%'
+            cutout: '75%',
+            borderRadius: 2
           }
         ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        layout: {
+          padding: 0
+        },
         plugins: {
           legend: {
             display: false
@@ -106,72 +118,57 @@ const UserRoleChart = () => {
 
   return (
     <div className="chart-container">
-      <h2 style={{ textAlign: 'center', marginBottom: '20px', fontWeight: 'bold' }}>Số lượng người dùng</h2>
+      <h2>Số lượng người dùng</h2>
       
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '20px' }}>Đang tải dữ liệu...</div>
+        <div className="loading-message">Đang tải dữ liệu...</div>
       ) : error ? (
-        <div style={{ textAlign: 'center', color: 'red', padding: '20px' }}>{error}</div>
+        <div className="error-message">{error}</div>
       ) : (
         <>
-          <div className="chart-wrapper" style={{
-            position: 'relative',
-            height: '200px',
-            width: '200px',
-            marginTop: '25px',
-            marginLeft: 'auto',
-            marginRight: 'auto',
-          }}>
-            <canvas ref={chartRef} style={{ width: '100%', height: '100%' }}></canvas>
+          <div className="chart-content">
+            <div className="chart-wrapper">
+              <canvas ref={chartRef}></canvas>
+              
+              {/* Display total in the center of the donut */}
+              <div className="chart-center-content">
+                <div className="chart-center-total">{userData.totalUsers}</div>
+                <div className="chart-center-label">Tổng số</div>
+              </div>
+            </div>
             
-            {/* Display total in the center of the donut */}
-            <div style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              textAlign: 'center'
-            }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold' }}>{userData.Total}</div>
-              <div style={{ fontSize: '14px' }}>Tổng số</div>
+            <div className="chart-legend">
+              <div className="legend-item">
+                <span className="legend-color legend-color-tenant"></span>
+                <span>Người thuê ({userData.byRole.tenant})</span>
+              </div>
+              <div className="legend-item">
+                <span className="legend-color legend-color-landlord"></span>
+                <span>Chủ nhà ({userData.byRole.landlord})</span>
+              </div>
+              <div className="legend-item">
+                <span className="legend-color legend-color-admin"></span>
+                <span>Quản trị viên ({userData.byRole.admin})</span>
+              </div>
             </div>
           </div>
-          
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            marginTop: '50px',
-            gap: '20px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <span style={{
-                display: 'inline-block',
-                width: '15px',
-                height: '15px',
-                backgroundColor: '#4A68D9',
-                marginRight: '5px'
-              }}></span>
-              <span>Người thuê ({userData.Tenant})</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <span style={{
-                display: 'inline-block',
-                width: '15px',
-                height: '15px',
-                backgroundColor: '#E67E22',
-                marginRight: '5px'
-              }}></span>
-              <span>Chủ nhà ({userData.Landlord})</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <span style={{
-                display: 'inline-block',
-                width: '15px',
-                height: '15px',
-                backgroundColor: '#2ECC71',
-                marginRight: '5px'
-              }}></span>
-              <span>Quản trị viên ({userData.Admin})</span>
+
+          {/* User Status Section */}
+          <div className="status-section">
+            <h3>Trạng thái người dùng:</h3>
+            <div className="status-stats">
+              <div className="status-item">
+                <div className="status-value status-value-active">
+                  {userData.byStatus.active}
+                </div>
+                <div>Hoạt động</div>
+              </div>
+              <div className="status-item">
+                <div className="status-value status-value-inactive">
+                  {userData.byStatus.inactive}
+                </div>
+                <div>Không hoạt động</div>
+              </div>
             </div>
           </div>
         </>
