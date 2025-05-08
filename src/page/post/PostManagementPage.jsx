@@ -490,9 +490,6 @@ const EstateManagement = () => {
                 <FileText className="stats-icon" />
               </div>
             </div>
-            <div className="stats-trend positive">
-              +8.2% so với tháng trước
-            </div>
           </div>
           
           <div className="stats-card">
@@ -505,9 +502,7 @@ const EstateManagement = () => {
                 <CheckCircle className="stats-icon" />
               </div>
             </div>
-            <div className="stats-trend positive">
-              +12.5% so với tháng trước
-            </div>
+
           </div>
           
           <div className="stats-card">
@@ -519,9 +514,6 @@ const EstateManagement = () => {
               <div className="stats-icon-container yellow">
                 <Flag className="stats-icon" />
               </div>
-            </div>
-            <div className="stats-trend positive">
-              +15.3% so với tháng trước
             </div>
           </div>
         </div>
@@ -573,13 +565,12 @@ const EstateManagement = () => {
               
               <div className="filter-dropdown-container">
                 <button className="btn btn-filter" onClick={toggleAuthorDropdown}>
-                  <Filter size={16} className="mr-2" /> Lọc nâng cao
+                  <Filter size={16} className="mr-2" /> Lọc tác giả
                 </button>
                 
                 {showAuthorDropdown && (
                   <div className="author-dropdown">
                     <div className="author-dropdown-header">
-                      <h4>Lọc theo tác giả</h4>
                     </div>
                     <div className="author-dropdown-list">
                       <div 
