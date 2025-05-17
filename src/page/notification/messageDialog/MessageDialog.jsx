@@ -6,42 +6,42 @@ const MessageDialog = ({ onClose, contact }) => {
   const [messages, setMessages] = useState([
     {
       id: 1,
-      sender: 'admin', // Changed from 'user' to 'admin'
+      sender: 'admin', 
       text: 'Tôi đã cập nhật thông tin phòng nhưng vẫn chưa hiển thị trên trang chính, admin có thể kiểm tra giúp tôi không?',
       time: '14:35',
       read: true
     },
     {
       id: 2,
-      sender: 'admin', // Changed from 'user' to 'admin'
+      sender: 'admin',
       text: 'Khi tôi thử thanh toán phí dịch vụ, hệ thống báo lỗi. Nhờ admin hỗ trợ xử lý giúp!',
       time: '14:37',
       read: true
     },
     {
       id: 4,
-      sender: 'admin', // Changed from 'user' to 'admin'
+      sender: 'admin', 
       text: 'Tôi không nhận được thông báo khi có người thuê gửi yêu cầu. Có phải hệ thống đang gặp lỗi không?',
       time: '14:42',
       read: false
     },
     {
       id: 5,
-      sender: 'user', // Changed from 'admin' to 'user'
+      sender: 'user', 
       text: 'Chào bạn, chúng tôi sẽ kiểm tra hệ thống thông báo và phản hồi lại sớm nhất có thể.',
       time: '14:43',
       read: false
     },
     {
       id: 6,
-      sender: 'admin', // Changed from 'user' to 'admin'
+      sender: 'admin', 
       text: 'Tôi liên tục bị đăng xuất khỏi hệ thống. Có phải có vấn đề về bảo mật hoặc đăng nhập không?',
       time: '14:45',
       read: false
     },
     {
       id: 7,
-      sender: 'user', // Changed from 'admin' to 'user'
+      sender: 'user',
       text: 'Cảm ơn bạn đã báo lỗi. Bạn vui lòng thử xóa cache trình duyệt hoặc gửi mã lỗi cụ thể để chúng tôi kiểm tra chi tiết hơn.',
       time: '14:46',
       read: false
@@ -58,7 +58,7 @@ const MessageDialog = ({ onClose, contact }) => {
     
     const newMessage = {
       id: messages.length + 1,
-      sender: 'user', // Changed from 'user' to 'user' (admin sending the message)
+      sender: 'user', 
       text: message,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       read: false
@@ -101,7 +101,7 @@ const MessageDialog = ({ onClose, contact }) => {
     
     const newMessage = {
       id: messages.length + 1,
-      sender: 'user', // Changed from 'user' to 'user' (admin sending the message)
+      sender: 'user', 
       text: `Đã gửi file: ${file.name}`,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       read: false,
@@ -205,8 +205,17 @@ const MessageDialog = ({ onClose, contact }) => {
           <div className="contact-details">
             <h3>{contact?.name || 'Trần Thị Hoa'}</h3>
             <div className="status">
-              <span className="status-dot online"></span>
-              <span className="status-text">Đang hoạt động</span>
+              {contact?.isOnline ? (
+                <>
+                  <span className="status-dot online"></span>
+                  <span className="status-text">Đang hoạt động</span>
+                </>
+              ) : (
+                <>
+                  <span className="status-dot offline"></span>
+                  <span className="status-text">Không hoạt động</span>
+                </>
+              )}
             </div>
           </div>
         </div>
