@@ -4,14 +4,22 @@ import defaultAvatar from '../../../images/loopy1.jpg';
 
 const AddAccountPage = ({ onClose, onAdd }) => {
   const [userData, setUserData] = useState({
-    name: '',
+    full_name: '',
     email: '',
-    address: '',
-    role: 'Người thuê',
     password: '',
     confirmPassword: '',
+    role: 'Tenant',
     avatar: null,
-    mobile: ''
+    mobile: '',
+    address: {
+      name: 'Nhà riêng',
+      road: '',
+      quarter: '',
+      city: '',
+      country: 'Việt Nam',
+      lat: '',
+      lng: ''
+    }
   });
   
   const [previewImage, setPreviewImage] = useState(null);
@@ -95,7 +103,28 @@ const AddAccountPage = ({ onClose, onAdd }) => {
         ...prev,
         [name]: "Nội dung không hợp lệ hoặc có thể gây nguy hiểm cho hệ thống"
       }));
+      return;
+    }
+    
+    // Handle address fields separately
+    if (name.startsWith('address.')) {
+      const addressField = name.split('.')[1];
+      setUserData(prev => ({
+        ...prev,
+        address: {
+          ...prev.address,
+          [addressField]: value
+        }
+      }));
+      
+      if (errors[name]) {
+        setErrors(prev => ({
+          ...prev,
+          [name]: null
+        }));
+      }
     } else {
+      // Handle regular fields
       setUserData(prev => ({
         ...prev,
         [name]: value
@@ -155,9 +184,17 @@ const AddAccountPage = ({ onClose, onAdd }) => {
   const validateForm = () => {
     const newErrors = {};
     
+    // Check for injections in basic fields
     for (const [key, value] of Object.entries(userData)) {
       if (typeof value === 'string' && containsInjection(value)) {
         newErrors[key] = "Nội dung không hợp lệ hoặc có thể gây nguy hiểm cho hệ thống";
+      }
+    }
+    
+    // Check for injections in address fields
+    for (const [key, value] of Object.entries(userData.address)) {
+      if (typeof value === 'string' && containsInjection(value)) {
+        newErrors[`address.${key}`] = "Nội dung không hợp lệ hoặc có thể gây nguy hiểm cho hệ thống";
       }
     }
     
@@ -166,7 +203,7 @@ const AddAccountPage = ({ onClose, onAdd }) => {
       return false;
     }
     
-    if (!userData.name.trim()) newErrors.name = "Họ và tên không được để trống";
+    if (!userData.full_name.trim()) newErrors.full_name = "Họ và tên không được để trống";
     
     if (!userData.email.trim()) {
       newErrors.email = "Email không được để trống";
@@ -177,7 +214,10 @@ const AddAccountPage = ({ onClose, onAdd }) => {
       }
     }
     
-    if (!userData.address.trim()) newErrors.address = "Địa chỉ không được để trống";
+    // Validate address fields
+    if (!userData.address.road.trim()) newErrors['address.road'] = "Đường không được để trống";
+    if (!userData.address.quarter.trim()) newErrors['address.quarter'] = "Phường/Xã không được để trống";
+    if (!userData.address.city.trim()) newErrors['address.city'] = "Quận/Huyện không được để trống";
     
     if (!userData.password) {
       newErrors.password = "Mật khẩu không được để trống";
@@ -197,33 +237,40 @@ const AddAccountPage = ({ onClose, onAdd }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const mapRole = (vietnameseRole) => {
+  const mapRoleToUI = (role) => {
+    const roleMapping = {
+      'Admin': 'Quản trị viên',
+      'Landlord': 'Chủ nhà',
+      'Tenant': 'Người thuê'
+    };
+    return roleMapping[role] || 'Người thuê';
+  };
+
+  const mapRoleToAPI = (uiRole) => {
     const roleMapping = {
       'Quản trị viên': 'Admin',
       'Chủ nhà': 'Landlord',
       'Người thuê': 'Tenant'
     };
-    return roleMapping[vietnameseRole] || 'Tenant';
+    return roleMapping[uiRole] || 'Tenant';
   };
 
   const prepareDataForApi = () => {
-    const addressParts = userData.address.split(',').map(part => part.trim());
-    
     return {
-      full_name: userData.name,
+      full_name: userData.full_name,
       email: userData.email,
       password: userData.password,
       mobile: userData.mobile || '',
-      role: mapRole(userData.role),
+      role: userData.role,
       avatar: previewImage || "https://res.cloudinary.com/dw1sniewf/image/upload/v1669720008/noko-social/audefto1as6m8gg17nu1.jpg",
       address: {
-        name: addressParts[0] || '',
-        road: addressParts[0] || '',
-        quarter: addressParts[1] || '',
-        city: addressParts[2] || '',
-        country: addressParts[3] || 'Việt Nam',
-        lat: "",
-        lng: ""
+        name: userData.address.name || 'Nhà riêng',
+        road: userData.address.road || '',
+        quarter: userData.address.quarter || '',
+        city: userData.address.city || '',
+        country: userData.address.country || 'Việt Nam',
+        lat: userData.address.lat || "",
+        lng: userData.address.lng || ""
       }
     };
   };
@@ -231,9 +278,15 @@ const AddAccountPage = ({ onClose, onAdd }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    const hasInjection = Object.values(userData).some(value => 
-      typeof value === 'string' && containsInjection(value)
-    );
+    // Check for injections in all form data
+    const hasInjection = Object.entries(userData).some(([key, value]) => {
+      if (key === 'address') {
+        return Object.values(value).some(addrValue => 
+          typeof addrValue === 'string' && containsInjection(addrValue)
+        );
+      }
+      return typeof value === 'string' && containsInjection(value);
+    });
     
     if (hasInjection) {
       setSubmitMessage({
@@ -289,15 +342,24 @@ const AddAccountPage = ({ onClose, onAdd }) => {
         }
         
         setTimeout(() => {
+          // Reset form to initial state
           setUserData({
-            name: '',
+            full_name: '',
             email: '',
-            address: '',
-            role: 'Người thuê',
             password: '',
             confirmPassword: '',
+            role: 'Tenant',
             avatar: null,
-            mobile: ''
+            mobile: '',
+            address: {
+              name: 'Nhà riêng',
+              road: '',
+              quarter: '',
+              city: '',
+              country: 'Việt Nam',
+              lat: '',
+              lng: ''
+            }
           });
           setPreviewImage(null);
         }, 2000);
@@ -379,17 +441,17 @@ const AddAccountPage = ({ onClose, onAdd }) => {
             <div className="form-group">
               <input
                 type="text"
-                id="name"
-                name="name"
-                value={userData.name}
+                id="full_name"
+                name="full_name"
+                value={userData.full_name}
                 onChange={handleChange}
                 placeholder="Họ và tên"
-                className={`form-input ${focusedField === 'name' ? 'focused' : ''} ${errors.name ? 'error' : ''}`}
-                onFocus={() => handleFocus('name')}
+                className={`form-input ${focusedField === 'full_name' ? 'focused' : ''} ${errors.full_name ? 'error' : ''}`}
+                onFocus={() => handleFocus('full_name')}
                 onBlur={handleBlur}
               />
               <label className="form-label">Họ và tên</label>
-              {errors.name && <span className="error-message">{errors.name}</span>}
+              {errors.full_name && <span className="error-message">{errors.full_name}</span>}
             </div>
             
             <div className="form-group">
@@ -427,20 +489,85 @@ const AddAccountPage = ({ onClose, onAdd }) => {
               {errors.mobile && <span className="error-message">{errors.mobile}</span>}
             </div>
             
+            {/* Address fields */}
             <div className="form-group">
               <input
                 type="text"
-                id="address"
-                name="address"
-                value={userData.address}
+                id="address_name"
+                name="address.name"
+                value={userData.address.name}
                 onChange={handleChange}
-                placeholder="Địa chỉ"
-                className={`form-input ${focusedField === 'address' ? 'focused' : ''} ${errors.address ? 'error' : ''}`}
-                onFocus={() => handleFocus('address')}
+                placeholder="Tên địa chỉ"
+                className={`form-input ${focusedField === 'address.name' ? 'focused' : ''} ${errors['address.name'] ? 'error' : ''}`}
+                onFocus={() => handleFocus('address.name')}
                 onBlur={handleBlur}
               />
-              <label className="form-label">Địa chỉ (đường, phường, thành phố, quốc gia)</label>
-              {errors.address && <span className="error-message">{errors.address}</span>}
+              <label className="form-label">Tên địa chỉ</label>
+              {errors['address.name'] && <span className="error-message">{errors['address.name']}</span>}
+            </div>
+            
+            <div className="form-group">
+              <input
+                type="text"
+                id="address_road"
+                name="address.road"
+                value={userData.address.road}
+                onChange={handleChange}
+                placeholder="Đường"
+                className={`form-input ${focusedField === 'address.road' ? 'focused' : ''} ${errors['address.road'] ? 'error' : ''}`}
+                onFocus={() => handleFocus('address.road')}
+                onBlur={handleBlur}
+              />
+              <label className="form-label">Đường</label>
+              {errors['address.road'] && <span className="error-message">{errors['address.road']}</span>}
+            </div>
+            
+            <div className="form-group">
+              <input
+                type="text"
+                id="address_quarter"
+                name="address.quarter"
+                value={userData.address.quarter}
+                onChange={handleChange}
+                placeholder="Phường/Xã"
+                className={`form-input ${focusedField === 'address.quarter' ? 'focused' : ''} ${errors['address.quarter'] ? 'error' : ''}`}
+                onFocus={() => handleFocus('address.quarter')}
+                onBlur={handleBlur}
+              />
+              <label className="form-label">Phường/Xã</label>
+              {errors['address.quarter'] && <span className="error-message">{errors['address.quarter']}</span>}
+            </div>
+            
+            <div className="form-group">
+              <input
+                type="text"
+                id="address_city"
+                name="address.city"
+                value={userData.address.city}
+                onChange={handleChange}
+                placeholder="Quận/Huyện"
+                className={`form-input ${focusedField === 'address.city' ? 'focused' : ''} ${errors['address.city'] ? 'error' : ''}`}
+                onFocus={() => handleFocus('address.city')}
+                onBlur={handleBlur}
+              />
+              <label className="form-label">Quận/Huyện</label>
+              {errors['address.city'] && <span className="error-message">{errors['address.city']}</span>}
+            </div>
+            
+            <div className="form-group">
+              <input
+                type="text"
+                id="address_country"
+                name="address.country"
+                value={userData.address.country}
+                onChange={handleChange}
+                placeholder="Quốc gia"
+                className={`form-input ${focusedField === 'address.country' ? 'focused' : ''} ${errors['address.country'] ? 'error' : ''}`}
+                onFocus={() => handleFocus('address.country')}
+                onBlur={handleBlur}
+              />
+              <label className="form-label">Quốc gia</label>
+              {errors['address.country'] && <span className="error-message">{errors['address.country']}</span>}
             </div>
             
             <div className="form-group">
@@ -453,9 +580,9 @@ const AddAccountPage = ({ onClose, onAdd }) => {
                 onFocus={() => handleFocus('role')}
                 onBlur={handleBlur}
               >
-                <option value="Quản trị viên">Quản trị viên</option>
-                <option value="Chủ nhà">Chủ nhà</option>
-                <option value="Người thuê">Người thuê</option>
+                <option value="Admin">Quản trị viên</option>
+                <option value="Landlord">Chủ nhà</option>
+                <option value="Tenant">Người thuê</option>
               </select>
               <label className="form-label">Vai trò</label>
             </div>

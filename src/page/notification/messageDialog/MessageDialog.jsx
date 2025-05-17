@@ -1,71 +1,181 @@
 import '../../../styles/notification/messageDialog/MessageDialog.css';
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 const MessageDialog = ({ onClose, contact }) => {
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      sender: 'admin', // Changed from 'user' to 'admin'
-      text: 'Tôi đã cập nhật thông tin phòng nhưng vẫn chưa hiển thị trên trang chính, admin có thể kiểm tra giúp tôi không?',
-      time: '14:35',
-      read: true
-    },
-    {
-      id: 2,
-      sender: 'admin', // Changed from 'user' to 'admin'
-      text: 'Khi tôi thử thanh toán phí dịch vụ, hệ thống báo lỗi. Nhờ admin hỗ trợ xử lý giúp!',
-      time: '14:37',
-      read: true
-    },
-    {
-      id: 4,
-      sender: 'admin', // Changed from 'user' to 'admin'
-      text: 'Tôi không nhận được thông báo khi có người thuê gửi yêu cầu. Có phải hệ thống đang gặp lỗi không?',
-      time: '14:42',
-      read: false
-    },
-    {
-      id: 5,
-      sender: 'user', // Changed from 'admin' to 'user'
-      text: 'Chào bạn, chúng tôi sẽ kiểm tra hệ thống thông báo và phản hồi lại sớm nhất có thể.',
-      time: '14:43',
-      read: false
-    },
-    {
-      id: 6,
-      sender: 'admin', // Changed from 'user' to 'admin'
-      text: 'Tôi liên tục bị đăng xuất khỏi hệ thống. Có phải có vấn đề về bảo mật hoặc đăng nhập không?',
-      time: '14:45',
-      read: false
-    },
-    {
-      id: 7,
-      sender: 'user', // Changed from 'admin' to 'user'
-      text: 'Cảm ơn bạn đã báo lỗi. Bạn vui lòng thử xóa cache trình duyệt hoặc gửi mã lỗi cụ thể để chúng tôi kiểm tra chi tiết hơn.',
-      time: '14:46',
-      read: false
-    }
-    
-  ]);
-  const [isTyping] = useState(true);
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isTyping] = useState(false);
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
+  const messagesContainerRef = useRef(null);
 
-  const handleSendMessage = () => {
-    if (message.trim() === '') return;
-    
-    const newMessage = {
-      id: messages.length + 1,
-      sender: 'user', // Changed from 'user' to 'user' (admin sending the message)
-      text: message,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      read: false
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (!contact || !contact.id) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const token = localStorage.getItem('token');
+        
+        const response = await fetch(`http://localhost:5000/api/messages/${contact.id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to load messages');
+        }
+        
+        const data = await response.json();
+        
+      
+        const formattedMessages = data.map(msg => ({
+          id: msg._id,
+          sender: msg.sender === contact.userId ? 'admin' : 'user', // 'admin' is the contact, 'user' is the current user
+          text: msg.text,
+          time: formatTime(new Date(msg.createdAt)),
+          read: msg.read || false,
+          attachment: msg.attachmentUrl ? {
+            name: msg.attachmentName || 'Attachment',
+            type: getAttachmentType(msg.attachmentUrl),
+            size: msg.attachmentSize || 0,
+            url: msg.attachmentUrl
+          } : null
+        }));
+        
+        setMessages(formattedMessages);
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching messages:', err);
+        setError(err.message);
+        setLoading(false);
+      }
     };
     
-    setMessages([...messages, newMessage]);
+    fetchMessages();
+  }, [contact]);
+
+
+  useEffect(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  const formatTime = (date) => {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const getAttachmentType = (url) => {
+    if (!url) return 'document';
+    const extension = url.split('.').pop().toLowerCase();
+    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'];
+    return imageExtensions.includes(extension) ? 'image' : 'document';
+  };
+
+  const handleSendMessage = async () => {
+    if (message.trim() === '') return;
+    
+    const currentTime = new Date();
+    const newMessage = {
+      id: `temp-${Date.now()}`,
+      sender: 'user', 
+      text: message,
+      time: formatTime(currentTime),
+      read: false
+    };
+
+    setMessages(prevMessages => [...prevMessages, newMessage]);
     setMessage('');
+    
+    try {
+      const token = localStorage.getItem('token');
+      
+ 
+      let userId = null;
+      if (token) {
+        try {
+          const base64Url = token.split('.')[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+          }).join(''));
+          
+          const payload = JSON.parse(jsonPayload);
+          userId = payload.id || payload.userId || payload._id;
+        } catch (e) {
+          console.error("Error decoding token:", e);
+        }
+      }
+      
+      if (!userId) {
+        throw new Error('Cannot get userId from token');
+      }
+      
+
+      const response = await fetch('http://localhost:5000/api/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          conversationId: contact.id,
+          sender: userId,
+          text: message,
+          createdAt: currentTime.toISOString()
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to send message');
+      }
+      
+ 
+      const updateConversationResponse = await fetch(`http://localhost:5000/api/messages/conversations/${contact.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          lastMessage: message,
+          lastUpdated: currentTime.toISOString()
+        })
+      });
+      
+      if (!updateConversationResponse.ok) {
+        console.warn('Failed to update conversation last message');
+      }
+      
+      const data = await response.json();
+
+      setMessages(prevMessages => 
+        prevMessages.map(msg => 
+          msg.id === newMessage.id 
+            ? {
+                id: data._id,
+                sender: 'user',
+                text: data.text,
+                time: formatTime(new Date(data.createdAt)),
+                read: data.read || false
+              }
+            : msg
+        )
+      );
+    } catch (err) {
+      console.error('Error sending message:', err);
+   
+      alert('Failed to send message. Please try again.');
+    }
   };
 
   const handleKeyPress = (e) => {
@@ -96,44 +206,187 @@ const MessageDialog = ({ onClose, contact }) => {
     }
   };
 
-  const sendFileMessage = (file) => {
-    const fileUrl = URL.createObjectURL(file);
+  const sendFileMessage = async (file) => {
+    try {
+      const token = localStorage.getItem('token');
+      
     
-    const newMessage = {
-      id: messages.length + 1,
-      sender: 'user', // Changed from 'user' to 'user' (admin sending the message)
-      text: `Đã gửi file: ${file.name}`,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      read: false,
-      attachment: {
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        url: fileUrl
+      let userId = null;
+      if (token) {
+        try {
+          const base64Url = token.split('.')[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+          }).join(''));
+          
+          const payload = JSON.parse(jsonPayload);
+          userId = payload.id || payload.userId || payload._id;
+        } catch (e) {
+          console.error("Error decoding token:", e);
+        }
       }
-    };
-    
-    setMessages([...messages, newMessage]);
+      
+      if (!userId) {
+        throw new Error('Cannot get userId from token');
+      }
+      
+  
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('conversationId', contact.id);
+      formData.append('sender', userId);
+      formData.append('text', `Đã gửi file: ${file.name}`);
+      
+
+      const tempFileUrl = URL.createObjectURL(file);
+      const tempMessage = {
+        id: `temp-${Date.now()}`,
+        sender: 'user',
+        text: `Đã gửi file: ${file.name}`,
+        time: formatTime(new Date()),
+        read: false,
+        attachment: {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          url: tempFileUrl
+        }
+      };
+      
+ 
+      setMessages(prevMessages => [...prevMessages, tempMessage]);
+      
+  
+      const response = await fetch('http://localhost:5000/api/messages/attachment', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to send file');
+      }
+      
+      const data = await response.json();
+      
+  
+      setMessages(prevMessages => 
+        prevMessages.map(msg => 
+          msg.id === tempMessage.id 
+            ? {
+                id: data._id,
+                sender: 'user',
+                text: data.text,
+                time: formatTime(new Date(data.createdAt)),
+                read: data.read || false,
+                attachment: {
+                  name: file.name,
+                  type: file.type,
+                  size: file.size,
+                  url: data.attachmentUrl || tempFileUrl
+                }
+              }
+            : msg
+        )
+      );
+    } catch (err) {
+      console.error('Error sending file:', err);
+      alert('Failed to send file. Please try again.');
+    }
   };
 
-  const sendImageMessage = (file) => {
-    const imageUrl = URL.createObjectURL(file);
-    
-    const newMessage = {
-      id: messages.length + 1,
-      sender: 'user', // Changed from 'user' to 'user' (admin sending the message)
-      text: `Đã gửi hình ảnh: ${file.name}`,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      read: false,
-      attachment: {
-        name: file.name,
-        type: 'image',
-        size: file.size,
-        url: imageUrl
+  const sendImageMessage = async (file) => {
+    try {
+      const token = localStorage.getItem('token');
+      
+   
+      let userId = null;
+      if (token) {
+        try {
+          const base64Url = token.split('.')[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+          }).join(''));
+          
+          const payload = JSON.parse(jsonPayload);
+          userId = payload.id || payload.userId || payload._id;
+        } catch (e) {
+          console.error("Error decoding token:", e);
+        }
       }
-    };
-    
-    setMessages([...messages, newMessage]);
+      
+      if (!userId) {
+        throw new Error('Cannot get userId from token');
+      }
+     
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('conversationId', contact.id);
+      formData.append('sender', userId);
+      formData.append('text', `Đã gửi hình ảnh: ${file.name}`);
+      
+
+      const tempImageUrl = URL.createObjectURL(file);
+      const tempMessage = {
+        id: `temp-${Date.now()}`,
+        sender: 'user',
+        text: `Đã gửi hình ảnh: ${file.name}`,
+        time: formatTime(new Date()),
+        read: false,
+        attachment: {
+          name: file.name,
+          type: 'image',
+          size: file.size,
+          url: tempImageUrl
+        }
+      };
+      
+      // Add to UI immediately
+      setMessages(prevMessages => [...prevMessages, tempMessage]);
+      
+      // Send to server
+      const response = await fetch('http://localhost:5000/api/messages/attachment', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to send image');
+      }
+      
+      const data = await response.json();
+      
+      // Replace temp message with server data
+      setMessages(prevMessages => 
+        prevMessages.map(msg => 
+          msg.id === tempMessage.id 
+            ? {
+                id: data._id,
+                sender: 'user',
+                text: data.text,
+                time: formatTime(new Date(data.createdAt)),
+                read: data.read || false,
+                attachment: {
+                  name: file.name,
+                  type: 'image',
+                  size: file.size,
+                  url: data.attachmentUrl || tempImageUrl
+                }
+              }
+            : msg
+        )
+      );
+    } catch (err) {
+      console.error('Error sending image:', err);
+      alert('Failed to send image. Please try again.');
+    }
   };
 
   const openFileExplorer = (type) => {
@@ -195,7 +448,7 @@ const MessageDialog = ({ onClose, contact }) => {
             {contact?.avatar ? (
               <img 
                 src={contact.avatar} 
-                alt={`Avatar của ${contact.name || 'Trần Thị Hoa'}`} 
+                alt={`Avatar của ${contact.name || 'Người dùng'}`} 
                 className="profile-avatar"
               />
             ) : (
@@ -203,10 +456,19 @@ const MessageDialog = ({ onClose, contact }) => {
             )}
           </div>
           <div className="contact-details">
-            <h3>{contact?.name || 'Trần Thị Hoa'}</h3>
+            <h3>{contact?.name || 'Người dùng'}</h3>
             <div className="status">
-              <span className="status-dot online"></span>
-              <span className="status-text">Đang hoạt động</span>
+              {contact?.isOnline ? (
+                <>
+                  <span className="status-dot online"></span>
+                  <span className="status-text">Đang hoạt động</span>
+                </>
+              ) : (
+                <>
+                  <span className="status-dot offline"></span>
+                  <span className="status-text">Không hoạt động</span>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -215,30 +477,38 @@ const MessageDialog = ({ onClose, contact }) => {
         </button>
       </div>
       
-      <div className="messages-container">
-        {messages.map(msg => (
-          <div 
-            key={msg.id} 
-            className={`message ${msg.sender === 'user' ? 'sent' : 'received'}`}
-          >
-            <div className="message-bubble">
-              <p>{msg.text}</p>
-              {msg.attachment && (
-                <div className={`attachment-preview ${msg.attachment.type}`}>
-                  {renderAttachmentContent(msg.attachment)}
-                </div>
-              )}
-              <span className="message-time">
-                {msg.time}
-                {msg.sender === 'user' && (
-                  <span className={`read-status ${msg.read ? 'read' : ''}`}>
-                    {msg.read ? '✓✓' : '✓'}
-                  </span>
+      <div className="messages-container" ref={messagesContainerRef}>
+        {loading ? (
+          <div className="loading-messages">Đang tải tin nhắn...</div>
+        ) : error ? (
+          <div className="error-messages">Lỗi: {error}</div>
+        ) : messages.length === 0 ? (
+          <div className="no-messages">Chưa có tin nhắn. Hãy bắt đầu cuộc trò chuyện!</div>
+        ) : (
+          messages.map(msg => (
+            <div 
+              key={msg.id} 
+              className={`message ${msg.sender === 'user' ? 'sent' : 'received'}`}
+            >
+              <div className="message-bubble">
+                <p>{msg.text}</p>
+                {msg.attachment && (
+                  <div className={`attachment-preview ${msg.attachment.type}`}>
+                    {renderAttachmentContent(msg.attachment)}
+                  </div>
                 )}
-              </span>
+                <span className="message-time">
+                  {msg.time}
+                  {msg.sender === 'user' && (
+                    <span className={`read-status ${msg.read ? 'read' : ''}`}>
+                      {msg.read ? '✓✓' : '✓'}
+                    </span>
+                  )}
+                </span>
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
         
         {isTyping && (
           <div className="typing-indicator">
@@ -247,7 +517,7 @@ const MessageDialog = ({ onClose, contact }) => {
               <span></span>
               <span></span>
             </div>
-            <p> đang nhập...</p>
+            <p>{contact?.name || 'Người dùng'} đang nhập...</p>
           </div>
         )}
       </div>
