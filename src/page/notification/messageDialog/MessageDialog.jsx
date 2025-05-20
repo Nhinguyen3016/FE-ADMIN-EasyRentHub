@@ -1,5 +1,5 @@
 import '../../../styles/notification/messageDialog/MessageDialog.css';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 
 const MessageDialog = ({ onClose, contact }) => {
   const [message, setMessage] = useState('');
@@ -13,7 +13,7 @@ const MessageDialog = ({ onClose, contact }) => {
   const messagesContainerRef = useRef(null);
   const [currentUserId, setCurrentUserId] = useState(null);
   
-  // API Base URL - could be set from environment variable for different environments
+
   const API_BASE_URL = 'http://localhost:5000';
 
   useEffect(() => {
@@ -35,8 +35,8 @@ const MessageDialog = ({ onClose, contact }) => {
     }
   }, []);
 
-  // Move fetchMessages outside of useEffect to reuse it
-  const fetchMessages = async (conversationId) => {
+  
+  const fetchMessages = useCallback(async (conversationId) => {
     if (!conversationId) {
       setLoading(false);
       return;
@@ -79,13 +79,13 @@ const MessageDialog = ({ onClose, contact }) => {
       setError(err.message);
       setLoading(false);
     }
-  };
+  }, [currentUserId, API_BASE_URL]);
 
   useEffect(() => {
     if (currentUserId && contact && contact.id) {
       fetchMessages(contact.id);
     }
-  }, [contact, currentUserId]);
+  }, [contact, currentUserId, fetchMessages]);
 
   useEffect(() => {
     if (messagesContainerRef.current) {
@@ -115,7 +115,7 @@ const MessageDialog = ({ onClose, contact }) => {
     try {
       const token = localStorage.getItem('token');
       
-      // Fixed endpoint to use the working API endpoint
+ 
       const response = await fetch(`${API_BASE_URL}/api/messages/send`, {
         method: 'POST',
         headers: {
@@ -135,24 +135,24 @@ const MessageDialog = ({ onClose, contact }) => {
         throw new Error('Failed to send message');
       }
       
-      const data = await response.json();
+      const responseData = await response.json();
       
-      // Update the message in the state with the one returned from the server
+    
       setMessages(prevMessages => 
         prevMessages.map(msg => 
           msg.id === newMessage.id 
             ? {
-                id: data._id,
+                id: responseData._id,
                 sender: 'user',
-                text: data.text,
-                time: formatTime(new Date(data.timestamp)),
-                read: data.read || false
+                text: responseData.text,
+                time: formatTime(new Date(responseData.timestamp)),
+                read: responseData.read || false
               }
             : msg
         )
       );
 
-      // After a successful message send, refresh the messages list
+     
       if (contact && contact.id) {
         fetchMessages(contact.id);
       }
@@ -194,12 +194,12 @@ const MessageDialog = ({ onClose, contact }) => {
     try {
       const token = localStorage.getItem('token');
       
-      // Create a temporary message to show immediately
+ 
       const tempFileUrl = URL.createObjectURL(file);
       const tempMessage = {
         id: `temp-${Date.now()}`,
         sender: 'user',
-        text: '', // Không hiển thị text mà chỉ hiển thị file attachment
+        text: '', 
         time: formatTime(new Date()),
         read: false,
         attachment: {
@@ -212,11 +212,7 @@ const MessageDialog = ({ onClose, contact }) => {
       
       setMessages(prevMessages => [...prevMessages, tempMessage]);
       
-      // Create FormData for file upload
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      // Send the message with attachment
+
       const response = await fetch(`${API_BASE_URL}/api/messages/send`, {
         method: 'POST',
         headers: {
@@ -228,7 +224,7 @@ const MessageDialog = ({ onClose, contact }) => {
           receiverId: contact.userId,
           text: `Đã gửi file: ${file.name}`,
           mediaType: 'document',
-          // We'll handle the file separately if needed
+    
         })
       });
       
@@ -236,9 +232,9 @@ const MessageDialog = ({ onClose, contact }) => {
         throw new Error('Failed to send file message');
       }
       
-      const data = await response.json();
-      
-      // After a successful message send, refresh the messages list
+      // Use the response data if needed in the future
+      await response.json();
+   
       if (contact && contact.id) {
         fetchMessages(contact.id);
       }
@@ -252,16 +248,16 @@ const MessageDialog = ({ onClose, contact }) => {
     try {
       const token = localStorage.getItem('token');
       
-      // Create a temporary message to show immediately
+    
       const tempImageUrl = URL.createObjectURL(file);
       const tempMessage = {
         id: `temp-${Date.now()}`,
         sender: 'user',
-        text: '', // Không hiển thị text mà chỉ hiển thị ảnh
+        text: '', 
         time: formatTime(new Date()),
         read: false,
         attachment: {
-          name: '', // Để trống để không hiển thị tên file
+          name: '', 
           type: 'image',
           url: tempImageUrl,
           size: file.size
@@ -270,7 +266,7 @@ const MessageDialog = ({ onClose, contact }) => {
       
       setMessages(prevMessages => [...prevMessages, tempMessage]);
       
-      // Send the message with image reference
+
       const response = await fetch(`${API_BASE_URL}/api/messages/send`, {
         method: 'POST',
         headers: {
@@ -282,7 +278,7 @@ const MessageDialog = ({ onClose, contact }) => {
           receiverId: contact.userId,
           text: `Đã gửi hình ảnh: ${file.name}`,
           mediaType: 'image',
-          // We'll handle the image file separately if needed
+      
         })
       });
       
@@ -290,9 +286,10 @@ const MessageDialog = ({ onClose, contact }) => {
         throw new Error('Failed to send image message');
       }
       
-      const data = await response.json();
+      // Use the response data if needed in the future
+      await response.json();
       
-      // After a successful message send, refresh the messages list
+  
       if (contact && contact.id) {
         fetchMessages(contact.id);
       }

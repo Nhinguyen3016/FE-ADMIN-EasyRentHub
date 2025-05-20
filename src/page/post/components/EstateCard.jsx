@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Star, Bed, Bath, Home, Eye, CheckCircle } from 'lucide-react';
+import { MapPin, Star, Bed, Bath, Home, Eye } from 'lucide-react';
 import bd1 from '../../../images/bd1.jpg';
 
 const EstateCard = ({
@@ -9,7 +9,7 @@ const EstateCard = ({
   formatCurrency,
   renderStatus
 }) => {
-  // Get user's last name
+  // Extract user's last name for the card
   const getUserLastName = () => {
     if (!estate || !estate.user || !estate.user.name) {
       return 'N/A';
@@ -20,6 +20,10 @@ const EstateCard = ({
       return 'N/A';
     }
   };
+
+  // Normalize status to either 'booked' or 'available'
+  // Any status other than 'available' will be treated as 'booked'
+  const normalizedStatus = estate.status === 'available' ? 'available' : 'booked';
 
   return (
     <div className="estate-card">
@@ -34,9 +38,10 @@ const EstateCard = ({
           }}
         />
         <div className="estate-card-status">
-          {renderStatus(estate.status)}
+          {renderStatus(normalizedStatus)}
         </div>
       </div>
+
       <div className="estate-card-content">
         <h3 className="estate-card-title">{estate.name || "Unnamed Property"}</h3>
         <div className="estate-card-address">
@@ -78,14 +83,6 @@ const EstateCard = ({
           >
             <Eye size={14} className="icon-fixed" /> Xem chi tiết
           </button>
-          {estate.status === 'pending' && (
-            <button
-              className="btn btn-approve"
-              onClick={() => onApprove(estate.id)}
-            >
-              <CheckCircle size={14} className="icon-fixed" /> Duyệt
-            </button>
-          )}
         </div>
       </div>
     </div>

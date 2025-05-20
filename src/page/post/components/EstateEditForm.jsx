@@ -2,68 +2,76 @@ import React, { useState, useEffect } from 'react';
 import { ChevronLeft, Upload, X, Plus, Save } from 'lucide-react';
 import '../../../styles/post/components/EstateEditForm.css';
 
-const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
-  const getInitialState = (estateData) => {
-    return estateData ? {
-      id: estateData.id || estateData._id || '',
-      name: estateData.name || '',
-      address: estateData.address || {
-        house_number: '',
-        road: '',
-        quarter: '',
-        city: '',
-        country: 'Việt Nam',
-        lat: '',
-        lng: ''
-      },
-      price: estateData.price || 0,
-      status: estateData.status || 'available',
-      property: estateData.property || {
-        bedroom: 2,
-        bathroom: 1,
-        floors: 1
-      },
-      description: estateData.description || '',
-      images: estateData.images || []
-    } : {
-      id: '', 
-      name: '',
-      address: {
-        house_number: '',
-        road: '',
-        quarter: '',
-        city: '',
-        country: 'Việt Nam',
-        lat: '',
-        lng: ''
-      },
-      price: 0,
-      status: 'available',
-      property: {
-        bedroom: 2,
-        bathroom: 1,
-        floors: 1
-      },
-      description: '',
-      images: []
-    };
+const EstateForm = ({ onClose, onSave }) => {
+  const initialState = {
+    id: '', 
+    name: '',
+    address: {
+      house_number: '',
+      road: '',
+      quarter: '',
+      city: '',
+      country: 'Việt Nam',
+      lat: '',
+      lng: ''
+    },
+    price: 0,
+    status: 'available',
+    property: {
+      bedroom: 2,
+      bathroom: 1,
+      floors: 1
+    },
+    description: '',
+    images: [],
+    user: ''
   };
 
-  const initialState = getInitialState(estate);
   const [formData, setFormData] = useState(initialState);
   const [errors, setErrors] = useState({});
   const [imageFiles, setImageFiles] = useState([]);
-  const [previewImages, setPreviewImages] = useState(initialState.images);
+  const [previewImages, setPreviewImages] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState('');
+  const [currentUser, setCurrentUser] = useState({
+    full_name: '',
+    email: '',
+    mobile: ''
+  });
 
+  // Fetch current user data when component mounts
   useEffect(() => {
-    if (estate) {
-      const newInitialState = getInitialState(estate);
-      setFormData(newInitialState);
-      setPreviewImages(estate.images || []);
-    }
-  }, [estate]);
+    const fetchCurrentUser = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Không tìm thấy token xác thực');
+        }
+
+        const response = await fetch('http://localhost:5000/api/user/info', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Không thể lấy thông tin người dùng');
+        }
+
+        const data = await response.json();
+        setCurrentUser({
+          full_name: data.full_name || '',
+          email: data.email || '',
+          mobile: data.mobile || ''
+        });
+      } catch (error) {
+        console.error('Error fetching current user data:', error);
+        setSubmissionError('Không thể lấy thông tin người dùng. Vui lòng đăng nhập lại.');
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -168,16 +176,13 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
   };
 
   const prepareDataForAPI = () => {
-
     const apiData = {
-      id: formData.id,  
-      _id: formData.id, 
-      full_name: formData.name,
-      email: "user@example.com", 
-      password: "UltraSecure789", 
-      mobile: "0909123456", 
+      full_name: currentUser.full_name,
+      email: currentUser.email,
+      password: "", // Leave blank as it's not needed for this API call
+      mobile: currentUser.mobile,
       role: "Tenant", 
-      avatar: previewImages.length > 0 ? previewImages[0] : "https://example.com/avatar3.jpg",
+      avatar: previewImages.length > 0 ? previewImages[0] : "",
       property: {
         bedroom: formData.property.bedroom,
         bathroom: formData.property.bathroom,
@@ -195,7 +200,8 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
       images: previewImages,
       price: formData.price,
       status: formData.status,
-      name: formData.name
+      name: formData.name,
+      user: currentUser.id || ''
     };
 
     return apiData;
@@ -209,75 +215,38 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
       setSubmissionError('');
       
       try {
-    
         const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Không tìm thấy token xác thực. Vui lòng đăng nhập lại.');
+        }
         
         const apiData = prepareDataForAPI();
         
-        let result;
+        const response = await fetch('http://localhost:5000/api/estates', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(apiData)
+        });
         
-       
-        if (isNew) {
-      
-          const response = await fetch('http://localhost:5000/api/estates', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(apiData)
-          });
-          
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.msg || 'Có lỗi xảy ra khi tạo bài đăng');
-          }
-          
-          result = await response.json();
-          
-       
-          if (result.newEstate && result.newEstate._id) {
-            apiData.id = result.newEstate._id;
-            apiData._id = result.newEstate._id;
-          } else if (result._id) {
-            apiData.id = result._id;
-            apiData._id = result._id;
-          }
-        } else {
-      
-          if (!formData.id) {
-            throw new Error('Bài đăng không có ID hợp lệ');
-          }
-          
-  
-          const updateData = {
-            property: apiData.property
-          };
-          
-      
-          if (formData.name) updateData.full_name = apiData.full_name;
-          if (formData.address) updateData.address = apiData.address;
-          
-          const response = await fetch(`http://localhost:5000/api/estate/${formData.id}`, {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(updateData)
-          });
-          
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.msg || 'Có lỗi xảy ra khi cập nhật bài đăng');
-          }
-          
-          result = await response.json();
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.msg || 'Có lỗi xảy ra khi tạo bài đăng');
         }
         
-
+        const result = await response.json();
+        
+        if (result.newEstate && result.newEstate._id) {
+          apiData.id = result.newEstate._id;
+          apiData._id = result.newEstate._id;
+        } else if (result._id) {
+          apiData.id = result._id;
+          apiData._id = result._id;
+        }
+        
         onSave(apiData);
- 
         onClose();
         
       } catch (error) {
@@ -293,9 +262,7 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
     <div className="edit-form-overlay">
       <div className="edit-form-container">
         <div className="edit-form-header">
-          <h2 className="edit-form-title">
-            {isNew ? 'Thêm bài đăng mới' : 'Chỉnh sửa bài đăng'}
-          </h2>
+          <h2 className="edit-form-title">Thêm bài đăng mới</h2>
           <button onClick={onClose} className="edit-form-close-btn">
             <ChevronLeft size={24} />
           </button>
@@ -537,7 +504,7 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
             </button>
             <button type="submit" className="btn btn-save" disabled={isSubmitting}>
               <Save size={16} className="mr-2" />
-              {isSubmitting ? 'Đang xử lý...' : isNew ? 'Thêm bài đăng' : 'Lưu thay đổi'}
+              {isSubmitting ? 'Đang xử lý...' : 'Thêm bài đăng'}
             </button>
           </div>
         </form>
@@ -546,4 +513,4 @@ const EstateEditForm = ({ estate, onClose, onSave, isNew = false }) => {
   );
 };
 
-export default EstateEditForm;
+export default EstateForm;

@@ -1,7 +1,7 @@
 import '../../styles/post/PostManagement.css';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Filter, CheckCircle, AlertCircle, Clock, Flag} from 'lucide-react';
+import { Search, Filter, CheckCircle, AlertCircle, Flag} from 'lucide-react';
 import EstateDetailModal from './components/EstateDetailModal'; 
 import EstateEditForm from './components/EstateEditForm';
 import EstateCard from './components/EstateCard'; 
@@ -23,12 +23,49 @@ const EstateManagement = () => {
   const [authors, setAuthors] = useState([]);
   const [selectedAuthor, setSelectedAuthor] = useState('');
   const [showAuthorDropdown, setShowAuthorDropdown] = useState(false);
+  const [loadingAuthors, setLoadingAuthors] = useState(false);
   
   const dropdownRef = useRef(null);
 
   const API_BASE_URL = 'http://localhost:5000/api';
 
   useEffect(() => {
+    const fetchLandlords = async () => {
+      try {
+        setLoadingAuthors(true);
+        const token = localStorage.getItem('token');
+        
+        const response = await fetch(`${API_BASE_URL}/users?role=landlord`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.users && Array.isArray(data.users)) {
+          const landlords = data.users.map(user => ({
+            _id: user._id,
+            full_name: user.fullName || user.name || 'Unknown User',
+            email: user.email
+          }));
+          
+          setAuthors(landlords);
+        } else {
+          throw new Error('Invalid data format received from API');
+        }
+      } catch (err) {
+        console.error('Error fetching landlords:', err);
+        // Don't set error state here as it would prevent estates from loading
+      } finally {
+        setLoadingAuthors(false);
+      }
+    };
+    
     const fetchEstates = async () => {
       try {
         setLoading(true);
@@ -72,28 +109,9 @@ const EstateManagement = () => {
       }
     };
     
-    const fetchAuthors = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/authors`);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        if (data.msg === "Success!" && Array.isArray(data.authors)) {
-          setAuthors(data.authors);
-        } else {
-          throw new Error('Invalid data format received from API');
-        }
-      } catch (err) {
-        console.error('Error fetching authors:', err);
-      }
-    };
-    
+    // Fetch both landlords and estates
+    fetchLandlords();
     fetchEstates();
-    fetchAuthors();
     
     // Add event listener to close dropdown when clicking outside
     const handleClickOutside = (event) => {
@@ -108,123 +126,33 @@ const EstateManagement = () => {
     };
   }, []);
 
-  // Function to fetch estates by author ID
-  const fetchEstatesByAuthor = async (authorId) => {
-    try {
-      setLoading(true);
-      
-      const response = await fetch(`${API_BASE_URL}/estates/author/${authorId}`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      if (data.msg === "Success!" && Array.isArray(data.estates)) {
-        const transformedEstates = data.estates.map(estate => ({
-          id: estate._id,
-          _id: estate._id, 
-          name: estate.name,
-          address: estate.address,
-          images: estate.images && estate.images.length > 0 ? estate.images : [bd1], 
-          rating_star: 4.5, 
-          price: estate.price || 0,
-          rental: true, 
-          property: estate.property,
-          status: estate.status,
-          likes: estate.likes || [],
-          reviews: estate.reviews || [],
-          user: typeof estate.user === 'object' ? estate.user : { _id: estate.user, name: 'Unknown User' },
-          distance: 1.0, 
-          createdAt: estate.createdAt,
-          updatedAt: estate.updatedAt,
-        }));
-        
-        setEstates(transformedEstates);
-      } else {
-        throw new Error('Invalid data format received from API');
-      }
-    } catch (err) {
-      console.error('Error fetching estates by author:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
+  // Function to filter estates by author
+  const filterEstatesByAuthor = (authorId) => {
+    if (!authorId) {
+      return [...estates]; // Return all estates if no author selected
     }
+    return estates.filter(estate => 
+      estate.user && (estate.user._id === authorId)
+    );
   };
 
-  // Reset estates to show all estates
-  const resetEstates = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/estates?limit=1000`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      if (data.msg === "Success!" && Array.isArray(data.estates)) {
-        const transformedEstates = data.estates.map(estate => ({
-          id: estate._id,
-          _id: estate._id, 
-          name: estate.name,
-          address: estate.address,
-          images: estate.images && estate.images.length > 0 ? estate.images : [bd1], 
-          rating_star: 4.5, 
-          price: estate.price || 0,
-          rental: true, 
-          property: estate.property,
-          status: estate.status,
-          likes: estate.likes || [],
-          reviews: estate.reviews || [],
-          user: typeof estate.user === 'object' ? estate.user : { _id: estate.user, name: 'Unknown User' },
-          distance: 1.0, 
-          createdAt: estate.createdAt,
-          updatedAt: estate.updatedAt,
-        }));
-        
-        setEstates(transformedEstates);
-      } else {
-        throw new Error('Invalid data format received from API');
-      }
-    } catch (err) {
-      console.error('Error resetting estates:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-      setSelectedAuthor('');
-    }
-  };
-
-  // Handle author change
   const handleAuthorChange = (authorId) => {
     setSelectedAuthor(authorId);
     setShowAuthorDropdown(false);
-    
-    if (authorId) {
-      fetchEstatesByAuthor(authorId);
-    } else {
-      resetEstates();
-    }
-    
     setCurrentPage(1);
   };
 
   const getFilteredEstates = () => {
-    let filtered = estates;
+    let filtered = selectedAuthor ? filterEstatesByAuthor(selectedAuthor) : estates;
     
-    // First filter by status tab
     if (activeTab !== 'all') {
       filtered = filtered.filter(estate => {
-        if (activeTab === 'available') return estate.status === 'available';
+        if (activeTab === 'available') return estate.status !== 'booked'; 
         if (activeTab === 'booked') return estate.status === 'booked';
         return true;
       });
     }
-    
-    // Then filter by search term if provided
+  
     if (searchTerm.trim() !== '') {
       const search = searchTerm.toLowerCase();
       filtered = filtered.filter(estate => 
@@ -270,31 +198,20 @@ const EstateManagement = () => {
   };
 
   const renderStatus = (status) => {
-    const statusConfig = {
-      available: {
-        label: 'Có sẵn',
-        icon: <CheckCircle size={14} className="mr-1" />,
-        classes: 'status-available'
-      },
-      pending: {
-        label: 'Chờ duyệt',
-        icon: <Clock size={14} className="mr-1" />,
-        classes: 'status-pending'
-      },
-      booked: {
-        label: 'Đã đặt',
-        icon: <AlertCircle size={14} className="mr-1" />,
-        classes: 'status-booked'
-      }
-    };
-    
-    const config = statusConfig[status] || statusConfig.pending;
-    
-    return (
-      <span className={`status-badge ${config.classes}`}>
-        {config.icon} {config.label}
-      </span>
-    );
+    if (status === 'booked') {
+      return (
+        <span className="status-badge status-booked">
+          <AlertCircle size={14} className="mr-1" /> Đã đặt
+        </span>
+      );
+    } else {
+  
+      return (
+        <span className="status-badge status-available">
+          <CheckCircle size={14} className="mr-1" /> Có sẵn
+        </span>
+      );
+    }
   };
 
   const handleEditEstate = (estate) => {
@@ -405,33 +322,45 @@ const EstateManagement = () => {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
       
+
       const updatedEstates = estates.map(estate => 
         (estate.id === estateId || estate._id === estateId) 
-          ? {...estate, status: 'available', updatedAt: new Date().toISOString()} 
+          ? {...estate, status: estate.status === 'booked' ? 'available' : estate.status, updatedAt: new Date().toISOString()} 
           : estate
       );
       
       setEstates(updatedEstates);
       
       if (showDetailModal && selectedEstate && (selectedEstate.id === estateId || selectedEstate._id === estateId)) {
-        setSelectedEstate({...selectedEstate, status: 'available'});
+        setSelectedEstate({...selectedEstate, status: selectedEstate.status === 'booked' ? 'available' : selectedEstate.status});
       }
     } catch (err) {
-      console.error('Error approving estate:', err);
-      alert(`Failed to approve estate: ${err.message}`);
+      console.error('Error updating estate status:', err);
+      alert(`Failed to update estate status: ${err.message}`);
     }
   };
 
-  // Toggle the author dropdown
+
   const toggleAuthorDropdown = () => {
     setShowAuthorDropdown(!showAuthorDropdown);
   };
 
-  // Get the name of the selected author for display
+
   const getSelectedAuthorName = () => {
     if (!selectedAuthor) return "Tất cả tác giả";
     const author = authors.find(a => a._id === selectedAuthor);
     return author ? author.full_name : "Tất cả tác giả";
+  };
+
+ 
+  const resetAuthorFilter = () => {
+    setSelectedAuthor('');
+    setCurrentPage(1);
+  };
+
+  // Check if a landlord has any listings
+  const hasListings = (authorId) => {
+    return estates.some(estate => estate.user && estate.user._id === authorId);
   };
 
   if (loading) {
@@ -496,7 +425,7 @@ const EstateManagement = () => {
             <div className="stats-card-content">
               <div>
                 <p className="stats-label">Có sẵn</p>
-                <h3 className="stats-value">{estates.filter(e => e.status === 'available').length}</h3>
+                <h3 className="stats-value">{estates.filter(e => e.status !== 'booked').length}</h3>
               </div>
               <div className="stats-icon-container green">
                 <CheckCircle className="stats-icon" />
@@ -556,7 +485,7 @@ const EstateManagement = () => {
                   <span>Tác giả: {getSelectedAuthorName()}</span>
                   <button 
                     className="clear-filter"
-                    onClick={() => handleAuthorChange('')}
+                    onClick={resetAuthorFilter}
                   >
                     ×
                   </button>
@@ -571,6 +500,7 @@ const EstateManagement = () => {
                 {showAuthorDropdown && (
                   <div className="author-dropdown">
                     <div className="author-dropdown-header">
+                      {loadingAuthors && <div className="dropdown-loading">Đang tải tác giả...</div>}
                     </div>
                     <div className="author-dropdown-list">
                       <div 
@@ -586,6 +516,7 @@ const EstateManagement = () => {
                           onClick={() => handleAuthorChange(author._id)}
                         >
                           {author.full_name}
+                          {!hasListings(author._id) && <span className="no-listings-badge">Chưa có bài đăng</span>}
                         </div>
                       ))}
                     </div>
@@ -635,15 +566,58 @@ const EstateManagement = () => {
                 Trước
               </button>
               
-              {Array.from({ length: totalPages }, (_, i) => (
-                <button 
-                  key={i + 1}
-                  onClick={() => paginate(i + 1)}
-                  className={`pagination-btn ${currentPage === i + 1 ? 'pagination-btn-active' : ''}`}
-                >
-                  {i + 1}
-                </button>
-              ))}
+              {totalPages <= 5 ? (
+             
+                Array.from({ length: totalPages }, (_, i) => (
+                  <button 
+                    key={i + 1}
+                    onClick={() => paginate(i + 1)}
+                    className={`pagination-btn ${currentPage === i + 1 ? 'pagination-btn-active' : ''}`}
+                  >
+                    {i + 1}
+                  </button>
+                ))
+              ) : (
+               
+                <>
+                  {/* First page */}
+                  <button 
+                    onClick={() => paginate(1)}
+                    className={`pagination-btn ${currentPage === 1 ? 'pagination-btn-active' : ''}`}
+                  >
+                    1
+                  </button>
+                  
+                  {/* Ellipsis if not near first page */}
+                  {currentPage > 3 && <span className="pagination-ellipsis">...</span>}
+                  
+                  {/* Pages around current page */}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(page => page !== 1 && page !== totalPages && 
+                           Math.abs(page - currentPage) <= 1)
+                    .map(page => (
+                      <button 
+                        key={page}
+                        onClick={() => paginate(page)}
+                        className={`pagination-btn ${currentPage === page ? 'pagination-btn-active' : ''}`}
+                      >
+                        {page}
+                      </button>
+                    ))
+                  }
+                  
+                  {/* Ellipsis if not near last page */}
+                  {currentPage < totalPages - 2 && <span className="pagination-ellipsis">...</span>}
+                  
+                  {/* Last page */}
+                  <button 
+                    onClick={() => paginate(totalPages)}
+                    className={`pagination-btn ${currentPage === totalPages ? 'pagination-btn-active' : ''}`}
+                  >
+                    {totalPages}
+                  </button>
+                </>
+              )}
               
               <button 
                 className="pagination-btn" 
