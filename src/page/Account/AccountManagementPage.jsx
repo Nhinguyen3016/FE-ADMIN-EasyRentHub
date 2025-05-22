@@ -169,23 +169,23 @@ const AccountManagementPage = () => {
   };
 
   const filteredUsers = users.filter(user => {
-    // Lọc theo vai trò đã chọn
+
     const roleMatches = selectedRole
       ? (selectedRole === 'admin' ? user.role === 'Quản trị viên' :
         selectedRole === 'owner' ? user.role === 'Chủ nhà' :
           selectedRole === 'tenant' ? user.role === 'Người thuê' : true)
       : true;
 
-    // Nếu searchQuery chỉ chứa khoảng trắng hoặc không trống, sẽ coi như có tìm kiếm
+ 
     const searchQueryTrimmed = searchQuery.trim();
     const isSearching = searchQuery !== '' && searchQueryTrimmed === '';
     
-    // Nếu người dùng đã nhập chỉ khoảng trắng, trả về mảng rỗng
+   
     if (isSearching) {
       return false;
     }
     
-    // Nếu không có từ khóa tìm kiếm, trả về kết quả dựa vào lọc theo vai trò
+ 
     if (!searchQueryTrimmed) {
       return roleMatches;
     }
@@ -194,13 +194,9 @@ const AccountManagementPage = () => {
     const userName = user.name ? user.name.toLowerCase() : '';
     const userEmail = user.email ? user.email.toLowerCase() : '';
     const userAddress = user.address ? user.address.toLowerCase() : '';
-
-    // Kiểm tra xem từ khóa có nằm trong bất kỳ trường nào không
     const nameMatch = userName.includes(searchTerm);
     const emailMatch = userEmail.includes(searchTerm);
     const addressMatch = userAddress.includes(searchTerm);
-
-    // Kết hợp kết quả tìm kiếm với lọc theo vai trò
     return roleMatches && (nameMatch || emailMatch || addressMatch);
   });
 

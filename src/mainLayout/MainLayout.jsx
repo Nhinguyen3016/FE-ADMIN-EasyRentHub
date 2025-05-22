@@ -8,7 +8,7 @@ import userImg from '../images/user.png';
 import logoutImg from '../images/logout.png';
 import backgroundImg from '../images/Home_background.jpg';
 import notificationImg from '../images/notification.png';  
-
+import revenueImg from'../images/best-price.png';
 const MainLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -19,6 +19,7 @@ const MainLayout = () => {
     if (pathname === '/account') return 'user';
     if (pathname === '/post') return 'post';
     if (pathname === '/messageManagement') return 'messageManagement';
+    if(pathname==='/revenue') return 'revenue';
     return '';
   };
 
@@ -88,6 +89,12 @@ const MainLayout = () => {
             <div className={`menu-item-mlo ${activePage === 'messageManagement' ? 'active' : ''}`}>
               <img src={notificationImg} alt="Notification" className="menu-icon-mlo" />
               <span className="menu-text-mlo">Quản lý tin nhắn</span>
+            </div>
+          </Link>
+           <Link to="/revenue" className="menu-link-mlo">
+            <div className={`menu-item-mlo ${activePage === 'revenue' ? 'active' : ''}`}>
+              <img src={revenueImg} alt="Revenue" className="menu-icon-mlo" />
+              <span className="menu-text-mlo">Doanh thu</span>
             </div>
           </Link>
         </div>

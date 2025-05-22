@@ -7,6 +7,7 @@ import PostManagementPage from './page/post/PostManagementPage';
 import LoginPage from './page/login/LoginPage';
 import RegisterPage from './page/register/RegisterPage';
 import MessageManagement from './page/notification/messageManagement/MessageManagement';
+import RevenuePage from './page/revenue/RevenuePage';
 import ProtectedRoute from './components/ProtectedRoute';
 import EditForm from './page/post/components/EstateEditForm';
 
@@ -23,6 +24,7 @@ function App() {
             <Route path="/account" element={<UserManagement />} />
             <Route path="/post" element={<PostManagementPage />} />
             <Route path="/messageManagement" element={<MessageManagement />} />
+            <Route path="/revenue" element={<RevenuePage />} />
             <Route path="/editform" element={<EditForm />} />
           </Route>
         </Route>
