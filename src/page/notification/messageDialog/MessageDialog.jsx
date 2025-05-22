@@ -82,8 +82,15 @@ const MessageDialog = ({ onClose, contact }) => {
   }, [currentUserId, API_BASE_URL]);
 
   useEffect(() => {
-    if (currentUserId && contact && contact.id) {
-      fetchMessages(contact.id);
+    if (currentUserId && contact) {
+      if (contact.id && !contact.isNewConversation) {
+        // Existing conversation
+        fetchMessages(contact.id);
+      } else {
+        // New conversation
+        setMessages([]);
+        setLoading(false);
+      }
     }
   }, [contact, currentUserId, fetchMessages]);
 
@@ -95,6 +102,39 @@ const MessageDialog = ({ onClose, contact }) => {
 
   const formatTime = (date) => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const createNewConversation = async (receiverId, messageText) => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(`${API_BASE_URL}/api/messages/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          senderId: currentUserId,
+          receiverId: receiverId,
+          text: messageText,
+          mediaUrl: '',
+          mediaType: 'text'
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create new conversation');
+      }
+      
+      const responseData = await response.json();
+      console.log("New conversation created:", responseData);
+      
+      return responseData;
+    } catch (err) {
+      console.error('Error creating new conversation:', err);
+      throw err;
+    }
   };
 
   const handleSendMessage = async () => {
@@ -110,55 +150,83 @@ const MessageDialog = ({ onClose, contact }) => {
     };
 
     setMessages(prevMessages => [...prevMessages, newMessage]);
+    const messageToSend = message;
     setMessage('');
     
     try {
-      const token = localStorage.getItem('token');
-      
- 
-      const response = await fetch(`${API_BASE_URL}/api/messages/send`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          senderId: currentUserId,
-          receiverId: contact.userId,
-          text: message,
-          mediaUrl: '',
-          mediaType: 'text'
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to send message');
-      }
-      
-      const responseData = await response.json();
-      
-    
-      setMessages(prevMessages => 
-        prevMessages.map(msg => 
-          msg.id === newMessage.id 
-            ? {
-                id: responseData._id,
-                sender: 'user',
-                text: responseData.text,
-                time: formatTime(new Date(responseData.timestamp)),
-                read: responseData.read || false
-              }
-            : msg
-        )
-      );
+      if (contact.isNewConversation) {
+        // Create new conversation
+        const responseData = await createNewConversation(contact.userId, messageToSend);
+        
+        // Update the message with actual ID
+        setMessages(prevMessages => 
+          prevMessages.map(msg => 
+            msg.id === newMessage.id 
+              ? {
+                  id: responseData._id,
+                  sender: 'user',
+                  text: responseData.text,
+                  time: formatTime(new Date(responseData.timestamp)),
+                  read: responseData.read || false
+                }
+              : msg
+          )
+        );
+        
+        // Update contact to no longer be a new conversation
+        contact.isNewConversation = false;
+        contact.id = responseData.conversationId || responseData._id;
+        
+      } else {
+        // Existing conversation
+        const token = localStorage.getItem('token');
+        
+        const response = await fetch(`${API_BASE_URL}/api/messages/send`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            senderId: currentUserId,
+            receiverId: contact.userId,
+            text: messageToSend,
+            mediaUrl: '',
+            mediaType: 'text'
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to send message');
+        }
+        
+        const responseData = await response.json();
+        
+        // Update the message with actual ID
+        setMessages(prevMessages => 
+          prevMessages.map(msg => 
+            msg.id === newMessage.id 
+              ? {
+                  id: responseData._id,
+                  sender: 'user',
+                  text: responseData.text,
+                  time: formatTime(new Date(responseData.timestamp)),
+                  read: responseData.read || false
+                }
+              : msg
+          )
+        );
 
-     
-      if (contact && contact.id) {
-        fetchMessages(contact.id);
+        // Refresh messages if we have a conversation ID
+        if (contact && contact.id) {
+          fetchMessages(contact.id);
+        }
       }
     } catch (err) {
       console.error('Error sending message:', err);
       alert('Failed to send message. Please try again.');
+      // Remove the failed message
+      setMessages(prevMessages => prevMessages.filter(msg => msg.id !== newMessage.id));
     }
   };
 
@@ -194,7 +262,6 @@ const MessageDialog = ({ onClose, contact }) => {
     try {
       const token = localStorage.getItem('token');
       
- 
       const tempFileUrl = URL.createObjectURL(file);
       const tempMessage = {
         id: `temp-${Date.now()}`,
@@ -212,28 +279,35 @@ const MessageDialog = ({ onClose, contact }) => {
       
       setMessages(prevMessages => [...prevMessages, tempMessage]);
       
-
-      const response = await fetch(`${API_BASE_URL}/api/messages/send`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          senderId: currentUserId,
-          receiverId: contact.userId,
-          text: `Đã gửi file: ${file.name}`,
-          mediaType: 'document',
-    
-        })
-      });
+      let responseData;
       
-      if (!response.ok) {
-        throw new Error('Failed to send file message');
+      if (contact.isNewConversation) {
+        // Create new conversation with file
+        responseData = await createNewConversation(contact.userId, `Đã gửi file: ${file.name}`);
+        contact.isNewConversation = false;
+        contact.id = responseData.conversationId || responseData._id;
+      } else {
+        // Send to existing conversation
+        const response = await fetch(`${API_BASE_URL}/api/messages/send`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            senderId: currentUserId,
+            receiverId: contact.userId,
+            text: `Đã gửi file: ${file.name}`,
+            mediaType: 'document',
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to send file message');
+        }
+        
+        responseData = await response.json();
       }
-      
-      // Use the response data if needed in the future
-      await response.json();
    
       if (contact && contact.id) {
         fetchMessages(contact.id);
@@ -248,7 +322,6 @@ const MessageDialog = ({ onClose, contact }) => {
     try {
       const token = localStorage.getItem('token');
       
-    
       const tempImageUrl = URL.createObjectURL(file);
       const tempMessage = {
         id: `temp-${Date.now()}`,
@@ -266,30 +339,36 @@ const MessageDialog = ({ onClose, contact }) => {
       
       setMessages(prevMessages => [...prevMessages, tempMessage]);
       
-
-      const response = await fetch(`${API_BASE_URL}/api/messages/send`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          senderId: currentUserId,
-          receiverId: contact.userId,
-          text: `Đã gửi hình ảnh: ${file.name}`,
-          mediaType: 'image',
+      let responseData;
       
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to send image message');
+      if (contact.isNewConversation) {
+        // Create new conversation with image
+        responseData = await createNewConversation(contact.userId, `Đã gửi hình ảnh: ${file.name}`);
+        contact.isNewConversation = false;
+        contact.id = responseData.conversationId || responseData._id;
+      } else {
+        // Send to existing conversation
+        const response = await fetch(`${API_BASE_URL}/api/messages/send`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            senderId: currentUserId,
+            receiverId: contact.userId,
+            text: `Đã gửi hình ảnh: ${file.name}`,
+            mediaType: 'image',
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to send image message');
+        }
+        
+        responseData = await response.json();
       }
       
-      // Use the response data if needed in the future
-      await response.json();
-      
-  
       if (contact && contact.id) {
         fetchMessages(contact.id);
       }
@@ -352,6 +431,27 @@ const MessageDialog = ({ onClose, contact }) => {
     }
   };
 
+  const renderNewConversationMessage = () => (
+    <div className="new-conversation-message">
+      <div className="welcome-container">
+        <div className="welcome-avatar">
+          <img 
+            src={contact?.avatar} 
+            alt={`Avatar của ${contact?.name}`}
+            className="welcome-profile-image"
+          />
+        </div>
+        <h3 className="welcome-name">{contact?.name}</h3>
+        <p className="welcome-text">
+          Hãy bắt đầu cuộc trò chuyện với {contact?.name}!
+        </p>
+        <p className="welcome-subtext">
+          Gửi tin nhắn đầu tiên để kết nối và trao đổi thông tin.
+        </p>
+      </div>
+    </div>
+  );
+
   return (
     <div className="message-dialog">
       <div className="message-header">
@@ -394,6 +494,8 @@ const MessageDialog = ({ onClose, contact }) => {
           <div className="loading-messages">Đang tải tin nhắn...</div>
         ) : error ? (
           <div className="error-messages">Lỗi: {error}</div>
+        ) : contact?.isNewConversation ? (
+          renderNewConversationMessage()
         ) : messages.length === 0 ? (
           <div className="no-messages">Chưa có tin nhắn. Hãy bắt đầu cuộc trò chuyện!</div>
         ) : (
@@ -437,7 +539,7 @@ const MessageDialog = ({ onClose, contact }) => {
       <div className="message-input">
         <input
           type="text"
-          placeholder="Nhập tin nhắn..."
+          placeholder={contact?.isNewConversation ? `Nhập tin nhắn gửi cho ${contact?.name}...` : "Nhập tin nhắn..."}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyPress={handleKeyPress}

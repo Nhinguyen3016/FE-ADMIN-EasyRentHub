@@ -263,3 +263,43 @@
     right: 2px;
   }
 }
+.landlords-list-container {
+  width: 100%;
+  overflow-x: auto;
+  padding: 5px 0;
+}
+
+.landlords-list {
+  display: flex;
+  gap: 15px;
+  min-width: fit-content;
+  padding: 10px 0;
+}
+
+.landlord-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  min-width: 70px;
+  flex-shrink: 0; /* Prevent shrinking */
+}
+
+/* Hide scrollbar but keep functionality */
+.landlords-list-container::-webkit-scrollbar {
+  height: 4px;
+}
+
+.landlords-list-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.landlords-list-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+
+.landlords-list-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

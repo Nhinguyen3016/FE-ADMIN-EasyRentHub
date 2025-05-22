@@ -457,3 +457,47 @@
   background-color: #4caf50; 
   border: 2px solid #fff;
 }
+.new-conversation-message {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 40px 20px;
+}
+
+.welcome-container {
+  text-align: center;
+  max-width: 300px;
+}
+
+.welcome-avatar {
+  margin-bottom: 20px;
+}
+
+.welcome-profile-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #e0e0e0;
+}
+
+.welcome-name {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.welcome-text {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.welcome-subtext {
+  font-size: 14px;
+  color: #999;
+  line-height: 1.4;
+}

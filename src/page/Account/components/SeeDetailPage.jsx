@@ -360,7 +360,7 @@ const SeeDetailPage = ({ user, onClose }) => {
                 onClick={goToPreviousPage}
                 disabled={currentPage === 1}
               >
-                « Trước
+                « 
               </button>
               <div className="pagination-info-seedp">
                 Trang {currentPage} / {totalPages}
@@ -370,7 +370,7 @@ const SeeDetailPage = ({ user, onClose }) => {
                 onClick={goToNextPage}
                 disabled={currentPage === totalPages}
               >
-                Sau »
+                »
               </button>
             </div>
           )}

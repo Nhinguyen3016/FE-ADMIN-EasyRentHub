@@ -97,44 +97,44 @@ export default function RevenueDashboard() {
     };
 
     return (
-        <div className="dashboard-container">
+        <div className="dashboard-container-rev">
             {/* Header */}
-            <div className="header">
-                <h1 className="header-title">Quản Lý Doanh Thu</h1>
-                <p className="header-subtitle">Theo dõi các khoản thanh toán từ chủ trọ</p>
+            <div className="header-rev">
+                <h1 className="header-title-rev">Quản Lý Doanh Thu</h1>
+                <p className="header-subtitle-rev">Theo dõi các khoản thanh toán từ chủ trọ</p>
             </div>
 
             {/* Stats Overview */}
-            <div className="stats-grid">
-                <div className="stat-card">
-                    <p className="stat-label">Tổng doanh thu</p>
-                    <p className="stat-value revenue">
+            <div className="stats-grid-rev">
+                <div className="stat-card-rev">
+                    <p className="stat-label-rev">Tổng doanh thu</p>
+                    <p className="stat-value-rev revenue-rev">
                         {totalRevenue.toLocaleString('vi-VN')} đ
                     </p>
                 </div>
 
-                <div className="stat-card">
-                    <p className="stat-label">Số lượng thanh toán</p>
-                    <p className="stat-value payments">{totalPayments}</p>
+                <div className="stat-card-rev">
+                    <p className="stat-label-rev">Số lượng thanh toán</p>
+                    <p className="stat-value-rev payments-rev">{totalPayments}</p>
                 </div>
             </div>
 
             {/* Filters and Search */}
-            <div className="controls-container">
-                <div className="controls-left">
-                    <div className="search-container">
+            <div className="controls-container-rev">
+                <div className="controls-left-rev">
+                    <div className="search-container-rev">
                         <input
                             type="text"
                             placeholder="Tìm theo tên chủ trọ..."
-                            className="search-input"
+                            className="search-input-rev"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
-                        <Search className="search-icon" size={18} />
+                        <Search className="search-icon-rev" size={18} />
                     </div>
 
                     <button
-                        className="filter-button"
+                        className="filter-button-rev"
                         onClick={() => setIsFilterOpen(!isFilterOpen)}
                     >
                         <Filter size={18} />
@@ -145,49 +145,49 @@ export default function RevenueDashboard() {
 
             {/* Filter dropdown */}
             {isFilterOpen && (
-                <div className="filter-dropdown">
-                    <h3 className="filter-title">Lọc theo khoảng thời gian</h3>
-                    <div className="date-filters">
-                        <div className="date-input-group">
-                            <span className="date-label">Từ ngày:</span>
-                            <div className="date-input-container">
+                <div className="filter-dropdown-rev">
+                    <h3 className="filter-title-rev">Lọc theo khoảng thời gian</h3>
+                    <div className="date-filters-rev">
+                        <div className="date-input-group-rev">
+                            <span className="date-label-rev">Từ ngày:</span>
+                            <div className="date-input-container-rev">
                                 <input
                                     type="date"
-                                    className="date-input"
+                                    className="date-input-rev"
                                     value={startDate}
                                     onChange={(e) => setStartDate(e.target.value)}
                                 />
-                                <Calendar className="date-icon" size={18} />
+                                <Calendar className="date-icon-rev" size={18} />
                             </div>
                         </div>
 
-                        <div className="date-input-group">
-                            <span className="date-label">Đến ngày:</span>
-                            <div className="date-input-container">
+                        <div className="date-input-group-rev">
+                            <span className="date-label-rev">Đến ngày:</span>
+                            <div className="date-input-container-rev">
                                 <input
                                     type="date"
-                                    className="date-input"
+                                    className="date-input-rev"
                                     value={endDate}
                                     onChange={(e) => setEndDate(e.target.value)}
                                 />
-                                <Calendar className="date-icon" size={18} />
+                                <Calendar className="date-icon-rev" size={18} />
                             </div>
                         </div>
                     </div>
 
                     {(startDate || endDate) && (
-                        <div className="filtered-stats">
-                            <div className="filtered-stats-container">
+                        <div className="filtered-stats-rev">
+                            <div className="filtered-stats-container-rev">
                                 <div>
-                                    <h4 className="filtered-stats-title">Thông tin thống kê (thời gian đã lọc)</h4>
-                                    <div className="filtered-stats-grid">
+                                    <h4 className="filtered-stats-title-rev">Thông tin thống kê (thời gian đã lọc)</h4>
+                                    <div className="filtered-stats-grid-rev">
                                         <div>
-                                            <p className="filtered-stat-label">Tổng doanh thu:</p>
-                                            <p className="filtered-stat-value revenue">{filteredRevenue.toLocaleString('vi-VN')} đ</p>
+                                            <p className="filtered-stat-label-rev">Tổng doanh thu:</p>
+                                            <p className="filtered-stat-value-rev revenue-rev">{filteredRevenue.toLocaleString('vi-VN')} đ</p>
                                         </div>
                                         <div>
-                                            <p className="filtered-stat-label">Số thanh toán:</p>
-                                            <p className="filtered-stat-value payments">{filteredPaymentsCount}</p>
+                                            <p className="filtered-stat-label-rev">Số thanh toán:</p>
+                                            <p className="filtered-stat-value-rev payments-rev">{filteredPaymentsCount}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -198,83 +198,83 @@ export default function RevenueDashboard() {
             )}
 
             {/* Table */}
-            <div className="table-container">
-                <table className="data-table">
-                    <thead className="table-header">
+            <div className="table-container-rev">
+                <table className="data-table-rev">
+                    <thead className="table-header-rev">
                         <tr>
                             <th
-                                className="table-header-cell sortable"
+                                className="table-header-cell-rev sortable-rev"
                                 onClick={() => handleSort('stt')}
                             >
-                                <div className="header-content">
+                                <div className="header-content-rev">
                                     <span>STT</span>
                                     <ArrowUpDown size={14} />
                                 </div>
                             </th>
                             <th
-                                className="table-header-cell sortable"
+                                className="table-header-cell-rev sortable-rev"
                                 onClick={() => handleSort('name')}
                             >
-                                <div className="header-content">
+                                <div className="header-content-rev">
                                     <span>Chủ trọ</span>
                                     <ArrowUpDown size={14} />
                                 </div>
                             </th>
                             <th
-                                className="table-header-cell sortable"
+                                className="table-header-cell-rev sortable-rev"
                                 onClick={() => handleSort('amount')}
                             >
-                                <div className="header-content">
+                                <div className="header-content-rev">
                                     <span>Số tiền</span>
                                     <ArrowUpDown size={14} />
                                 </div>
                             </th>
-                            <th className="table-header-cell">
+                            <th className="table-header-cell-rev">
                                 Thời hạn
                             </th>
                             <th
-                                className="table-header-cell sortable"
+                                className="table-header-cell-rev sortable-rev"
                                 onClick={() => handleSort('date')}
                             >
-                                <div className="header-content">
+                                <div className="header-content-rev">
                                     <span>Ngày thanh toán</span>
                                     <ArrowUpDown size={14} />
                                 </div>
                             </th>
-                            <th className="table-header-cell">
+                            <th className="table-header-cell-rev">
                                 Phương thức
                             </th>
-                            <th className="table-header-cell">
+                            <th className="table-header-cell-rev">
                                 Trạng thái
                             </th>
                         </tr>
                     </thead>
-                    <tbody className="table-body">
+                    <tbody className="table-body-rev">
                         {paginatedPayments.map((payment, index) => (
-                            <tr key={payment.id} className="table-row">
-                                <td className="table-cell">
+                            <tr key={payment.id} className="table-row-rev">
+                                <td className="table-cell-rev">
                                     {(currentPage - 1) * itemsPerPage + index + 1}
                                 </td>
-                                <td className="table-cell">
-                                    <div className="landlord-name">{payment.landlordName}</div>
+                                <td className="table-cell-rev">
+                                    <div className="landlord-name-rev">{payment.landlordName}</div>
                                 </td>
-                                <td className="table-cell">
-                                    <div className="amount">
+                                <td className="table-cell-rev">
+                                    <div className="amount-rev">
                                         {payment.amount.toLocaleString('vi-VN')} đ
                                     </div>
                                 </td>
-                                <td className="table-cell">
+                                <td className="table-cell-rev">
                                     {payment.duration}
                                 </td>
-                                <td className="table-cell">
+                                <td className="table-cell-rev">
                                     {new Date(payment.date).toLocaleDateString('vi-VN')}
                                 </td>
-                                <td className="table-cell">
+                                <td className="table-cell-rev">
                                     {payment.method}
                                 </td>
-                                <td className="table-cell">
-                                    <span className="status-badge success">
-                                        <CheckCircle size={16} className="status-icon" /> Thành công
+                                <td className="table-cell-rev">
+                                    <span className="status-badge-rev success-rev">
+                                        <CheckCircle size={16} className="status-icon-rev" /> Thành công
                                     </span>
                                 </td>
                             </tr>
@@ -283,49 +283,49 @@ export default function RevenueDashboard() {
                 </table>
 
                 {/* Pagination */}
-                <div className="pagination-container">
-                    <div className="pagination-mobile">
+                <div className="pagination-container-rev">
+                    <div className="pagination-mobile-rev">
                         <button
                             onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                             disabled={currentPage === 1}
-                            className={`pagination-btn ${currentPage === 1 ? 'disabled' : ''}`}
+                            className={`pagination-btn-rev ${currentPage === 1 ? 'disabled-rev' : ''}`}
                         >
                             &lt;&lt;
                         </button>
                         <button
                             onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                             disabled={currentPage === totalPages}
-                            className={`pagination-btn ${currentPage === totalPages ? 'disabled' : ''}`}
+                            className={`pagination-btn-rev ${currentPage === totalPages ? 'disabled-rev' : ''}`}
                         >
                             &gt;&gt;
                         </button>
                     </div>
-                    <div className="pagination-desktop">
+                    <div className="pagination-desktop-rev">
                         <div>
-                            <p className="pagination-info">
-                                Hiển thị <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> đến <span className="font-medium">
+                            <p className="pagination-info-rev">
+                                Hiển thị <span className="font-medium-rev">{(currentPage - 1) * itemsPerPage + 1}</span> đến <span className="font-medium-rev">
                                     {Math.min(currentPage * itemsPerPage, filteredPayments.length)}
-                                </span> trong <span className="font-medium">{filteredPayments.length}</span> kết quả
+                                </span> trong <span className="font-medium-rev">{filteredPayments.length}</span> kết quả
                             </p>
                         </div>
                         <div>
-                            <nav className="pagination-nav">
+                            <nav className="pagination-nav-rev">
                                 <button
                                     onClick={() => handlePageChange(1)}
                                     disabled={currentPage === 1}
-                                    className={`pagination-nav-btn first ${currentPage === 1 ? 'disabled' : ''}`}
+                                    className={`pagination-nav-btn-rev first-rev ${currentPage === 1 ? 'disabled-rev' : ''}`}
                                 >
                                     &lt;&lt;
                                 </button>
 
-                                <button className="pagination-nav-btn current">
+                                <button className="pagination-nav-btn-rev current-rev">
                                     {currentPage}
                                 </button>
 
                                 {currentPage < totalPages && (
                                     <button
                                         onClick={() => handlePageChange(currentPage + 1)}
-                                        className="pagination-nav-btn next"
+                                        className="pagination-nav-btn-rev next-rev"
                                     >
                                         {currentPage + 1}
                                     </button>
@@ -334,7 +334,7 @@ export default function RevenueDashboard() {
                                 <button
                                     onClick={() => handlePageChange(totalPages)}
                                     disabled={currentPage === totalPages}
-                                    className={`pagination-nav-btn last ${currentPage === totalPages ? 'disabled' : ''}`}
+                                    className={`pagination-nav-btn-rev last-rev ${currentPage === totalPages ? 'disabled-rev' : ''}`}
                                 >
                                     &gt;&gt;
                                 </button>

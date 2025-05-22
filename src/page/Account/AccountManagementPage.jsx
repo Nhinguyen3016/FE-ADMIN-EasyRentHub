@@ -9,7 +9,6 @@ import SeeDetailPage from './components/SeeDetailPage';
 import AddAccountPage from './components/AddAccountPage';
 import '../../styles/Account/UserManagement.css';
 
-// Toast notification component
 const Toast = ({ message, type, onClose }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -84,6 +83,7 @@ const AccountManagementPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedRole, setSelectedRole] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -123,15 +123,42 @@ const AccountManagementPage = () => {
       const data = await response.json();
 
       const formattedUsers = data.users.map(user => {
+        // Format address in simple comma-separated format
+        let formattedAddress = '';
+        if (user.address) {
+          const addressParts = [];
+          
+          if (user.address.name) {
+            addressParts.push(user.address.name);
+          }
+          if (user.address.road) {
+            addressParts.push(user.address.road);
+          }
+          if (user.address.quarter) {
+            addressParts.push(user.address.quarter);
+          }
+          if (user.address.city) {
+            addressParts.push(user.address.city);
+          }
+          if (user.address.country) {
+            addressParts.push(user.address.country);
+          }
+          
+          formattedAddress = addressParts.join(', ');
+        }
+
+        // Đảm bảo status được xử lý đúng cách
+        const userStatus = user.status !== undefined ? user.status : 1;
+        
         return {
           id: user._id,
           name: user.full_name,
           email: user.email,
-          address: user.address.name ||
-            [user.address.road, user.address.quarter, user.address.city, user.address.country]
-              .filter(Boolean).join(', '),
+          address: formattedAddress || 'Chưa có địa chỉ',
           role: user.role === 'Admin' ? 'Quản trị viên' :
             user.role === 'Landlord' ? 'Chủ nhà' : 'Người thuê',
+          status: userStatus,
+          statusText: userStatus === 1 ? 'Hoạt động' : 'Không hoạt động',
           avatar: user.avatar,
           originalData: user
         };
@@ -158,46 +185,62 @@ const AccountManagementPage = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedRole, searchQuery]);
+  }, [selectedRole, selectedStatus, searchQuery]);
 
   const handleRoleChange = (e) => {
     setSelectedRole(e.target.value);
+  };
+
+  const handleStatusChange = (e) => {
+    setSelectedStatus(e.target.value);
   };
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
 
+  // Fixed filtering logic
   const filteredUsers = users.filter(user => {
-
-    const roleMatches = selectedRole
-      ? (selectedRole === 'admin' ? user.role === 'Quản trị viên' :
-        selectedRole === 'owner' ? user.role === 'Chủ nhà' :
-          selectedRole === 'tenant' ? user.role === 'Người thuê' : true)
-      : true;
-
- 
-    const searchQueryTrimmed = searchQuery.trim();
-    const isSearching = searchQuery !== '' && searchQueryTrimmed === '';
-    
-   
-    if (isSearching) {
-      return false;
-    }
-    
- 
-    if (!searchQueryTrimmed) {
-      return roleMatches;
+    // Role filter
+    let roleMatches = true;
+    if (selectedRole) {
+      switch(selectedRole) {
+        case 'admin':
+          roleMatches = user.role === 'Quản trị viên';
+          break;
+        case 'owner':
+          roleMatches = user.role === 'Chủ nhà';
+          break;
+        case 'tenant':
+          roleMatches = user.role === 'Người thuê';
+          break;
+        default:
+          roleMatches = true;
+          break;
+      }
     }
 
-    const searchTerm = searchQueryTrimmed.toLowerCase();
-    const userName = user.name ? user.name.toLowerCase() : '';
-    const userEmail = user.email ? user.email.toLowerCase() : '';
-    const userAddress = user.address ? user.address.toLowerCase() : '';
-    const nameMatch = userName.includes(searchTerm);
-    const emailMatch = userEmail.includes(searchTerm);
-    const addressMatch = userAddress.includes(searchTerm);
-    return roleMatches && (nameMatch || emailMatch || addressMatch);
+    // Status filter - Fixed logic
+    let statusMatches = true;
+    if (selectedStatus) {
+      switch(selectedStatus) {
+        case 'active':
+          statusMatches = user.status === 1;
+          break;
+        case 'inactive':
+          statusMatches = user.status === 0;
+          break;
+        default:
+          statusMatches = true;
+          break;
+      }
+    }
+
+    // Search filter
+    const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         user.email.toLowerCase().includes(searchQuery.toLowerCase());
+
+    return roleMatches && statusMatches && matchesSearch;
   });
 
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -241,21 +284,45 @@ const AccountManagementPage = () => {
 
       setUsers(users.filter(user => user.id !== userToDelete.id));
 
+      // Update pagination if needed
       const newFilteredUsers = users.filter(user => user.id !== userToDelete.id).filter(user => {
-        const roleMatches = selectedRole
-          ? (selectedRole === 'admin' ? user.role === 'Quản trị viên' :
-            selectedRole === 'owner' ? user.role === 'Chủ nhà' :
-              selectedRole === 'tenant' ? user.role === 'Người thuê' : true)
-          : true;
+        let roleMatches = true;
+        if (selectedRole) {
+          switch(selectedRole) {
+            case 'admin':
+              roleMatches = user.role === 'Quản trị viên';
+              break;
+            case 'owner':
+              roleMatches = user.role === 'Chủ nhà';
+              break;
+            case 'tenant':
+              roleMatches = user.role === 'Người thuê';
+              break;
+            default:
+              roleMatches = true;
+              break;
+          }
+        }
 
-        const searchTerm = searchQuery.toLowerCase().trim();
-        if (!searchTerm) return roleMatches;
+        let statusMatches = true;
+        if (selectedStatus) {
+          switch(selectedStatus) {
+            case 'active':
+              statusMatches = user.status === 1;
+              break;
+            case 'inactive':
+              statusMatches = user.status === 0;
+              break;
+            default:
+              statusMatches = true;
+              break;
+          }
+        }
+
+        const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                             user.email.toLowerCase().includes(searchQuery.toLowerCase());
         
-        const userName = user.name ? user.name.toLowerCase() : '';
-        const userEmail = user.email ? user.email.toLowerCase() : '';
-        const userAddress = user.address ? user.address.toLowerCase() : '';
-        
-        return roleMatches && (userName.includes(searchTerm) || userEmail.includes(searchTerm) || userAddress.includes(searchTerm));
+        return roleMatches && statusMatches && matchesSearch;
       });
 
       const newTotalPages = Math.ceil(newFilteredUsers.length / itemsPerPage);
@@ -445,6 +512,15 @@ const AccountManagementPage = () => {
             <img src={arrowImg} alt="Dropdown arrow" className="dropdown-arrow" />
           </div>
 
+          <div className="role-dropdown-acc">
+            <select value={selectedStatus} onChange={handleStatusChange}>
+              <option value="">Tất cả trạng thái</option>
+              <option value="active">Hoạt động</option>
+              <option value="inactive">Không hoạt động</option>
+            </select>
+            <img src={arrowImg} alt="Dropdown arrow" className="dropdown-arrow" />
+          </div>
+
           <button className="add-button" onClick={handleAddUser}>
             <img src={addImg} alt="Add" className="add-icon" />
             <span>Tạo mới</span>
@@ -454,52 +530,61 @@ const AccountManagementPage = () => {
 
       {/* Table container with horizontal scroll */}
       <div className="table-wrapper">
-        <table className="user-table">
-          <thead>
-            <tr>
-              <th>Tên</th>
-              <th>Email</th>
-              <th>Địa chỉ</th>
-              <th>Vai trò</th>
-              <th>Thao tác</th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentItems.length > 0 ? (
-              currentItems.map(user => (
-                <tr key={user.id}>
-                  <td title={user.name}>{user.name}</td>
-                  <td title={user.email}>{user.email}</td>
-                  <td title={user.address}>{user.address}</td>
-                  <td>
-                    <span className={`role-badge ${user.role === 'Quản trị viên' ? 'admin-role' :
-                      user.role === 'Chủ nhà' ? 'owner-role' : 'tenant-role'
-                      }`}>
-                      {user.role}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="action-buttons">
-                      <button className="see-button" onClick={() => handleViewUser(user.id)}>
-                        <img src={seeImg} alt="Xem" className="see-icon" />
-                      </button>
-                      <button className="edit-button" onClick={() => handleEdit(user.id)}>
-                        <img src={writeImg} alt="Edit" className="edit-icon" />
-                      </button>
-                      <button className="delete-button" onClick={() => openDeleteModal(user.id)}>
-                        <img src={deleteImg} alt="Delete" className="delete-icon" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            ) : (
+        <div className="table-scroll-container">
+          <table className="user-table">
+            <thead>
               <tr>
-                <td colSpan="5" className="no-users-message">Không tìm thấy người dùng phù hợp</td>
+                <th className="scrollable-column">Tên</th>
+                <th className="scrollable-column">Email</th>
+                <th className="scrollable-column">Địa chỉ</th>
+                <th className="scrollable-column">Vai trò</th>
+                <th className="scrollable-column">Trạng thái</th>
+                <th className="fixed-column">Thao tác</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {currentItems.length > 0 ? (
+                currentItems.map(user => (
+                  <tr key={user.id}>
+                    <td className="scrollable-column" title={user.name}>{user.name}</td>
+                    <td className="scrollable-column" title={user.email}>{user.email}</td>
+                    <td className="scrollable-column" title={user.address}>{user.address}</td>
+                    <td className="scrollable-column">
+                      <span className={`role-badge ${user.role === 'Quản trị viên' ? 'admin-role' :
+                        user.role === 'Chủ nhà' ? 'owner-role' : 'tenant-role'
+                        }`}>
+                        {user.role}
+                      </span>
+                    </td>
+                    <td className="scrollable-column">
+                      <span className={`status-badge ${user.status === 1 ? 'active-status' : 'inactive-status'}`}>
+                        {user.statusText}
+                      </span>
+                    </td>
+                    <td className="fixed-column">
+                      <div className="action-buttons">
+                        <button className="see-button" onClick={() => handleViewUser(user.id)} title="Xem chi tiết">
+                          <img src={seeImg} alt="Xem" className="see-icon" />
+                        </button>
+                        <button className="edit-button" onClick={() => handleEdit(user.id)} title="Chỉnh sửa">
+                          <img src={writeImg} alt="Edit" className="edit-icon" />
+                        </button>
+                        <button className="delete-button" onClick={() => openDeleteModal(user.id)} title="Xóa">
+                          <img src={deleteImg} alt="Delete" className="delete-icon" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" className="scrollable-column no-users-message">Không tìm thấy người dùng phù hợp</td>
+                  <td className="fixed-column"></td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Pagination controls */}

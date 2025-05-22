@@ -1,3 +1,4 @@
+/* Main container */
 .user-table-container {
   width: 100%;
   padding: 20px;
@@ -13,6 +14,7 @@
   color: #333;
 }
 
+/* Table actions section */
 .table-actions {
   display: flex;
   justify-content: space-between;
@@ -28,6 +30,7 @@
   gap: 12px;
 }
 
+/* Search functionality */
 .search-container {
   position: relative;
   max-width: 250px;
@@ -56,6 +59,7 @@
   color: #888;
 }
 
+/* Dropdown filters */
 .role-dropdown-acc {
   position: relative;
   min-width: 180px;
@@ -89,6 +93,7 @@
   pointer-events: none;
 }
 
+/* Add button */
 .add-button {
   display: flex;
   align-items: center;
@@ -113,53 +118,88 @@
   margin-right: 8px;
 }
 
-/* Contenedor de tabla con scroll */
+/* Table container with horizontal scroll */
 .table-wrapper {
-  width: 100%;
-  overflow-x: auto;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
   margin-bottom: 20px;
+}
+
+.table-scroll-container {
+  overflow-x: auto;
+  overflow-y: visible;
 }
 
 .user-table {
   width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
+  min-width: 800px;
+  border-collapse: collapse;
+  position: relative;
   background-color: white;
-  border-radius: 5px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   table-layout: fixed;
-  min-width: 100%;
 }
 
-.user-table th,
-.user-table td {
-  padding: 14px 16px;
+/* Table cells - scrollable columns */
+.scrollable-column {
+  padding: 12px;
   text-align: left;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #e0e0e0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 120px;
 }
 
+/* Table cells - fixed action column */
+.fixed-column {
+  position: sticky;
+  right: 0;
+  background-color: white;
+  padding: 12px;
+  text-align: center;
+  border-bottom: 1px solid #e0e0e0;
+  border-left: 1px solid #e0e0e0;
+  box-shadow: -2px 0 4px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  min-width: 120px;
+  width: 120px;
+}
+
+/* Table headers */
 .user-table th {
-  background-color: #f9fafb;
-  font-weight: 500;
-  color: #6b7280;
+  font-weight: 600;
+  color: #333;
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+thead .scrollable-column {
+  background-color: #f8f9fa;
+  position: sticky;
+  top: 0;
+  z-index: 9;
+}
+
+thead .fixed-column {
+  background-color: #f8f9fa;
+  position: sticky;
+  top: 0;
+  z-index: 11;
+}
+
+/* Table row hover effect */
+.user-table tr:hover {
+  background-color: #f9fafb;
 }
 
 .user-table tr:last-child td {
   border-bottom: none;
 }
 
-.user-table tr:hover {
-  background-color: #f9fafb;
-}
-
-/* Definir anchos específicos para cada columna */
+/* Column width distribution */
 .user-table th:nth-child(1),
 .user-table td:nth-child(1) {
   width: 20%;
@@ -183,7 +223,6 @@
 .user-table th:nth-child(5),
 .user-table td:nth-child(5) {
   width: 15%;
-  white-space: nowrap;
 }
 
 /* Role badges */
@@ -210,37 +249,60 @@
   color: #1d4ed8;
 }
 
+/* Status badges */
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.active-status {
+  background-color: #e8f5e8;
+  color: #2e7d32;
+}
+
+.inactive-status {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
 /* Action buttons */
 .action-buttons {
   display: flex;
-  gap: 10px;
-  justify-content: flex-end;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
 }
 
 .see-button, .edit-button, .delete-button {
-  background: none;
+  padding: 6px;
   border: none;
-  cursor: pointer;
-  padding: 5px;
+  background: none;
   border-radius: 4px;
-  transition: background-color 0.2s;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
 }
 
 .see-button:hover {
-  background-color: rgba(59, 130, 246, 0.1);
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 .edit-button:hover {
-  background-color: rgba(247, 148, 29, 0.1);
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 .delete-button:hover {
-  background-color: rgba(239, 68, 68, 0.1);
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 .see-icon, .edit-icon, .delete-icon {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
 
 /* No users message */
@@ -250,7 +312,7 @@
   color: #6b7280;
 }
 
-/* Form input & select styles for modals */
+/* Form inputs */
 .form-input-udt, .form-select-udt {
   width: 100%;
   padding: 10px 12px;
@@ -260,17 +322,13 @@
   transition: border-color 0.3s;
 }
 
-.form-input-udt:focus, .form-select-udt:focus {
-  border-color: #f7941d;
-  outline: none;
-}
-
+.form-input-udt:focus, .form-select-udt:focus,
 .form-input-udt.focused-udt, .form-select-udt.focused-udt {
   border-color: #f7941d;
   outline: none;
 }
 
-/* Delete Confirmation Modal */
+/* Delete confirmation modal */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -380,30 +438,7 @@
   background-color: #DC2626;
 }
 
-/* Responsive styles */
-@media (max-width: 768px) {
-  .table-actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .right-actions {
-    width: 100%;
-    justify-content: space-between;
-  }
-  
-  .search-container {
-    max-width: 100%;
-    width: 100%;
-  }
-
-  .delete-confirm-modal {
-    width: 90%;
-    margin: 0 20px;
-  }
-}
-
-/* Pagination Styles */
+/* Pagination */
 .pagination-container {
   display: flex;
   justify-content: space-between;
@@ -460,22 +495,7 @@
   color: #666;
 }
 
-@media (max-width: 768px) {
-  .pagination-container {
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .pagination-info {
-    text-align: center;
-  }
-  
-  .pagination-controls {
-    justify-content: center;
-  }
-}
-
-/* Toast container */
+/* Toast notifications */
 .toast-container {
   position: fixed;
   top: 20px;
@@ -487,7 +507,6 @@
   max-width: 350px;
 }
 
-/* Toast notification */
 .toast-notification {
   display: flex;
   align-items: center;
@@ -501,7 +520,6 @@
   animation: slideIn 0.3s ease-out forwards;
 }
 
-/* Toast types */
 .toast-notification.success {
   border-left: 4px solid #10B981;
 }
@@ -518,7 +536,6 @@
   border-left: 4px solid #3B82F6;
 }
 
-/* Toast content */
 .toast-content {
   padding: 12px 16px;
   flex-grow: 1;
@@ -529,7 +546,6 @@
   font-size: 14px;
 }
 
-/* Toast close button */
 .toast-close {
   background: none;
   border: none;
@@ -570,12 +586,74 @@
   }
 }
 
-/* Toast appearing animation */
 .toast-notification.closing {
   animation: slideOut 0.3s ease-in forwards;
 }
 
-/* Responsive styles */
+/* Loading and error states */
+.loading-container, .error-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  color: #666;
+  font-size: 16px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .table-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .right-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .search-container {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .delete-confirm-modal {
+    width: 90%;
+    margin: 0 20px;
+  }
+
+  .pagination-container {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .pagination-info {
+    text-align: center;
+  }
+  
+  .pagination-controls {
+    justify-content: center;
+  }
+
+  .scrollable-column {
+    min-width: 100px;
+    font-size: 14px;
+  }
+  
+  .fixed-column {
+    min-width: 100px;
+    width: 100px;
+  }
+  
+  .action-buttons {
+    gap: 4px;
+  }
+  
+  .action-buttons button {
+    padding: 4px;
+  }
+}
+
 @media (max-width: 480px) {
   .toast-container {
     top: 10px;
@@ -588,4 +666,107 @@
     width: 100%;
     max-width: 100%;
   }
+}
+.landlords-section {
+  margin-bottom: 20px;
+}
+
+.landlords-title, .recent-messages-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #666;
+}
+
+.landlords-list {
+  display: flex;
+  gap: 15px;
+  overflow-x: auto;
+  padding: 10px 0;
+}
+
+.landlord-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  min-width: 60px;
+}
+
+.landlord-item.selected .landlord-avatar {
+  border: 2px solid #007bff;
+}
+
+.landlord-avatar-container {
+  position: relative;
+  margin-bottom: 5px;
+}
+
+.landlord-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.landlord-name {
+  font-size: 12px;
+  text-align: center;
+  max-width: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-section {
+  margin-bottom: 15px;
+}
+
+.search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 10px;
+  z-index: 1;
+  color: #999;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 10px 10px 35px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  outline: none;
+}
+
+.recent-messages-section {
+  flex: 1;
+}
+
+.unread-count {
+  background-color: #007bff;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  margin-left: auto;
+}
+
+.online-indicator {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  background-color: #4CAF50;
+  border: 2px solid white;
+  border-radius: 50%;
 }

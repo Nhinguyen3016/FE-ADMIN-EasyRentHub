@@ -1,5 +1,3 @@
-import '../../styles/post/PostManagement.css';
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Filter, CheckCircle, AlertCircle, Flag} from 'lucide-react';
 import EstateDetailModal from './components/EstateDetailModal'; 
@@ -7,6 +5,41 @@ import EstateEditForm from './components/EstateEditForm';
 import EstateCard from './components/EstateCard'; 
 import { FileText } from "lucide-react";
 import bd1 from '../../images/bd1.jpg';
+import '../../styles/post/PostManagement.css';
+
+const Toast = ({ message, type, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 5000);
+    
+    return () => clearTimeout(timer);
+  }, [onClose]);
+  
+  return (
+    <div className={`toast-notification ${type}`}>
+      <div className="toast-content">
+        <span className="toast-message">{message}</span>
+      </div>
+      <button className="toast-close" onClick={onClose}>×</button>
+    </div>
+  );
+};
+
+const ToastContainer = ({ toasts, removeToast }) => {
+  return (
+    <div className="toast-container">
+      {toasts.map((toast) => (
+        <Toast 
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => removeToast(toast.id)}
+        />
+      ))}
+    </div>
+  );
+};
 
 const EstateManagement = () => {
   const [activeTab, setActiveTab] = useState('all');
@@ -24,10 +57,20 @@ const EstateManagement = () => {
   const [selectedAuthor, setSelectedAuthor] = useState('');
   const [showAuthorDropdown, setShowAuthorDropdown] = useState(false);
   const [loadingAuthors, setLoadingAuthors] = useState(false);
+  const [toasts, setToasts] = useState([]);
   
   const dropdownRef = useRef(null);
 
   const API_BASE_URL = 'http://localhost:5000/api';
+
+  const addToast = (message, type = 'success') => {
+    const id = Date.now();
+    setToasts(prevToasts => [...prevToasts, { id, message, type }]);
+  };
+  
+  const removeToast = (id) => {
+    setToasts(prevToasts => prevToasts.filter(toast => toast.id !== id));
+  };
 
   useEffect(() => {
     const fetchLandlords = async () => {
@@ -35,7 +78,7 @@ const EstateManagement = () => {
         setLoadingAuthors(true);
         const token = localStorage.getItem('token');
         
-        const response = await fetch(`${API_BASE_URL}/users?role=landlord`, {
+        const response = await fetch(`${API_BASE_URL}/users`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -48,11 +91,14 @@ const EstateManagement = () => {
         const data = await response.json();
         
         if (data.users && Array.isArray(data.users)) {
-          const landlords = data.users.map(user => ({
-            _id: user._id,
-            full_name: user.fullName || user.name || 'Unknown User',
-            email: user.email
-          }));
+          const landlords = data.users
+            .filter(user => user.role === 'Landlord')
+            .map(user => ({
+              _id: user._id,
+              full_name: user.fullName || user.full_name || user.name || 'Unknown User',
+              email: user.email,
+              role: user.role
+            }));
           
           setAuthors(landlords);
         } else {
@@ -60,7 +106,7 @@ const EstateManagement = () => {
         }
       } catch (err) {
         console.error('Error fetching landlords:', err);
-        // Don't set error state here as it would prevent estates from loading
+        addToast(`Không thể tải danh sách tác giả: ${err.message}`, 'error');
       } finally {
         setLoadingAuthors(false);
       }
@@ -104,16 +150,15 @@ const EstateManagement = () => {
       } catch (err) {
         console.error('Error fetching estates:', err);
         setError(err.message);
+        addToast(`Lỗi khi tải dữ liệu: ${err.message}`, 'error');
       } finally {
         setLoading(false);
       }
     };
     
-    // Fetch both landlords and estates
     fetchLandlords();
     fetchEstates();
     
-    // Add event listener to close dropdown when clicking outside
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowAuthorDropdown(false);
@@ -126,10 +171,9 @@ const EstateManagement = () => {
     };
   }, []);
 
-  // Function to filter estates by author
   const filterEstatesByAuthor = (authorId) => {
     if (!authorId) {
-      return [...estates]; // Return all estates if no author selected
+      return [...estates];
     }
     return estates.filter(estate => 
       estate.user && (estate.user._id === authorId)
@@ -205,7 +249,6 @@ const EstateManagement = () => {
         </span>
       );
     } else {
-  
       return (
         <span className="status-badge status-available">
           <CheckCircle size={14} className="mr-1" /> Có sẵn
@@ -271,11 +314,12 @@ const EstateManagement = () => {
       
       setEstates(updatedEstates);
       setShowEditForm(false);
+      addToast('Cập nhật bài đăng thành công');
       
       console.log('Estate updated successfully:', estateId);
     } catch (err) {
       console.error('Error updating estate:', err);
-      alert(`Failed to update estate: ${err.message}`);
+      addToast(`Không thể cập nhật bài đăng: ${err.message}`, 'error');
     }
   };
 
@@ -283,23 +327,78 @@ const EstateManagement = () => {
     try {
       const token = localStorage.getItem('token');
       
+      if (!token) {
+        throw new Error('Không tìm thấy token xác thực');
+      }
+
+      console.log(`Attempting to delete estate with ID: ${estateId}`);
+      
       const response = await fetch(`${API_BASE_URL}/estate/${estateId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       });
+      console.log('Delete response status:', response.status);
+      console.log('Delete response ok:', response.ok);
       
       if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+        let errorMessage = `Lỗi ${response.status}`;
+        
+        try {
+          const errorData = await response.json();
+          console.log('Error response data:', errorData);
+          
+          if (errorData.msg) {
+            if (errorData.msg.includes("Cannot read properties of null")) {
+              errorMessage = 'Lỗi server: Dữ liệu bài đăng không hợp lệ. Vui lòng liên hệ quản trị viên.';
+            } else if (errorData.msg.includes("not found")) {
+              errorMessage = 'Bài đăng không tồn tại hoặc đã được xóa.';
+            } else if (errorData.msg.includes("permission") || errorData.msg.includes("unauthorized")) {
+              errorMessage = 'Bạn không có quyền xóa bài đăng này.';
+            } else {
+              errorMessage = `Lỗi server: ${errorData.msg}`;
+            }
+          } else if (errorData.message) {
+            errorMessage = `Lỗi: ${errorData.message}`;
+          } else {
+            errorMessage = `Lỗi HTTP ${response.status}: Không thể xóa bài đăng`;
+          }
+        } catch (parseError) {
+          console.log('Could not parse error response as JSON');
+          try {
+            const errorText = await response.text();
+            console.log('Error response text:', errorText);
+            if (errorText) {
+              errorMessage = `Lỗi server: ${errorText}`;
+            }
+          } catch (textError) {
+            console.log('Could not get error response text');
+            errorMessage = `Lỗi HTTP ${response.status}: Không thể kết nối đến server`;
+          }
+        }
+        
+        throw new Error(errorMessage);
       }
-      
+     
       const updatedEstates = estates.filter(estate => estate.id !== estateId && estate._id !== estateId);
       setEstates(updatedEstates);
       setShowDetailModal(false);
+      addToast('Xóa bài đăng thành công');
+      
+      console.log('Estate deleted successfully:', estateId);
     } catch (err) {
       console.error('Error deleting estate:', err);
-      alert(`Failed to delete estate: ${err.message}`);
+
+      let userMessage = err.message;
+      if (err.message.includes('Failed to fetch')) {
+        userMessage = 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.';
+      } else if (err.message.includes('500')) {
+        userMessage = 'Lỗi server nội bộ. Vui lòng thử lại sau hoặc liên hệ quản trị viên.';
+      }
+      
+      addToast(userMessage, 'error');
     }
   };
 
@@ -319,10 +418,10 @@ const EstateManagement = () => {
       });
       
       if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+        const errorData = await response.json().catch(() => null);
+        throw new Error(`HTTP error! Status: ${response.status}${errorData ? ` - ${errorData.message}` : ''}`);
       }
       
-
       const updatedEstates = estates.map(estate => 
         (estate.id === estateId || estate._id === estateId) 
           ? {...estate, status: estate.status === 'booked' ? 'available' : estate.status, updatedAt: new Date().toISOString()} 
@@ -330,21 +429,20 @@ const EstateManagement = () => {
       );
       
       setEstates(updatedEstates);
+      addToast('Cập nhật trạng thái thành công');
       
       if (showDetailModal && selectedEstate && (selectedEstate.id === estateId || selectedEstate._id === estateId)) {
         setSelectedEstate({...selectedEstate, status: selectedEstate.status === 'booked' ? 'available' : selectedEstate.status});
       }
     } catch (err) {
       console.error('Error updating estate status:', err);
-      alert(`Failed to update estate status: ${err.message}`);
+      addToast(`Không thể cập nhật trạng thái: ${err.message}`, 'error');
     }
   };
-
 
   const toggleAuthorDropdown = () => {
     setShowAuthorDropdown(!showAuthorDropdown);
   };
-
 
   const getSelectedAuthorName = () => {
     if (!selectedAuthor) return "Tất cả tác giả";
@@ -352,15 +450,9 @@ const EstateManagement = () => {
     return author ? author.full_name : "Tất cả tác giả";
   };
 
- 
   const resetAuthorFilter = () => {
     setSelectedAuthor('');
     setCurrentPage(1);
-  };
-
-  // Check if a landlord has any listings
-  const hasListings = (authorId) => {
-    return estates.some(estate => estate.user && estate.user._id === authorId);
   };
 
   if (loading) {
@@ -386,6 +478,9 @@ const EstateManagement = () => {
 
   return (
     <div className="estate-management">
+      {/* Toast notifications container */}
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
+      
       {/* Header */}
       <header className="app-header">
         <div className="header-content">
@@ -516,7 +611,6 @@ const EstateManagement = () => {
                           onClick={() => handleAuthorChange(author._id)}
                         >
                           {author.full_name}
-                          {!hasListings(author._id) && <span className="no-listings-badge">Chưa có bài đăng</span>}
                         </div>
                       ))}
                     </div>
@@ -567,7 +661,6 @@ const EstateManagement = () => {
               </button>
               
               {totalPages <= 5 ? (
-             
                 Array.from({ length: totalPages }, (_, i) => (
                   <button 
                     key={i + 1}
@@ -578,9 +671,7 @@ const EstateManagement = () => {
                   </button>
                 ))
               ) : (
-               
                 <>
-                  {/* First page */}
                   <button 
                     onClick={() => paginate(1)}
                     className={`pagination-btn ${currentPage === 1 ? 'pagination-btn-active' : ''}`}
@@ -588,10 +679,8 @@ const EstateManagement = () => {
                     1
                   </button>
                   
-                  {/* Ellipsis if not near first page */}
                   {currentPage > 3 && <span className="pagination-ellipsis">...</span>}
                   
-                  {/* Pages around current page */}
                   {Array.from({ length: totalPages }, (_, i) => i + 1)
                     .filter(page => page !== 1 && page !== totalPages && 
                            Math.abs(page - currentPage) <= 1)
@@ -606,10 +695,8 @@ const EstateManagement = () => {
                     ))
                   }
                   
-                  {/* Ellipsis if not near last page */}
                   {currentPage < totalPages - 2 && <span className="pagination-ellipsis">...</span>}
                   
-                  {/* Last page */}
                   <button 
                     onClick={() => paginate(totalPages)}
                     className={`pagination-btn ${currentPage === totalPages ? 'pagination-btn-active' : ''}`}
