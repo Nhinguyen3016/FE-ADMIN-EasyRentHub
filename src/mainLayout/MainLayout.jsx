@@ -70,7 +70,7 @@ const MainLayout = () => {
           <Link to="/dashboard" className="menu-link-mlo">
             <div className={`menu-item-mlo ${activePage === 'dashboard' ? 'active' : ''}`}>
               <img src={dashboardImg} alt="Dashboard" className="menu-icon-mlo" />
-              <span className="menu-text-mlo">Thống kê kinh doanh</span>
+              <span className="menu-text-mlo">Thống kê</span>
             </div>
           </Link>
           <Link to="/account" className="menu-link-mlo">

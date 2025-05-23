@@ -5,54 +5,113 @@ import '../../../styles/dashboard/components/MonthlyTransactionChart.css';
 const MonthlyTransactionChart = () => {
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
-  const [revenueData, setRevenueData] = useState(null);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [availableYears, setAvailableYears] = useState([]);
 
   useEffect(() => {
-    const fetchRevenueData = async () => {
+    const fetchDashboardData = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/revenue/monthly', {
+        setLoading(true);
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+          throw new Error('Không tìm thấy token. Vui lòng đăng nhập lại.');
+        }
+
+        const response = await fetch('http://localhost:5000/api/payment/dashboard', {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'}`
-          }
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
         });
 
         if (!response.ok) {
-          throw new Error('Failed to fetch revenue data');
+          if (response.status === 401) {
+            throw new Error('Token không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại.');
+          } else if (response.status === 403) {
+            throw new Error('Bạn không có quyền truy cập dữ liệu này.');
+          } else {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
         }
 
         const data = await response.json();
-        setRevenueData(data.yearlyData);
-        setAvailableYears(data.availableYears);
-
-        if (data.availableYears?.length > 0 && !data.yearlyData[selectedYear]) {
-          setSelectedYear(data.availableYears[0]);
+        setDashboardData(data);
+    
+        const dailyRevenue = data.charts?.dailyRevenue || [];
+        const years = [...new Set(dailyRevenue.map(item => new Date(item._id).getFullYear()))].sort((a, b) => b - a);
+        
+        if (years.length === 0) {
+          years.push(new Date().getFullYear());
         }
-      } catch (error) {
-        console.error('Error fetching revenue data:', error);
-        const currentYear = new Date().getFullYear();
-        const fallbackData = {
-          [currentYear]: {
-            monthlyRevenue: Array(12).fill().map(() => ({ revenue: Math.floor(Math.random() * 100) + 20 })),
-            totalAnnualRevenue: 1000
-          }
-        };
-        setRevenueData(fallbackData);
-        setAvailableYears([currentYear]);
+        
+        setAvailableYears(years);
+      
+        if (years.length > 0 && !years.includes(selectedYear)) {
+          setSelectedYear(years[0]);
+        }
+        
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchRevenueData();
-  }, [selectedYear]); // ✅ thêm selectedYear để loại bỏ cảnh báo eslint
+    fetchDashboardData();
+  }, [selectedYear]);
+ 
+  const getMonthlyRevenueData = () => {
+    if (!dashboardData?.charts?.dailyRevenue) return Array(12).fill(0);
+
+    const dailyRevenue = dashboardData.charts.dailyRevenue;
+    const monthlyData = Array(12).fill(0);
+ 
+    dailyRevenue.forEach(item => {
+      const date = new Date(item._id);
+      const year = date.getFullYear();
+      const month = date.getMonth(); // 0-11
+      
+      if (year === selectedYear) {
+        monthlyData[month] += item.amount || 0;
+      }
+    });
+
+    return monthlyData;
+  };
 
   useEffect(() => {
-    if (!revenueData || !revenueData[selectedYear] || !chartRef.current) return;
+    if (!chartRef.current || loading || error) return;
 
     if (chartInstance.current) {
       chartInstance.current.destroy();
     }
+
+   
+    const getMonthlyData = () => {
+      if (!dashboardData?.charts?.dailyRevenue) return Array(12).fill(0);
+
+      const dailyRevenue = dashboardData.charts.dailyRevenue;
+      const monthlyData = Array(12).fill(0);
+
+     
+      dailyRevenue.forEach(item => {
+        const date = new Date(item._id);
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        if (year === selectedYear) {
+          monthlyData[month] += item.amount || 0;
+        }
+      });
+
+      return monthlyData;
+    };
 
     const ctx = chartRef.current.getContext('2d');
 
@@ -60,9 +119,9 @@ const MonthlyTransactionChart = () => {
     gradient.addColorStop(0, 'rgba(65, 105, 225, 0.6)');
     gradient.addColorStop(1, 'rgba(65, 105, 225, 0.1)');
 
-    const dataValues = revenueData[selectedYear].monthlyRevenue.map(item => item.revenue);
+    const dataValues = getMonthlyData();
     const maxValue = Math.max(...dataValues, 1);
-    const yMax = maxValue + 50;
+    const yMax = maxValue + (maxValue * 0.1); 
 
     chartInstance.current = new Chart(ctx, {
       type: 'line',
@@ -76,8 +135,8 @@ const MonthlyTransactionChart = () => {
             backgroundColor: gradient,
             tension: 0.4,
             fill: true,
-            pointRadius: 0, // 👈 Mặc định không hiển thị chấm
-            pointHoverRadius: 6, // 👈 Chỉ hiển thị khi hover
+            pointRadius: 0,
+            pointHoverRadius: 6,
             pointBackgroundColor: '#4169E1',
             pointHoverBorderColor: '#4169E1',
             hoverBorderWidth: 2,
@@ -116,6 +175,9 @@ const MonthlyTransactionChart = () => {
               stepSize: Math.ceil(yMax / 4),
               font: {
                 size: 11
+              },
+              callback: function(value) {
+                return value.toLocaleString();
               }
             },
             grid: {
@@ -157,11 +219,49 @@ const MonthlyTransactionChart = () => {
         chartInstance.current.destroy();
       }
     };
-  }, [revenueData, selectedYear]);
+  }, [dashboardData, selectedYear, loading, error]);
 
   const handleYearChange = (e) => {
     setSelectedYear(parseInt(e.target.value));
   };
+
+  const getTotalAnnualRevenue = () => {
+    const monthlyData = getMonthlyRevenueData();
+    return monthlyData.reduce((sum, amount) => sum + amount, 0);
+  };
+
+  if (loading) {
+    return (
+      <div className="chart-container-mtc">
+        <div className="chart-header-mtc">
+          <h3 className="chart-title-mtc">Doanh thu</h3>
+        </div>
+        <div className="chart-wrapper-mtc">
+          <div className="loading-container">
+            Đang tải dữ liệu...
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="chart-container-mtc">
+        <div className="chart-header-mtc">
+          <h3 className="chart-title-mtc">Doanh thu</h3>
+        </div>
+        <div className="chart-wrapper-mtc">
+          <div className="error-container">
+            <div>
+              <p>Lỗi khi tải dữ liệu</p>
+              <p className="error-message">{error}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="chart-container-mtc">
@@ -186,13 +286,16 @@ const MonthlyTransactionChart = () => {
         <canvas ref={chartRef}></canvas>
       </div>
 
-      {revenueData && revenueData[selectedYear] && (
-        <div className="chart-footer-mtc">
-          <span className="total-revenue-mtc">
-            <strong>Tổng doanh thu:</strong> {revenueData[selectedYear].totalAnnualRevenue.toLocaleString()} VNĐ
+      <div className="chart-footer-mtc">
+        <span className="total-revenue-mtc">
+          <strong>Tổng doanh thu năm {selectedYear}:</strong> {getTotalAnnualRevenue().toLocaleString()} VNĐ
+        </span>
+        {dashboardData?.revenue && (
+          <span className="current-month-revenue">
+            | <strong>Tháng hiện tại:</strong> {dashboardData.revenue.currentMonth.toLocaleString()} VNĐ
           </span>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

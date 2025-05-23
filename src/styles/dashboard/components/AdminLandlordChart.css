@@ -3,3 +3,152 @@
   height: 100% !important;
   flex: 1;
 }
+
+
+.chart-container {
+  position: relative;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.year-filter-container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+  width:70px;
+}
+
+.year-filter-label {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+}
+
+.year-filter-select {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: white;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.year-filter-select:hover {
+  border-color: #4A68D9;
+}
+
+.year-filter-select:focus {
+  border-color: #4A68D9;
+  box-shadow: 0 0 0 2px rgba(74, 104, 217, 0.1);
+}
+
+.chart-title {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 20px 0;
+}
+
+
+.chart-canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  color: #666;
+  font-size: 14px;
+}
+
+
+.error-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  color: #e74c3c;
+  text-align: center;
+}
+
+.error-message {
+  font-size: 14px;
+  color: #666;
+  margin-top: 8px;
+}
+
+.chart-summary {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #666;
+  text-align: center;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .chart-container {
+    padding: 15px;
+  }
+  
+  .year-filter-container {
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  
+  .chart-title {
+    font-size: 16px;
+  }
+  
+  .chart-wrapper {
+    height: 250px;
+  }
+  
+  .chart-summary {
+    font-size: 12px;
+    padding: 8px;
+  }
+}
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.chart-title {
+  margin: 0;
+  flex: 1;
+}
+
+.year-filter-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.year-filter-label {
+  font-weight: 500;
+  color: #333;
+}
+
+.year-filter-select {
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  font-size: 14px;
+}

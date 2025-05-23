@@ -106,3 +106,159 @@
   font-weight: 600;
   margin-right: 5px;
 }
+/* MonthlyTransactionChart.css */
+
+.chart-container-mtc {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin: 20px 0;
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-header-mtc {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.chart-title-mtc {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+}
+
+.year-selector-mtc {
+  margin-left: auto;
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  font-size: 14px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.year-selector-mtc:hover {
+  border-color: #4169E1;
+}
+
+.year-selector-mtc:focus {
+  border-color: #4169E1;
+  box-shadow: 0 0 0 2px rgba(65, 105, 225, 0.2);
+}
+
+.chart-wrapper-mtc {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chart-wrapper-mtc canvas {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.chart-footer-mtc {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #e0e0e0;
+  text-align: center;
+  font-size: 14px;
+  color: #666;
+}
+
+.total-revenue-mtc {
+  color: #333;
+}
+
+.current-month-revenue {
+  color: #4169E1;
+  margin-left: 10px;
+}
+
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  font-size: 16px;
+  color: #666;
+}
+
+.error-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  text-align: center;
+}
+
+.error-container p {
+  margin: 5px 0;
+  color: #666;
+}
+
+.error-message {
+  color: #e74c3c !important;
+  font-size: 12px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .chart-container-mtc {
+    padding: 15px;
+    margin: 10px 0;
+    height: 350px;
+  }
+  
+  .chart-header-mtc {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .chart-title-mtc {
+    position: static;
+    transform: none;
+    margin-bottom: 10px;
+  }
+  
+  .year-selector-mtc {
+    margin-left: 0;
+  }
+  
+  .chart-footer-mtc {
+    font-size: 12px;
+  }
+  
+  .current-month-revenue {
+    display: block;
+    margin-left: 0;
+    margin-top: 5px;
+  }
+}
+
+@media (max-width: 480px) {
+  .chart-container-mtc {
+    height: 300px;
+  }
+  
+  .chart-title-mtc {
+    font-size: 16px;
+  }
+}

@@ -14,10 +14,7 @@ const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const navigate = useNavigate();
-
-  // Xóa bất kỳ dữ liệu xác thực cũ khi trang đăng nhập được tải
   useEffect(() => {
-    // Xóa toàn bộ dữ liệu xác thực khi trang đăng nhập được tải
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('userRole');
