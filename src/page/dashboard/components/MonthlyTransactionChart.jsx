@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Chart from 'chart.js/auto';
 import '../../../styles/dashboard/components/MonthlyTransactionChart.css';
 
@@ -9,7 +9,9 @@ const MonthlyTransactionChart = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [availableYears, setAvailableYears] = useState([]);
+  const [viewType, setViewType] = useState('monthly'); 
 
   useEffect(() => {
     const fetchTransactionData = async () => {
@@ -20,8 +22,7 @@ const MonthlyTransactionChart = () => {
         if (!token) {
           throw new Error('Không tìm thấy token. Vui lòng đăng nhập lại.');
         }
-
-        // Fetch all transactions with pagination
+  
         let allTransactions = [];
         let page = 1;
         let hasMore = true;
@@ -54,14 +55,13 @@ const MonthlyTransactionChart = () => {
           page++;
         }
 
-        // Filter only completed transactions
+
         const completedTransactions = allTransactions.filter(transaction => 
           transaction.status === 'COMPLETED'
         );
 
         setTransactionData(completedTransactions);
-    
-        // Extract available years from completed transactions
+   
         const years = [...new Set(completedTransactions.map(item => 
           new Date(item.createdAt).getFullYear()
         ))].sort((a, b) => b - a);
@@ -87,8 +87,16 @@ const MonthlyTransactionChart = () => {
 
     fetchTransactionData();
   }, [selectedYear]);
- 
-  const getMonthlyRevenueData = () => {
+
+  const getDaysInMonth = useCallback((month, year) => {
+    const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    if (month === 2 && ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0)) {
+      return 29; 
+    }
+    return daysInMonth[month - 1];
+  }, []);
+
+  const getMonthlyRevenueData = useCallback(() => {
     if (!transactionData || transactionData.length === 0) return Array(12).fill(0);
 
     const monthlyData = Array(12).fill(0);
@@ -96,7 +104,7 @@ const MonthlyTransactionChart = () => {
     transactionData.forEach(transaction => {
       const date = new Date(transaction.createdAt);
       const year = date.getFullYear();
-      const month = date.getMonth(); // 0-11
+      const month = date.getMonth(); 
       
       if (year === selectedYear) {
         monthlyData[month] += transaction.amount || 0;
@@ -104,7 +112,90 @@ const MonthlyTransactionChart = () => {
     });
 
     return monthlyData;
-  };
+  }, [transactionData, selectedYear]);
+
+  const getDailyRevenueData = useCallback(() => {
+    if (!transactionData || transactionData.length === 0) {
+      const daysInMonth = getDaysInMonth(selectedMonth, selectedYear);
+      return Array(daysInMonth).fill(0);
+    }
+
+    const daysInMonth = getDaysInMonth(selectedMonth, selectedYear);
+    const dailyData = Array(daysInMonth).fill(0);
+    
+    transactionData.forEach(transaction => {
+      const date = new Date(transaction.createdAt);
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1; 
+      const day = date.getDate();
+      
+      if (year === selectedYear && month === selectedMonth) {
+        dailyData[day - 1] += transaction.amount || 0;
+      }
+    });
+
+    return dailyData;
+  }, [transactionData, selectedYear, selectedMonth, getDaysInMonth]);
+
+  const getGrowthRate = useCallback(() => {
+    if (!transactionData || transactionData.length === 0) return 0;
+
+    if (viewType === 'monthly') {
+      const currentMonthData = getDailyRevenueData();
+      const currentTotal = currentMonthData.reduce((sum, amount) => sum + amount, 0);
+      
+      const prevMonth = selectedMonth === 1 ? 12 : selectedMonth - 1;
+      const prevYear = selectedMonth === 1 ? selectedYear - 1 : selectedYear;
+      
+      const prevMonthData = Array(getDaysInMonth(prevMonth, prevYear)).fill(0);
+      
+      transactionData.forEach(transaction => {
+        const date = new Date(transaction.createdAt);
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        
+        if (year === prevYear && month === prevMonth) {
+          prevMonthData[day - 1] += transaction.amount || 0;
+        }
+      });
+      
+      const prevTotal = prevMonthData.reduce((sum, amount) => sum + amount, 0);
+      
+      if (prevTotal === 0) {
+        return currentTotal > 0 ? 100 : 0;
+      }
+  
+      const growthRate = ((currentTotal / prevTotal) * 100) - 100;
+      return Math.round(growthRate * 10) / 10;
+    } else {
+     
+      const currentYearData = getMonthlyRevenueData();
+      const currentTotal = currentYearData.reduce((sum, amount) => sum + amount, 0);
+      
+      const prevYearData = Array(12).fill(0);
+      
+      transactionData.forEach(transaction => {
+        const date = new Date(transaction.createdAt);
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        
+        if (year === selectedYear - 1) {
+          prevYearData[month] += transaction.amount || 0;
+        }
+      });
+      
+      const prevTotal = prevYearData.reduce((sum, amount) => sum + amount, 0);
+      
+      if (prevTotal === 0) {
+        return currentTotal > 0 ? 100 : 0;
+      }
+      
+    
+      const growthRate = ((currentTotal / prevTotal) * 100) - 100;
+      return Math.round(growthRate * 10) / 10;
+    }
+  }, [transactionData, viewType, selectedMonth, selectedYear, getDaysInMonth, getDailyRevenueData, getMonthlyRevenueData]);
 
   useEffect(() => {
     if (!chartRef.current || loading || error) return;
@@ -119,14 +210,25 @@ const MonthlyTransactionChart = () => {
     gradient.addColorStop(0, 'rgba(65, 105, 225, 0.6)');
     gradient.addColorStop(1, 'rgba(65, 105, 225, 0.1)');
 
-    const dataValues = getMonthlyRevenueData();
+    let chartLabels, chartData;
+    
+    if (viewType === 'monthly') {
+      const daysInMonth = getDaysInMonth(selectedMonth, selectedYear);
+      chartLabels = Array.from({length: daysInMonth}, (_, i) => `${i + 1}`);
+      chartData = getDailyRevenueData();
+    } else {
+      chartLabels = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
+      chartData = getMonthlyRevenueData();
+    }
+
+    const dataValues = chartData;
     const maxValue = Math.max(...dataValues, 1);
     const yMax = maxValue + (maxValue * 0.1); 
 
     chartInstance.current = new Chart(ctx, {
       type: 'line',
       data: {
-        labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
+        labels: chartLabels,
         datasets: [
           {
             label: 'Doanh thu',
@@ -192,7 +294,9 @@ const MonthlyTransactionChart = () => {
             ticks: {
               font: {
                 size: 11
-              }
+              },
+              maxRotation: 0,
+              minRotation: 0
             }
           }
         },
@@ -219,30 +323,39 @@ const MonthlyTransactionChart = () => {
         chartInstance.current.destroy();
       }
     };
-  }, [transactionData, selectedYear, loading, error]);
+  }, [transactionData, selectedYear, selectedMonth, viewType, loading, error, getDailyRevenueData, getMonthlyRevenueData, getDaysInMonth]);
 
-  const handleYearChange = (e) => {
-    setSelectedYear(parseInt(e.target.value));
-  };
 
-  const getTotalAnnualRevenue = () => {
-    const monthlyData = getMonthlyRevenueData();
-    return monthlyData.reduce((sum, amount) => sum + amount, 0);
-  };
+  const getTotalRevenueAllTime = useCallback(() => {
+    if (!transactionData || transactionData.length === 0) return 0;
+    return transactionData.reduce((sum, transaction) => sum + (transaction.amount || 0), 0);
+  }, [transactionData]);
 
-  const getCurrentMonthRevenue = () => {
+  const getSelectedPeriodRevenue = useCallback(() => {
     if (!transactionData || transactionData.length === 0) return 0;
     
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
-    
-    return transactionData
-      .filter(transaction => {
-        const date = new Date(transaction.createdAt);
-        return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
-      })
-      .reduce((sum, transaction) => sum + (transaction.amount || 0), 0);
-  };
+    if (viewType === 'monthly') {
+      return transactionData
+        .filter(transaction => {
+          const date = new Date(transaction.createdAt);
+          return date.getMonth() + 1 === selectedMonth && date.getFullYear() === selectedYear;
+        })
+        .reduce((sum, transaction) => sum + (transaction.amount || 0), 0);
+    } else {
+      return transactionData
+        .filter(transaction => {
+          const date = new Date(transaction.createdAt);
+          return date.getFullYear() === selectedYear;
+        })
+        .reduce((sum, transaction) => sum + (transaction.amount || 0), 0);
+    }
+  }, [transactionData, viewType, selectedMonth, selectedYear]);
+
+  const formatGrowthRate = useCallback((rate) => {
+    if (rate === 0) return '0%';
+    if (rate > 0) return `+${rate}%`;
+    return `${rate}%`;
+  }, []);
 
   if (loading) {
     return (
@@ -277,23 +390,70 @@ const MonthlyTransactionChart = () => {
     );
   }
 
+  const growthRate = getGrowthRate();
+
   return (
     <div className="chart-container-mtc">
+      {/* Header with title and filters */}
       <div className="chart-header-mtc">
         <h3 className="chart-title-mtc">Doanh thu</h3>
-        {availableYears.length > 0 && (
-          <select
-            value={selectedYear}
-            onChange={handleYearChange}
-            className="year-selector-mtc"
-          >
-            {availableYears.map(year => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
-        )}
+        
+        <div className="filter-controls">
+          {/* View Type Toggle */}
+          <div className="filter-group">
+            <span className="filter-label">Xem theo:</span>
+            <div className="filter-tabs">
+              <button 
+                className={`filter-tab ${viewType === 'monthly' ? 'active' : ''}`}
+                onClick={() => setViewType('monthly')}
+              >
+                Tháng
+              </button>
+              <button 
+                className={`filter-tab ${viewType === 'yearly' ? 'active' : ''}`}
+                onClick={() => setViewType('yearly')}
+              >
+                Năm
+              </button>
+            </div>
+          </div>
+
+          {/* Month Selection (for daily view) */}
+          {viewType === 'monthly' && (
+            <div className="filter-group">
+              <span className="filter-label">Tháng:</span>
+              <div className="select-wrapper">
+                <select
+                  className="custom-select"
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                >
+                  {Array.from({length: 12}, (_, i) => (
+                    <option key={i + 1} value={i + 1}>Tháng {i + 1}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* Year Selection */}
+          {availableYears.length > 0 && (
+            <div className="filter-group">
+              <span className="filter-label">Năm:</span>
+              <div className="select-wrapper">
+                <select
+                  className="custom-select"
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                >
+                  {availableYears.map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="chart-wrapper-mtc">
@@ -301,12 +461,24 @@ const MonthlyTransactionChart = () => {
       </div>
 
       <div className="chart-footer-mtc">
-        <span className="total-revenue-mtc">
-          <strong>Tổng doanh thu năm {selectedYear}:</strong> {getTotalAnnualRevenue().toLocaleString()} VNĐ
-        </span>
-        <span className="current-month-revenue">
-          | <strong>Tháng hiện tại:</strong> {getCurrentMonthRevenue().toLocaleString()} VNĐ
-        </span>
+        <div className="summary-item">
+          <span className="total-revenue-mtc">
+            <strong>Tổng doanh thu:</strong> {getTotalRevenueAllTime().toLocaleString()} VNĐ
+          </span>
+        </div>
+        <div className="summary-item">
+          <span className="selected-period-revenue">
+            | <strong>Tổng doanh thu của {viewType === 'monthly' ? `tháng ${selectedMonth}` : 'năm'} {selectedYear}:</strong> {getSelectedPeriodRevenue().toLocaleString()} VNĐ
+          </span>
+        </div>
+        <div className="summary-item">
+          <span className="growth-rate">
+            | <strong>So với {viewType === 'monthly' ? 'tháng trước' : 'năm trước'}:</strong> 
+            <span className={`growth-value ${growthRate >= 0 ? 'positive' : 'negative'}`}>
+              {formatGrowthRate(growthRate)}
+            </span>
+          </span>
+        </div>
       </div>
     </div>
   );

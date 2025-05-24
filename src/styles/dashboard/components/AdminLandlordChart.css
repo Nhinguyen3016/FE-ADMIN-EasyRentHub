@@ -1,10 +1,9 @@
-
 .chart-header {
-    margin-bottom: 15px;
-    flex-wrap: wrap;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .chart-title {
@@ -132,10 +131,9 @@
   margin-top: 8px;
 }
 
-/* Summary section */
 .chart-summary {
   display: flex;
-  justify-content: space-between;
+  justify-content: end;
   align-items: center;
   padding: 16px 0;
   border-top: 1px solid #e2e8f0;
