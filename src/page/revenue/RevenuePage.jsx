@@ -10,6 +10,7 @@ export default function RevenueDashboard() {
     const [sortOrder, setSortOrder] = useState('asc');
     const [currentPage, setCurrentPage] = useState(1);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [statusFilter, setStatusFilter] = useState('ALL'); 
     const [payments, setPayments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -23,7 +24,7 @@ export default function RevenueDashboard() {
         return `${year}-${month}-${day}`;
     };
 
-    // Fetch data from API
+
     useEffect(() => {
         const fetchPayments = async () => {
             try {
@@ -60,7 +61,7 @@ export default function RevenueDashboard() {
                     
                     const data = await response.json();
                     
-                    // Transform API data to match component structure
+                  
                     const transformedPayments = data.transactions.map((transaction, index) => ({
                         id: transaction._id,
                         landlordName: transaction.userId?.full_name || 'N/A',
@@ -86,7 +87,7 @@ export default function RevenueDashboard() {
                     page++;
                 }
                 
-                // Set all payments (display all statuses)
+                
                 setPayments(allPayments);
                 setError(null);
                 
@@ -101,7 +102,7 @@ export default function RevenueDashboard() {
         fetchPayments();
     }, []);
 
-    // Calculate statistics for 5 cards
+  
     const totalPayments = payments.length;
     const completedPayments = payments.filter(payment => payment.status === 'COMPLETED');
     const pendingPayments = payments.filter(payment => payment.status === 'PENDING');
@@ -116,12 +117,13 @@ export default function RevenueDashboard() {
         const matchesSearch = payment.landlordName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             payment.landlordEmail.toLowerCase().includes(searchTerm.toLowerCase());
 
+        const matchesStatus = statusFilter === 'ALL' || payment.status === statusFilter;
+
         let matchesDateRange = true;
         if (startDate && endDate) {
-            // So sánh chỉ dựa trên ngày, bỏ qua giờ
             const paymentDateString = getDateString(payment.paymentDate);
-            const filterStartDateString = startDate; // startDate đã ở format YYYY-MM-DD
-            const filterEndDateString = endDate; // endDate đã ở format YYYY-MM-DD
+            const filterStartDateString = startDate; 
+            const filterEndDateString = endDate; 
             
             matchesDateRange = paymentDateString >= filterStartDateString && 
                              paymentDateString <= filterEndDateString;
@@ -135,10 +137,9 @@ export default function RevenueDashboard() {
             matchesDateRange = paymentDateString <= filterEndDateString;
         }
 
-        return matchesSearch && matchesDateRange;
+        return matchesSearch && matchesDateRange && matchesStatus;
     });
 
-    // Calculate filtered statistics for 5 cards
     const filteredPaymentsCount = filteredPayments.length;
     const filteredCompletedPayments = filteredPayments.filter(payment => payment.status === 'COMPLETED');
     const filteredPendingPayments = filteredPayments.filter(payment => payment.status === 'PENDING');
@@ -168,10 +169,6 @@ export default function RevenueDashboard() {
             return sortOrder === 'asc'
                 ? lastNameA.localeCompare(lastNameB, 'vi', { sensitivity: 'base' })
                 : lastNameB.localeCompare(lastNameA, 'vi', { sensitivity: 'base' });
-        } else if (sortBy === 'email') {
-            return sortOrder === 'asc'
-                ? a.landlordEmail.localeCompare(b.landlordEmail, 'vi', { sensitivity: 'base' })
-                : b.landlordEmail.localeCompare(a.landlordEmail, 'vi', { sensitivity: 'base' });
         } else if (sortBy === 'stt') {
             return sortOrder === 'asc' ? a.id.localeCompare(b.id) : b.id.localeCompare(a.id);
         }
@@ -309,6 +306,20 @@ export default function RevenueDashboard() {
                         <Search className="search-icon-rev" size={18} />
                     </div>
 
+                    {/* Status Filter */}
+                    <div className="status-filter-container-rev">
+                        <select
+                            className="status-filter-select-rev"
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                        >
+                            <option value="ALL">Tất cả trạng thái</option>
+                            <option value="COMPLETED">Thành công</option>
+                            <option value="PENDING">Đang xử lý</option>
+                            <option value="FAILED">Thất bại</option>
+                        </select>
+                    </div>
+
                     <button
                         className="filter-button-rev"
                         onClick={() => setIsFilterOpen(!isFilterOpen)}
@@ -420,14 +431,8 @@ export default function RevenueDashboard() {
                                     <ArrowUpDown size={14} />
                                 </div>
                             </th>
-                            <th
-                                className="table-header-cell-rev sortable-rev"
-                                onClick={() => handleSort('email')}
-                            >
-                                <div className="header-content-rev">
-                                    <span>Email</span>
-                                    <ArrowUpDown size={14} />
-                                </div>
+                            <th className="table-header-cell-rev">
+                                Email
                             </th>
                             <th
                                 className="table-header-cell-rev sortable-rev"

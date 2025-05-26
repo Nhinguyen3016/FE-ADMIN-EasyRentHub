@@ -717,3 +717,96 @@
     padding: 3px 6px;
   }
 }
+
+.status-filter-container-rev {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin: 0 12px;
+}
+
+.status-filter-select-rev {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 10px 40px 10px 12px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    min-width: 160px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 12px center;
+    background-repeat: no-repeat;
+    background-size: 16px;
+}
+
+.status-filter-select-rev:hover {
+    border-color: #9ca3af;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.status-filter-select-rev:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.status-filter-select-rev option {
+    padding: 8px 12px;
+    font-size: 14px;
+    color: #374151;
+    background-color: #ffffff;
+}
+
+.status-filter-select-rev option:hover {
+    background-color: #f3f4f6;
+}
+
+
+@media (prefers-color-scheme: dark) {
+    .status-filter-select-rev {
+        background-color: #1f2937;
+        border-color: #374151;
+        color: #f9fafb;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%9ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    }
+    
+    .status-filter-select-rev:hover {
+        border-color: #6b7280;
+    }
+    
+    .status-filter-select-rev:focus {
+        border-color: #3b82f6;
+    }
+    
+    .status-filter-select-rev option {
+        background-color: #1f2937;
+        color: #f9fafb;
+    }
+}
+
+
+@media (max-width: 768px) {
+    .status-filter-container-rev {
+        margin: 8px 0;
+        width: 100%;
+    }
+    
+    .status-filter-select-rev {
+        min-width: 140px;
+        font-size: 13px;
+        padding: 8px 32px 8px 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .status-filter-select-rev {
+        min-width: 120px;
+        font-size: 12px;
+    }
+}
