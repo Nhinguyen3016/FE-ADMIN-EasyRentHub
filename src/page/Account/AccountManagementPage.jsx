@@ -152,8 +152,8 @@ const AccountManagementPage = () => {
         
         return {
           id: user._id,
-          name: user.full_name,
-          email: user.email,
+          name: user.full_name || 'Chưa có tên', // Add fallback for name
+          email: user.email || 'Chưa có email', // Add fallback for email
           address: formattedAddress || 'Chưa có địa chỉ',
           role: user.role === 'Admin' ? 'Quản trị viên' :
             user.role === 'Landlord' ? 'Chủ nhà' : 'Người thuê',
@@ -199,7 +199,7 @@ const AccountManagementPage = () => {
     setSearchQuery(e.target.value);
   };
 
-  // Fixed filtering logic
+  // Fixed filtering logic with null checks
   const filteredUsers = users.filter(user => {
     // Role filter
     let roleMatches = true;
@@ -236,9 +236,13 @@ const AccountManagementPage = () => {
       }
     }
 
-    // Search filter
-    const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchQuery.toLowerCase());
+    // Search filter with null checks
+    const userName = user.name || '';
+    const userEmail = user.email || '';
+    const searchLower = searchQuery.toLowerCase();
+    
+    const matchesSearch = userName.toLowerCase().includes(searchLower) ||
+                         userEmail.toLowerCase().includes(searchLower);
 
     return roleMatches && statusMatches && matchesSearch;
   });
@@ -319,8 +323,12 @@ const AccountManagementPage = () => {
           }
         }
 
-        const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                             user.email.toLowerCase().includes(searchQuery.toLowerCase());
+        const userName = user.name || '';
+        const userEmail = user.email || '';
+        const searchLower = searchQuery.toLowerCase();
+        
+        const matchesSearch = userName.toLowerCase().includes(searchLower) ||
+                             userEmail.toLowerCase().includes(searchLower);
         
         return roleMatches && statusMatches && matchesSearch;
       });
@@ -546,9 +554,9 @@ const AccountManagementPage = () => {
               {currentItems.length > 0 ? (
                 currentItems.map(user => (
                   <tr key={user.id}>
-                    <td className="scrollable-column" title={user.name}>{user.name}</td>
-                    <td className="scrollable-column" title={user.email}>{user.email}</td>
-                    <td className="scrollable-column" title={user.address}>{user.address}</td>
+                    <td className="scrollable-column" title={user.name || 'Chưa có tên'}>{user.name || 'Chưa có tên'}</td>
+                    <td className="scrollable-column" title={user.email || 'Chưa có email'}>{user.email || 'Chưa có email'}</td>
+                    <td className="scrollable-column" title={user.address || 'Chưa có địa chỉ'}>{user.address || 'Chưa có địa chỉ'}</td>
                     <td className="scrollable-column">
                       <span className={`role-badge ${user.role === 'Quản trị viên' ? 'admin-role' :
                         user.role === 'Chủ nhà' ? 'owner-role' : 'tenant-role'

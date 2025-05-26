@@ -657,7 +657,7 @@ const EstateManagement = () => {
                 onClick={prevPage}
                 disabled={currentPage === 1}
               >
-                Trước
+                 &lt;&lt;
               </button>
               
               {totalPages <= 5 ? (
@@ -711,7 +711,7 @@ const EstateManagement = () => {
                 onClick={nextPage}
                 disabled={currentPage === totalPages}
               >
-                Sau
+                  &gt;&gt;
               </button>
             </nav>
           </div>

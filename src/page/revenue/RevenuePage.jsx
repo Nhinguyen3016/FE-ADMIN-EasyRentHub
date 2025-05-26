@@ -6,7 +6,7 @@ export default function RevenueDashboard() {
     const [searchTerm, setSearchTerm] = useState('');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
-    const [sortBy, setSortBy] = useState('stt');
+    const [sortBy, setSortBy] = useState('paymentDate'); // Changed from 'stt' to 'paymentDate'
     const [sortOrder, setSortOrder] = useState('asc');
     const [currentPage, setCurrentPage] = useState(1);
     const [isFilterOpen, setIsFilterOpen] = useState(false);

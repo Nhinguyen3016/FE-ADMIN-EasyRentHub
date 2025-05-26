@@ -1,7 +1,7 @@
 import '../../../styles/notification/messageDialog/MessageDialog.css';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
-const MessageDialog = ({ onClose, contact }) => {
+const MessageDialog = ({ onClose, contact, onConversationCreated }) => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -84,10 +84,8 @@ const MessageDialog = ({ onClose, contact }) => {
   useEffect(() => {
     if (currentUserId && contact) {
       if (contact.id && !contact.isNewConversation) {
-        // Existing conversation
         fetchMessages(contact.id);
       } else {
-        // New conversation
         setMessages([]);
         setLoading(false);
       }
@@ -155,10 +153,7 @@ const MessageDialog = ({ onClose, contact }) => {
     
     try {
       if (contact.isNewConversation) {
-        // Create new conversation
         const responseData = await createNewConversation(contact.userId, messageToSend);
-        
-        // Update the message with actual ID
         setMessages(prevMessages => 
           prevMessages.map(msg => 
             msg.id === newMessage.id 
@@ -172,13 +167,14 @@ const MessageDialog = ({ onClose, contact }) => {
               : msg
           )
         );
-        
-        // Update contact to no longer be a new conversation
+       
         contact.isNewConversation = false;
         contact.id = responseData.conversationId || responseData._id;
+        if (onConversationCreated) {
+          onConversationCreated(contact.id, contact.userId);
+        }
         
       } else {
-        // Existing conversation
         const token = localStorage.getItem('token');
         
         const response = await fetch(`${API_BASE_URL}/api/messages/send`, {
@@ -201,8 +197,6 @@ const MessageDialog = ({ onClose, contact }) => {
         }
         
         const responseData = await response.json();
-        
-        // Update the message with actual ID
         setMessages(prevMessages => 
           prevMessages.map(msg => 
             msg.id === newMessage.id 
@@ -217,7 +211,6 @@ const MessageDialog = ({ onClose, contact }) => {
           )
         );
 
-        // Refresh messages if we have a conversation ID
         if (contact && contact.id) {
           fetchMessages(contact.id);
         }
@@ -225,7 +218,6 @@ const MessageDialog = ({ onClose, contact }) => {
     } catch (err) {
       console.error('Error sending message:', err);
       alert('Failed to send message. Please try again.');
-      // Remove the failed message
       setMessages(prevMessages => prevMessages.filter(msg => msg.id !== newMessage.id));
     }
   };
@@ -282,12 +274,13 @@ const MessageDialog = ({ onClose, contact }) => {
       let responseData;
       
       if (contact.isNewConversation) {
-        // Create new conversation with file
         responseData = await createNewConversation(contact.userId, `Đã gửi file: ${file.name}`);
         contact.isNewConversation = false;
         contact.id = responseData.conversationId || responseData._id;
+        if (onConversationCreated) {
+          onConversationCreated(contact.id, contact.userId);
+        }
       } else {
-        // Send to existing conversation
         const response = await fetch(`${API_BASE_URL}/api/messages/send`, {
           method: 'POST',
           headers: {
@@ -342,12 +335,14 @@ const MessageDialog = ({ onClose, contact }) => {
       let responseData;
       
       if (contact.isNewConversation) {
-        // Create new conversation with image
         responseData = await createNewConversation(contact.userId, `Đã gửi hình ảnh: ${file.name}`);
         contact.isNewConversation = false;
         contact.id = responseData.conversationId || responseData._id;
+        if (onConversationCreated) {
+          onConversationCreated(contact.id, contact.userId);
+        }
       } else {
-        // Send to existing conversation
+      
         const response = await fetch(`${API_BASE_URL}/api/messages/send`, {
           method: 'POST',
           headers: {

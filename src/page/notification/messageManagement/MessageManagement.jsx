@@ -15,6 +15,30 @@ const MessageManagement = () => {
   const [selectedLandlord, setSelectedLandlord] = useState(null);
   const defaultAvatar = avatar1;
   
+  // Function to fetch conversations
+  const fetchConversations = async (userId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/messages/conversations/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Cannot load conversation data');
+      }
+      
+      const data = await response.json();
+      console.log("Fetched conversations:", data);
+      setConversations(data);
+      return data;
+    } catch (err) {
+      console.error('Error fetching conversations:', err);
+      throw err;
+    }
+  };
+  
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -41,7 +65,6 @@ const MessageManagement = () => {
           throw new Error('Cannot get userId from token');
         }
 
-    
         const allUsersResponse = await fetch(`http://localhost:5000/api/users`, {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -63,21 +86,12 @@ const MessageManagement = () => {
         );
         console.log("Landlords data:", landlordsData);
         setLandlords(landlordsData);
-        const response = await fetch(`http://localhost:5000/api/messages/conversations/${userId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
         
-        if (!response.ok) {
-          throw new Error('Cannot load conversation data');
-        }
+        // Fetch conversations
+        const conversationsData = await fetchConversations(userId);
         
-        const data = await response.json();
-        console.log("Fetched conversations:", data);
-        setConversations(data);
         const userIds = new Set();
-        data.forEach(conversation => {
+        conversationsData.forEach(conversation => {
           conversation.members.forEach(memberId => {
             if (memberId !== userId) {
               userIds.add(memberId);
@@ -230,8 +244,10 @@ const MessageManagement = () => {
   
   const handleCloseDialog = () => {
     setSelectedContact(null);
+    setSelectedLandlord(null);
   };
 
+  // Fixed handleLandlordClick function
   const handleLandlordClick = async (landlord) => {
     setSelectedLandlord(landlord);
    
@@ -239,35 +255,72 @@ const MessageManagement = () => {
       conversation.members.includes(landlord._id)
     );
     
+    const displayName = getUserDisplayName(landlord);
+    const userAvatar = getUserAvatar(landlord);
+    
     if (existingConversation) {
-     
-      const otherUser = getOtherUserFromConversation(existingConversation);
-      const displayName = getUserDisplayName(otherUser);
-      const userAvatar = getUserAvatar(otherUser);
-      
+      // Existing conversation - set isNewConversation to false
       setSelectedContact({
         id: existingConversation._id,
         name: displayName,
         userId: landlord._id,
         avatar: userAvatar,
-        isOnline: Math.random() > 0.5 
+        isOnline: Math.random() > 0.5,
+        isNewConversation: false // Explicitly set to false for existing conversations
       });
     } else {
-  
-      const displayName = getUserDisplayName(landlord);
-      const userAvatar = getUserAvatar(landlord);
-      
+      // New conversation - set isNewConversation to true
       setSelectedContact({
         id: null, 
         name: displayName,
         userId: landlord._id,
         avatar: userAvatar,
         isOnline: Math.random() > 0.5, 
-        isNewConversation: true
+        isNewConversation: true // Explicitly set to true for new conversations
       });
     }
   };
 
+  // Add callback function to refresh conversations when a new conversation is created
+  const handleConversationCreated = async (newConversationId, otherUserId) => {
+    console.log("New conversation created:", newConversationId, "with user:", otherUserId);
+    
+    try {
+      // Refresh conversations list
+      await fetchConversations(currentUserId);
+      
+      // Update the selected contact to reflect it's no longer a new conversation
+      setSelectedContact(prev => ({
+        ...prev,
+        id: newConversationId,
+        isNewConversation: false
+      }));
+      
+      // Also update users data if needed
+      const token = localStorage.getItem('token');
+      if (otherUserId && !usersData[otherUserId]) {
+        try {
+          const userResponse = await fetch(`http://localhost:5000/api/user/${otherUserId}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          if (userResponse.ok) {
+            const userData = await userResponse.json();
+            setUsersData(prev => ({
+              ...prev,
+              [otherUserId]: userData
+            }));
+          }
+        } catch (err) {
+          console.error('Error fetching user data after conversation creation:', err);
+        }
+      }
+    } catch (err) {
+      console.error('Error refreshing conversations:', err);
+    }
+  };
 
   const getFilteredItems = () => {
     const filteredConversations = conversations.filter(conversation => {
@@ -280,6 +333,7 @@ const MessageManagement = () => {
     if (!searchQuery.trim()) {
       return { conversations: filteredConversations, landlords: [] };
     }
+    
     const conversationUserIds = new Set(
       conversations.flatMap(conv => conv.members.filter(id => id !== currentUserId))
     );
@@ -392,7 +446,8 @@ const MessageManagement = () => {
                         name: displayName,
                         userId: otherUserId,
                         avatar: userAvatar,
-                        isOnline: isOnline
+                        isOnline: isOnline,
+                        isNewConversation: false // Existing conversations are not new
                       })}
                     >
                       <div className="avatar-container-mssm">
@@ -471,6 +526,7 @@ const MessageManagement = () => {
           <MessageDialog
             onClose={handleCloseDialog}
             contact={selectedContact}
+            onConversationCreated={handleConversationCreated}
           />
         </div>
       )}
