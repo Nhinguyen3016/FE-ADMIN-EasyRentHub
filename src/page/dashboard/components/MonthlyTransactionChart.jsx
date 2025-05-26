@@ -11,7 +11,7 @@ const MonthlyTransactionChart = () => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [availableYears, setAvailableYears] = useState([]);
-  const [viewType, setViewType] = useState('monthly'); 
+  const [viewType, setViewType] = useState('yearly'); 
 
   useEffect(() => {
     const fetchTransactionData = async () => {
@@ -49,7 +49,7 @@ const MonthlyTransactionChart = () => {
           const data = await response.json();
           allTransactions = [...allTransactions, ...data.transactions];
           
-          // Check if there are more pages
+       
           const totalPages = Math.ceil(data.pagination.total / 100);
           hasMore = page < totalPages;
           page++;
@@ -137,8 +137,60 @@ const MonthlyTransactionChart = () => {
     return dailyData;
   }, [transactionData, selectedYear, selectedMonth, getDaysInMonth]);
 
+
+  const getMaxRevenue = useCallback(() => {
+    if (!transactionData || transactionData.length === 0) return 1;
+
+    let maxRevenue = 0;
+    
+    if (viewType === 'monthly') {
+    
+      for (let year of availableYears) {
+        for (let month = 1; month <= 12; month++) {
+          const monthData = Array(getDaysInMonth(month, year)).fill(0);
+          
+          transactionData.forEach(transaction => {
+            const date = new Date(transaction.createdAt);
+            const txYear = date.getFullYear();
+            const txMonth = date.getMonth() + 1;
+            const day = date.getDate();
+            
+            if (txYear === year && txMonth === month) {
+              monthData[day - 1] += transaction.amount || 0;
+            }
+          });
+          
+          const monthTotal = monthData.reduce((sum, amount) => sum + amount, 0);
+          maxRevenue = Math.max(maxRevenue, monthTotal);
+        }
+      }
+    } else {
+ 
+      for (let year of availableYears) {
+        const yearData = Array(12).fill(0);
+        
+        transactionData.forEach(transaction => {
+          const date = new Date(transaction.createdAt);
+          const txYear = date.getFullYear();
+          const month = date.getMonth();
+          
+          if (txYear === year) {
+            yearData[month] += transaction.amount || 0;
+          }
+        });
+        
+        const yearTotal = yearData.reduce((sum, amount) => sum + amount, 0);
+        maxRevenue = Math.max(maxRevenue, yearTotal);
+      }
+    }
+    
+    return maxRevenue || 1; 
+  }, [transactionData, viewType, availableYears, getDaysInMonth]);
+
   const getGrowthRate = useCallback(() => {
     if (!transactionData || transactionData.length === 0) return 0;
+
+    const maxRevenue = getMaxRevenue();
 
     if (viewType === 'monthly') {
       const currentMonthData = getDailyRevenueData();
@@ -161,15 +213,13 @@ const MonthlyTransactionChart = () => {
       });
       
       const prevTotal = prevMonthData.reduce((sum, amount) => sum + amount, 0);
+   
+      const currentPercent = (currentTotal / maxRevenue) * 100;
+      const prevPercent = (prevTotal / maxRevenue) * 100;
+      const growthOnScale = currentPercent - prevPercent;
       
-      if (prevTotal === 0) {
-        return currentTotal > 0 ? 100 : 0;
-      }
-  
-      const growthRate = ((currentTotal / prevTotal) * 100) - 100;
-      return Math.round(growthRate * 10) / 10;
+      return Math.round(growthOnScale * 10) / 10;
     } else {
-     
       const currentYearData = getMonthlyRevenueData();
       const currentTotal = currentYearData.reduce((sum, amount) => sum + amount, 0);
       
@@ -187,15 +237,14 @@ const MonthlyTransactionChart = () => {
       
       const prevTotal = prevYearData.reduce((sum, amount) => sum + amount, 0);
       
-      if (prevTotal === 0) {
-        return currentTotal > 0 ? 100 : 0;
-      }
-      
     
-      const growthRate = ((currentTotal / prevTotal) * 100) - 100;
-      return Math.round(growthRate * 10) / 10;
+      const currentPercent = (currentTotal / maxRevenue) * 100;
+      const prevPercent = (prevTotal / maxRevenue) * 100;
+      const growthOnScale = currentPercent - prevPercent;
+      
+      return Math.round(growthOnScale * 10) / 10;
     }
-  }, [transactionData, viewType, selectedMonth, selectedYear, getDaysInMonth, getDailyRevenueData, getMonthlyRevenueData]);
+  }, [transactionData, viewType, selectedMonth, selectedYear, getDaysInMonth, getDailyRevenueData, getMonthlyRevenueData, getMaxRevenue]);
 
   useEffect(() => {
     if (!chartRef.current || loading || error) return;

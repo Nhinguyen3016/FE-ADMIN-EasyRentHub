@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Calendar, ArrowUpDown, CheckCircle, Filter } from 'lucide-react';
 import '../../styles/revenue/RevenueDashboard.css';
 
@@ -10,52 +10,150 @@ export default function RevenueDashboard() {
     const [sortOrder, setSortOrder] = useState('asc');
     const [currentPage, setCurrentPage] = useState(1);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [payments, setPayments] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    const payments = [
-        { id: 1, landlordName: 'Nguyễn Văn A', amount: 500000, date: '2025-05-15', duration: '1 tháng', method: 'Chuyển khoản ngân hàng' },
-        { id: 2, landlordName: 'Trần Thị B', amount: 1500000, date: '2025-05-12', duration: '3 tháng', method: 'Chuyển khoản ngân hàng' },
-        { id: 3, landlordName: 'Trương Văn F', amount: 500000, date: '2025-06-15', duration: '1 tháng', method: 'Chuyển khoản ngân hàng' },
-        { id: 4, landlordName: 'Phạm Thị D', amount: 2000000, date: '2025-05-05', duration: '6 tháng', method: 'Chuyển khoản ngân hàng' },
-        { id: 6, landlordName: 'Nguyễn Thị A', amount: 1000000, date: '2025-04-28', duration: '3 tháng', method: 'Chuyển khoản ngân hàng' },
-        { id: 7, landlordName: 'Võ Thị G', amount: 500000, date: '2025-04-20', duration: '1 tháng', method: 'Chuyển khoản ngân hàng' },
-        { id: 8, landlordName: 'Mai Văn H', amount: 1500000, date: '2025-04-15', duration: '3 tháng', method: 'Chuyển khoản ngân hàng' },
-        { id: 9, landlordName: 'Lý Thị I', amount: 500000, date: '2025-04-10', duration: '1 tháng', method: 'Chuyển khoản ngân hàng' },
-        { id: 10, landlordName: 'Đặng Văn K', amount: 2000000, date: '2025-04-05', duration: '6 tháng', method: 'Chuyển khoản ngân hàng' },
-    ];
 
-    const totalRevenue = payments.reduce((sum, payment) => sum + payment.amount, 0);
+    const getDateString = (dateInput) => {
+        const date = new Date(dateInput);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    // Fetch data from API
+    useEffect(() => {
+        const fetchPayments = async () => {
+            try {
+                setLoading(true);
+                
+                const token = localStorage.getItem('token');
+                
+                if (!token) {
+                    throw new Error('Không tìm thấy token. Vui lòng đăng nhập lại.');
+                }
+
+                let allPayments = [];
+                let page = 1;
+                let hasMore = true;
+                
+                while (hasMore) {
+                    const response = await fetch(`http://localhost:5000/api/payment/transactions?page=${page}&limit=100`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                    });
+                    
+                    if (!response.ok) {
+                        if (response.status === 401) {
+                            throw new Error('Token không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại.');
+                        } else if (response.status === 403) {
+                            throw new Error('Bạn không có quyền truy cập dữ liệu này.');
+                        } else {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // Transform API data to match component structure
+                    const transformedPayments = data.transactions.map((transaction, index) => ({
+                        id: transaction._id,
+                        landlordName: transaction.userId?.full_name || 'N/A',
+                        landlordEmail: transaction.userId?.email || 'N/A',
+                        amount: transaction.amount || 0,
+                        paymentDate: transaction.createdAt,
+                        duration: transaction.planType === 'WEEKLY' ? '1 tuần' : 
+                                transaction.planType === 'MONTHLY' ? '1 tháng' : 
+                                transaction.planType === 'QUARTERLY' ? '3 tháng' : 
+                                transaction.planType === 'YEARLY' ? '1 năm' : 'N/A',
+                        method: transaction.paymentMethod === 'PAYOS' ? 'PayOS' : 
+                               transaction.paymentMethod === 'BANK_TRANSFER' ? 'Chuyển khoản ngân hàng' : 
+                               transaction.paymentMethod || 'N/A',
+                        status: transaction.status,
+                        orderInfo: transaction.orderInfo || '',
+                        transactionId: transaction.transactionId || ''
+                    }));
+                    
+                    allPayments = [...allPayments, ...transformedPayments];
+                    
+                    const totalPages = Math.ceil(data.pagination.total / 100);
+                    hasMore = page < totalPages;
+                    page++;
+                }
+                
+                // Set all payments (display all statuses)
+                setPayments(allPayments);
+                setError(null);
+                
+            } catch (err) {
+                console.error('Error fetching payments:', err);
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchPayments();
+    }, []);
+
+    // Calculate statistics for 5 cards
     const totalPayments = payments.length;
+    const completedPayments = payments.filter(payment => payment.status === 'COMPLETED');
+    const pendingPayments = payments.filter(payment => payment.status === 'PENDING');
+    const failedPayments = payments.filter(payment => payment.status === 'FAILED');
+    
+    const completedRevenue = completedPayments.reduce((sum, payment) => sum + payment.amount, 0);
+    const completedCount = completedPayments.length;
+    const pendingCount = pendingPayments.length;
+    const failedCount = failedPayments.length;
 
     const filteredPayments = payments.filter(payment => {
-        const matchesSearch = payment.landlordName.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = payment.landlordName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            payment.landlordEmail.toLowerCase().includes(searchTerm.toLowerCase());
 
         let matchesDateRange = true;
         if (startDate && endDate) {
-            const paymentDate = new Date(payment.date);
-            const filterStartDate = new Date(startDate);
-            const filterEndDate = new Date(endDate);
-            matchesDateRange = paymentDate >= filterStartDate && paymentDate <= filterEndDate;
+            // So sánh chỉ dựa trên ngày, bỏ qua giờ
+            const paymentDateString = getDateString(payment.paymentDate);
+            const filterStartDateString = startDate; // startDate đã ở format YYYY-MM-DD
+            const filterEndDateString = endDate; // endDate đã ở format YYYY-MM-DD
+            
+            matchesDateRange = paymentDateString >= filterStartDateString && 
+                             paymentDateString <= filterEndDateString;
         } else if (startDate) {
-            const paymentDate = new Date(payment.date);
-            const filterStartDate = new Date(startDate);
-            matchesDateRange = paymentDate >= filterStartDate;
+            const paymentDateString = getDateString(payment.paymentDate);
+            const filterStartDateString = startDate;
+            matchesDateRange = paymentDateString >= filterStartDateString;
         } else if (endDate) {
-            const paymentDate = new Date(payment.date);
-            const filterEndDate = new Date(endDate);
-            matchesDateRange = paymentDate <= filterEndDate;
+            const paymentDateString = getDateString(payment.paymentDate);
+            const filterEndDateString = endDate;
+            matchesDateRange = paymentDateString <= filterEndDateString;
         }
 
         return matchesSearch && matchesDateRange;
     });
 
-    const filteredRevenue = filteredPayments.reduce((sum, payment) => sum + payment.amount, 0);
+    // Calculate filtered statistics for 5 cards
     const filteredPaymentsCount = filteredPayments.length;
+    const filteredCompletedPayments = filteredPayments.filter(payment => payment.status === 'COMPLETED');
+    const filteredPendingPayments = filteredPayments.filter(payment => payment.status === 'PENDING');
+    const filteredFailedPayments = filteredPayments.filter(payment => payment.status === 'FAILED');
+    
+    const filteredCompletedRevenue = filteredCompletedPayments.reduce((sum, payment) => sum + payment.amount, 0);
+    const filteredCompletedCount = filteredCompletedPayments.length;
+    const filteredPendingCount = filteredPendingPayments.length;
+    const filteredFailedCount = filteredFailedPayments.length;
 
     const sortedPayments = [...filteredPayments].sort((a, b) => {
-        if (sortBy === 'date') {
+        if (sortBy === 'paymentDate') {
             return sortOrder === 'asc'
-                ? new Date(a.date) - new Date(b.date)
-                : new Date(b.date) - new Date(a.date);
+                ? new Date(a.paymentDate) - new Date(b.paymentDate)
+                : new Date(b.paymentDate) - new Date(a.paymentDate);
         } else if (sortBy === 'amount') {
             return sortOrder === 'asc' ? a.amount - b.amount : b.amount - a.amount;
         } else if (sortBy === 'name') {
@@ -70,8 +168,12 @@ export default function RevenueDashboard() {
             return sortOrder === 'asc'
                 ? lastNameA.localeCompare(lastNameB, 'vi', { sensitivity: 'base' })
                 : lastNameB.localeCompare(lastNameA, 'vi', { sensitivity: 'base' });
+        } else if (sortBy === 'email') {
+            return sortOrder === 'asc'
+                ? a.landlordEmail.localeCompare(b.landlordEmail, 'vi', { sensitivity: 'base' })
+                : b.landlordEmail.localeCompare(a.landlordEmail, 'vi', { sensitivity: 'base' });
         } else if (sortBy === 'stt') {
-            return sortOrder === 'asc' ? a.id - b.id : b.id - a.id;
+            return sortOrder === 'asc' ? a.id.localeCompare(b.id) : b.id.localeCompare(a.id);
         }
         return 0;
     });
@@ -96,6 +198,65 @@ export default function RevenueDashboard() {
         setCurrentPage(page);
     };
 
+    const formatDate = (dateString) => {
+        return new Date(dateString).toLocaleDateString('vi-VN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        });
+    };
+
+    const getStatusBadge = (status) => {
+        switch (status) {
+            case 'COMPLETED':
+                return (
+                    <span className="status-badge-rev success-rev">
+                        <CheckCircle size={16} className="status-icon-rev" /> Thành công
+                    </span>
+                );
+            case 'PENDING':
+                return (
+                    <span className="status-badge-rev processing-rev">
+                        Đang xử lý
+                    </span>
+                );
+            case 'FAILED':
+                return (
+                    <span className="status-badge-rev failed-rev">
+                        Thất bại
+                    </span>
+                );
+            default:
+                return (
+                    <span className="status-badge-rev">
+                        {status}
+                    </span>
+                );
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="dashboard-container-rev">
+                <div className="header-rev">
+                    <h1 className="header-title-rev">Quản Lý Doanh Thu</h1>
+                    <p className="header-subtitle-rev">Đang tải dữ liệu...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="dashboard-container-rev">
+                <div className="header-rev">
+                    <h1 className="header-title-rev">Quản Lý Doanh Thu</h1>
+                    <p className="header-subtitle-rev">Lỗi: {error}</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="dashboard-container-rev">
             {/* Header */}
@@ -104,18 +265,33 @@ export default function RevenueDashboard() {
                 <p className="header-subtitle-rev">Theo dõi các khoản thanh toán từ chủ trọ</p>
             </div>
 
-            {/* Stats Overview */}
+            {/* Stats Overview - Updated to 5 cards with different colored values */}
             <div className="stats-grid-rev">
                 <div className="stat-card-rev">
-                    <p className="stat-label-rev">Tổng doanh thu</p>
-                    <p className="stat-value-rev revenue-rev">
-                        {totalRevenue.toLocaleString('vi-VN')} đ
+                    <p className="stat-label-rev">Tổng doanh thu (thành công)</p>
+                    <p className="stat-value-rev revenue-success-rev">
+                        {completedRevenue.toLocaleString('vi-VN')} đ
                     </p>
                 </div>
 
                 <div className="stat-card-rev">
-                    <p className="stat-label-rev">Số lượng thanh toán</p>
-                    <p className="stat-value-rev payments-rev">{totalPayments}</p>
+                    <p className="stat-label-rev">Tổng số thanh toán</p>
+                    <p className="stat-value-rev total-payments-rev">{totalPayments}</p>
+                </div>
+
+                <div className="stat-card-rev">
+                    <p className="stat-label-rev">Thanh toán thành công</p>
+                    <p className="stat-value-rev success-payments-rev">{completedCount}</p>
+                </div>
+
+                <div className="stat-card-rev">
+                    <p className="stat-label-rev">Thanh toán đang xử lý</p>
+                    <p className="stat-value-rev pending-payments-rev">{pendingCount}</p>
+                </div>
+
+                <div className="stat-card-rev">
+                    <p className="stat-label-rev">Thanh toán thất bại</p>
+                    <p className="stat-value-rev failed-payments-rev">{failedCount}</p>
                 </div>
             </div>
 
@@ -125,7 +301,7 @@ export default function RevenueDashboard() {
                     <div className="search-container-rev">
                         <input
                             type="text"
-                            placeholder="Tìm theo tên chủ trọ..."
+                            placeholder="Tìm theo tên hoặc email chủ trọ..."
                             className="search-input-rev"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
@@ -173,6 +349,18 @@ export default function RevenueDashboard() {
                                 <Calendar className="date-icon-rev" size={18} />
                             </div>
                         </div>
+
+                        <button
+                            className="reset-filter-btn-rev"
+                            onClick={() => {
+                                setStartDate('');
+                                setEndDate('');
+                                setCurrentPage(1);
+                            }}
+                            disabled={!startDate && !endDate}
+                        >
+                            Bỏ lọc
+                        </button>
                     </div>
 
                     {(startDate || endDate) && (
@@ -182,12 +370,24 @@ export default function RevenueDashboard() {
                                     <h4 className="filtered-stats-title-rev">Thông tin thống kê (thời gian đã lọc)</h4>
                                     <div className="filtered-stats-grid-rev">
                                         <div>
-                                            <p className="filtered-stat-label-rev">Tổng doanh thu:</p>
-                                            <p className="filtered-stat-value-rev revenue-rev">{filteredRevenue.toLocaleString('vi-VN')} đ</p>
+                                            <p className="filtered-stat-label-rev">Tổng doanh thu (thành công):</p>
+                                            <p className="filtered-stat-value-rev revenue-success-rev">{filteredCompletedRevenue.toLocaleString('vi-VN')} đ</p>
                                         </div>
                                         <div>
-                                            <p className="filtered-stat-label-rev">Số thanh toán:</p>
-                                            <p className="filtered-stat-value-rev payments-rev">{filteredPaymentsCount}</p>
+                                            <p className="filtered-stat-label-rev">Tổng số thanh toán:</p>
+                                            <p className="filtered-stat-value-rev total-payments-rev">{filteredPaymentsCount}</p>
+                                        </div>
+                                        <div>
+                                            <p className="filtered-stat-label-rev">Thanh toán thành công:</p>
+                                            <p className="filtered-stat-value-rev success-payments-rev">{filteredCompletedCount}</p>
+                                        </div>
+                                        <div>
+                                            <p className="filtered-stat-label-rev">Đang xử lý:</p>
+                                            <p className="filtered-stat-value-rev pending-payments-rev">{filteredPendingCount}</p>
+                                        </div>
+                                        <div>
+                                            <p className="filtered-stat-label-rev">Thanh toán thất bại:</p>
+                                            <p className="filtered-stat-value-rev failed-payments-rev">{filteredFailedCount}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -222,6 +422,15 @@ export default function RevenueDashboard() {
                             </th>
                             <th
                                 className="table-header-cell-rev sortable-rev"
+                                onClick={() => handleSort('email')}
+                            >
+                                <div className="header-content-rev">
+                                    <span>Email</span>
+                                    <ArrowUpDown size={14} />
+                                </div>
+                            </th>
+                            <th
+                                className="table-header-cell-rev sortable-rev"
                                 onClick={() => handleSort('amount')}
                             >
                                 <div className="header-content-rev">
@@ -234,7 +443,7 @@ export default function RevenueDashboard() {
                             </th>
                             <th
                                 className="table-header-cell-rev sortable-rev"
-                                onClick={() => handleSort('date')}
+                                onClick={() => handleSort('paymentDate')}
                             >
                                 <div className="header-content-rev">
                                     <span>Ngày thanh toán</span>
@@ -259,6 +468,9 @@ export default function RevenueDashboard() {
                                     <div className="landlord-name-rev">{payment.landlordName}</div>
                                 </td>
                                 <td className="table-cell-rev">
+                                    <div className="landlord-email-rev">{payment.landlordEmail}</div>
+                                </td>
+                                <td className="table-cell-rev">
                                     <div className="amount-rev">
                                         {payment.amount.toLocaleString('vi-VN')} đ
                                     </div>
@@ -267,81 +479,87 @@ export default function RevenueDashboard() {
                                     {payment.duration}
                                 </td>
                                 <td className="table-cell-rev">
-                                    {new Date(payment.date).toLocaleDateString('vi-VN')}
+                                    {formatDate(payment.paymentDate)}
                                 </td>
                                 <td className="table-cell-rev">
                                     {payment.method}
                                 </td>
                                 <td className="table-cell-rev">
-                                    <span className="status-badge-rev success-rev">
-                                        <CheckCircle size={16} className="status-icon-rev" /> Thành công
-                                    </span>
+                                    {getStatusBadge(payment.status)}
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
 
+                {paginatedPayments.length === 0 && (
+                    <div style={{ textAlign: 'center', padding: '20px' }}>
+                        Không có dữ liệu thanh toán nào.
+                    </div>
+                )}
+
                 {/* Pagination */}
-                <div className="pagination-container-rev">
-                    <div className="pagination-mobile-rev">
-                        <button
-                            onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                            disabled={currentPage === 1}
-                            className={`pagination-btn-rev ${currentPage === 1 ? 'disabled-rev' : ''}`}
-                        >
-                            &lt;&lt;
-                        </button>
-                        <button
-                            onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                            disabled={currentPage === totalPages}
-                            className={`pagination-btn-rev ${currentPage === totalPages ? 'disabled-rev' : ''}`}
-                        >
-                            &gt;&gt;
-                        </button>
-                    </div>
-                    <div className="pagination-desktop-rev">
-                        <div>
-                            <p className="pagination-info-rev">
-                                Hiển thị <span className="font-medium-rev">{(currentPage - 1) * itemsPerPage + 1}</span> đến <span className="font-medium-rev">
-                                    {Math.min(currentPage * itemsPerPage, filteredPayments.length)}
-                                </span> trong <span className="font-medium-rev">{filteredPayments.length}</span> kết quả
-                            </p>
+                {totalPages > 1 && (
+                    <div className="pagination-container-rev">
+                        <div className="pagination-mobile-rev">
+                            <button
+                                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                                disabled={currentPage === 1}
+                                className={`pagination-btn-rev ${currentPage === 1 ? 'disabled-rev' : ''}`}
+                            >
+                                &lt;&lt;
+                            </button>
+                            <button
+                                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                                disabled={currentPage === totalPages}
+                                className={`pagination-btn-rev ${currentPage === totalPages ? 'disabled-rev' : ''}`}
+                            >
+                                &gt;&gt;
+                            </button>
                         </div>
-                        <div>
-                            <nav className="pagination-nav-rev">
-                                <button
-                                    onClick={() => handlePageChange(1)}
-                                    disabled={currentPage === 1}
-                                    className={`pagination-nav-btn-rev first-rev ${currentPage === 1 ? 'disabled-rev' : ''}`}
-                                >
-                                    &lt;&lt;
-                                </button>
-
-                                <button className="pagination-nav-btn-rev current-rev">
-                                    {currentPage}
-                                </button>
-
-                                {currentPage < totalPages && (
+                        <div className="pagination-desktop-rev">
+                            <div>
+                                <p className="pagination-info-rev">
+                                    Hiển thị <span className="font-medium-rev">{(currentPage - 1) * itemsPerPage + 1}</span> đến <span className="font-medium-rev">
+                                        {Math.min(currentPage * itemsPerPage, filteredPayments.length)}
+                                    </span> trong <span className="font-medium-rev">{filteredPayments.length}</span> kết quả
+                                </p>
+                            </div>
+                            <div>
+                                <nav className="pagination-nav-rev">
                                     <button
-                                        onClick={() => handlePageChange(currentPage + 1)}
-                                        className="pagination-nav-btn-rev next-rev"
+                                        onClick={() => handlePageChange(1)}
+                                        disabled={currentPage === 1}
+                                        className={`pagination-nav-btn-rev first-rev ${currentPage === 1 ? 'disabled-rev' : ''}`}
                                     >
-                                        {currentPage + 1}
+                                        &lt;&lt;
                                     </button>
-                                )}
 
-                                <button
-                                    onClick={() => handlePageChange(totalPages)}
-                                    disabled={currentPage === totalPages}
-                                    className={`pagination-nav-btn-rev last-rev ${currentPage === totalPages ? 'disabled-rev' : ''}`}
-                                >
-                                    &gt;&gt;
-                                </button>
-                            </nav>
+                                    <button className="pagination-nav-btn-rev current-rev">
+                                        {currentPage}
+                                    </button>
+
+                                    {currentPage < totalPages && (
+                                        <button
+                                            onClick={() => handlePageChange(currentPage + 1)}
+                                            className="pagination-nav-btn-rev next-rev"
+                                        >
+                                            {currentPage + 1}
+                                        </button>
+                                    )}
+
+                                    <button
+                                        onClick={() => handlePageChange(totalPages)}
+                                        disabled={currentPage === totalPages}
+                                        className={`pagination-nav-btn-rev last-rev ${currentPage === totalPages ? 'disabled-rev' : ''}`}
+                                    >
+                                        &gt;&gt;
+                                    </button>
+                                </nav>
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
             </div>
         </div>
     );

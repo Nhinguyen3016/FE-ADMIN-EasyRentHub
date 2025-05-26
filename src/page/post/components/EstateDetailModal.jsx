@@ -112,12 +112,6 @@ const EstateDetailModal = ({ estate, onClose, onDelete, onApprove }) => {
     setShowDeleteConfirm(false);
   };
 
-  const handleApproveClick = () => {
-    if (typeof onApprove === 'function') {
-      onApprove(estate.id || estate._id);
-    }
-  };
-
   // Safely access arrays
   const images = estate.images || [];
   const likes = estate.likes || [];
@@ -250,13 +244,6 @@ const EstateDetailModal = ({ estate, onClose, onDelete, onApprove }) => {
               </div>
               
               <div className="estate-actions">
-                {normalizedStatus === 'booked' && (
-                  <button className="btn btn-approve" onClick={handleApproveClick}>
-                    <CheckCircle size={16} className="mr-2" />
-                    Đánh dấu có sẵn
-                  </button>
-                )}
-                
                 <button className="btn btn-delete" onClick={handleDeleteClick}>
                   <Trash2 size={16} className="mr-2" />
                   Xóa

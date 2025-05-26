@@ -11,7 +11,7 @@ const AdminLandlordChart = () => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [availableYears, setAvailableYears] = useState([]);
-  const [viewType, setViewType] = useState('monthly'); 
+  const [viewType, setViewType] = useState('yearly'); // Mặc định hiển thị theo năm
 
   useEffect(() => {
     const fetchTransactionData = async () => {
@@ -63,15 +63,17 @@ const AdminLandlordChart = () => {
           new Date(item.createdAt).getFullYear()
         ))].sort((a, b) => b - a);
         
-        if (years.length === 0) {
-          years.push(new Date().getFullYear());
+        // Luôn đảm bảo năm hiện tại có trong danh sách
+        const currentYear = new Date().getFullYear();
+        if (!years.includes(currentYear)) {
+          years.unshift(currentYear);
+          years.sort((a, b) => b - a);
         }
         
         setAvailableYears(years);
         
-        if (years.length > 0 && !years.includes(selectedYear)) {
-          setSelectedYear(years[0]);
-        }
+        // Đảm bảo selectedYear luôn là năm hiện tại khi khởi tạo
+        setSelectedYear(currentYear);
         
         setError(null);
       } catch (err) {
@@ -83,7 +85,7 @@ const AdminLandlordChart = () => {
     };
 
     fetchTransactionData();
-  }, [selectedYear]); 
+  }, []); // Chỉ chạy một lần khi component mount
 
   const getDaysInMonth = useCallback((month, year) => {
     const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
